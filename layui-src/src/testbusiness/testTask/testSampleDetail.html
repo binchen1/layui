@@ -1,0 +1,319 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%-- <%@include file="/context/layuiCommon.jsp" %> --%>
+<!DOCTYPE html>
+<style>
+  .panel-body {
+    font-size: 12px;
+  }
+
+  .layui-form-radio {
+    font-size: 12px;
+  }
+
+  .layui-form-item {
+    margin-bottom: 0px;
+  }
+
+  .layui-input-block {
+    margin-left: 0px;
+  }
+
+  .layui-table-view .layui-table td {
+    padding: 0 0 0 0;
+  }
+
+  .layui-body {
+    overflow-y: scroll;
+  }
+
+  .layui-table-body {
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-y: scroll;
+  }
+
+  .custom-table-box .layui-table-view .layui-table td {
+    padding: 0 10px;
+  }
+
+  .custom-table-box .layui-table-view .layui-table th {
+    padding: 5px 10px;
+  }
+</style>
+<script>
+
+  var taskId = "${testTask.id}";
+  var testObjects = eval('${testObjects}');
+  // 同步获取样品信息
+	/* $.ajax({
+		url: basePath + '/testTaskController.do?getTestObjectDetails',  
+		async: false,
+  		data: {
+  			id: taskId
+  		},  
+  		dataType: "json",  
+  		type: "POST",  
+  		beforeSend: function(){
+  		
+  		},
+  		success: function (res) {  
+      		if(res.success){
+      			testObjects = eval(res.obj);
+      		} else {
+      			
+      		}
+		}
+	}); */
+
+  var sampleDetailsMap = {};	// 样品属性列表：  样品ID - 样品属性
+  var sampleOtherInfoMap = {};	// 样品附加信息： 样品ID - 样品附加信息
+  var defaultSampleDetails = [];
+  var defaultSampleOtherInfo = [];
+  var currentSelectedTestObjectId = "";
+
+  setSampleDetailsMap(sampleDetailsMap, sampleOtherInfoMap, testObjects);// key - value 
+  defaultSampleDetails = sampleDetailsMap[testObjects[0].id];
+  defaultSampleOtherInfo = sampleOtherInfoMap[testObjects[0].id];
+  currentSelectedTestObjectId = testObjects[0].id;
+
+  layui.use(['element', 'laydate', 'form', 'table'], function () {
+    var $ = layui.$
+      , element = layui.element
+      , laydate = layui.laydate
+      , form = layui.form
+      , table = layui.table;
+
+    // radio 选中事件
+    form.on('radio(testSampleRadio)', function (data) {
+      console.log('testSampleRadio', data)
+      var testSampleId = data.value;
+      currentSelectedTestObjectId = data.value;
+      defaultSampleDetails = sampleDetailsMap[testSampleId];
+      defaultSampleOtherInfo = sampleOtherInfoMap[testSampleId];
+      tableRenderTestObjectDetail(table, 'sampleDetail', defaultSampleDetails);
+      tableRenderTestObjectInfo(table, 'sampleOtherInfo', defaultSampleOtherInfo);
+
+      // 试验检测结论切换，这个是调用的testTaskConclusion.jsp的方法
+      // setTestTaskConclusion();
+    });
+
+    // 样品属性
+    tableRenderTestObjectDetail(table, 'sampleDetail', defaultSampleDetails);
+    // 样品附加信息
+    tableRenderTestObjectInfo(table, 'sampleOtherInfo', defaultSampleOtherInfo);
+
+    initEvent();
+  });
+
+  function getTestObjectData(sampleDetails, testObject) {
+    console.log('testObject', testObject)
+    sampleDetails.push({ "name": "样品名称", "value": testObject.testSampleDisplayName });
+    sampleDetails.push({ "name": "规格型号", "value": testObject.standard });
+    sampleDetails.push({ "name": "工程部位/用途", "value": testObject.projectPartAndUse });
+    sampleDetails.push({ "name": "检测部位", "value": testObject.part });
+    sampleDetails.push({ "name": "样品描述", "value": testObject.description });
+    sampleDetails.push({ "name": "试样数量", "value": testObject.sampleNum });
+    sampleDetails.push({ "name": "代表数量", "value": testObject.delegatesNum });
+    sampleDetails.push({ "name": "备注", "value": testObject.remark });
+  }
+
+	/**
+	 *	sampleDetailsMap ：  样品ID - 样品属性集合
+	 *	sampleOtherInfoMap : 样品ID - 附加信息集合
+	 */
+  function setSampleDetailsMap(sampleDetailsMap, sampleOtherInfoMap, testObjects) {
+    for (var i = 0; i < testObjects.length; i++) {
+      var sampleDetails = [];	// 样品属性列表
+      // 将样品属性填充到 sampleDetails 中
+      getTestObjectData(sampleDetails, testObjects[i]);
+      sampleDetailsMap[testObjects[i].id] = sampleDetails;
+
+      // 附加信息
+      var otherInfos = testObjects[i].testObjectOtherInfos;
+      var otherInfoValid = [];
+      for (var j = 0; j < otherInfos.length; j++) {
+        if (otherInfos[j].isDeleted == '0') {
+          otherInfoValid.push({ "name": otherInfos[j].name, "value": otherInfos[j].value });
+        }
+      }
+      sampleOtherInfoMap[testObjects[i].id] = otherInfoValid;
+    }
+  }
+
+  // 表格渲染
+  function tableRenderTestObjectDetail(table, id, data) {
+    table.render({
+      elem: '#' + id
+      , cols: [[
+        { field: 'name', title: '', align: 'right', width: 120 }
+        , { field: 'value', title: '', align: 'left' }
+      ]]
+      , data: data
+      , page: false
+      , limit: 1000
+    });
+  }
+  function tableRenderTestObjectInfo(table, id, data) {
+    table.render({
+      elem: '#' + id
+      , cols: [[
+        { field: 'name', title: '', align: 'right', width: 120 }
+        , { field: 'value', title: '', align: 'left' }
+      ]]
+      , data: data
+      , page: false
+      , limit: 1000
+    });
+  }
+
+  // 事件初始化
+  function initEvent() {
+
+    // 点击修改样品按钮 
+    $("a[name='updateSample']").on('click', function () {
+      var testObjectId = $(this).attr("value");
+      layer.open({
+        type: 2,
+        title: '样品信息',
+        offset: 'auto',
+        skin: 'mylayui-layer-molv',
+        content: "testTaskController.do?goTestSampleUpdate&testObjectId=" + testObjectId,
+        closeBtn: 0,
+        btn: ['确定', '取消'],
+        area: ['80%', '80%'],
+        btn1: function (index, layero) {
+          var body = layer.getChildFrame('body', index);
+          body.find("#submitBtn").click();
+        },
+        btn2: function () {
+          layer.close();
+        },
+      });
+    });
+
+    // 点击查看委托按钮 
+    $("a[name='checkConsignInfo']").on('click', function () {
+      var consignId = $(this).attr("value");
+      var consignIndex = layer.open({
+        type: 2,
+        title: '委托信息',
+        offset: 'auto',
+        skin: 'mylayui-layer-molv',
+        content: "testTaskController.do?goConsignEdit&isTaskRedirect=true&id=" + consignId + '&detail=detailPage',
+        closeBtn: 0,
+        btn: ['取消'],
+        area: ['90%', '95%'],
+        btn1: function () {
+          layer.close(consignIndex);
+        },
+      });
+    });
+  }
+
+</script>
+<style>
+  .layui-table-view .layui-table {
+    width: 100%;
+  }
+</style>
+
+<body>
+  <div class="layui-container" style="width: 100%;">
+    <form class="layui-form" lay-filter="form" style="width: 100%;" method="post">
+      <input id="reloadPage" name="reloadPage" lay-filter="reloadPage" lay-submit=""
+        class="layui-btn layui-hide"></input>
+      <c:set var="sampleIndex" value="1"></c:set>
+      <c:forEach var="testObj" items="${testTask.testObjects }">
+        <c:choose>
+          <c:when test="${sampleIndex == 1 }">
+            <div class="layui-form-item">
+              <div class="layui-input-block">
+                <c:choose>
+                  <c:when test='${testObj.testObjectCode != "" && testObj.testObjectCode != null}'>
+                    <input type="radio" title="${testObj.testSampleDisplayName }(${testObj.testObjectCode })"
+                      checked="checked" lay-filter="testSampleRadio" name="testSampleRadio" value="${testObj.id}" />
+                  </c:when>
+                  <c:otherwise>
+                    <input type="radio" title="${testObj.testSampleDisplayName }" checked="checked"
+                      lay-filter="testSampleRadio" name="testSampleRadio" value="${testObj.id}" />
+                  </c:otherwise>
+                </c:choose>
+                <a name="updateSample" title="修改样品" class="layui-btn layui-btn-xs" value="${testObj.id}">
+                  <!-- <i class="layui-icon">&#xe642;</i> -->
+                  修改
+                </a>
+                <a name="checkConsignInfo" title="查看委托" class="layui-btn layui-btn-xs"
+                  value="${testObj.consignInfoId }">
+                  <!-- <i class="layui-icon">&#xe63c;</i> -->
+                  查看委托
+                </a>
+              </div>
+            </div>
+            <c:set var="sampleIndex" value="${sampleIndex+1}" />
+          </c:when>
+          <c:otherwise>
+            <div class="layui-form-item">
+              <div class="layui-input-block">
+                <input type="radio" title="${testObj.testSampleDisplayName }(${testObj.testObjectCode })"
+                  lay-filter="testSampleRadio" name="testSampleRadio" value="${testObj.id}" />
+                <a name="updateSample" title="修改样品" class="layui-btn layui-btn-xs" value="${testObj.id}">
+                  修改
+                  <!-- <i class="layui-icon">&#xe642;</i> -->
+                </a>
+                <a name="checkConsignInfo" title="查看委托" class="layui-btn layui-btn-xs"
+                  value="${testObj.consignInfoId }">
+                  <!-- <i class="layui-icon">&#xe63c;</i> -->
+                  查看委托
+                </a>
+              </div>
+            </div>
+          </c:otherwise>
+        </c:choose>
+      </c:forEach>
+    </form>
+    <div class="custom-table-box">
+      <div class="layui-row layui-col-space10">
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6">
+          <table class="layui-table" id="sampleDetail" lay-filter="sampleDetail" style="margin-top: 0px;">
+          </table>
+        </div>
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6">
+          <table class="layui-table" id="sampleOtherInfo" lay-filter="sampleOtherInfo" style="margin-top: 0px;">
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%-- <div class="easyui-layout" fit="true" >
+		<c:set var="sampleIndex" value="1"  ></c:set>
+		<c:forEach var="testObj" items="${testTask.testObjects }">
+			<c:if test="${sampleIndex == 1 }">
+				<c:choose>
+					<c:when test="${sampleIndex == 1 }">
+						<span>
+							<input type="radio" checked="checked" name="testSampleRadio" value="${testObj.testSampleId}" />
+								${testObj.testSampleDisplayName }(${testObj.testObjectCode })
+							<a href="#" >>>>修改</a>
+						</span>
+						<c:set var="sampleIndex" value="${sampleIndex+1}" /> 
+					</c:when>
+					<c:otherwise>
+						<span>
+							<input type="radio" name="testSampleRadio" value="${testObj.testSampleId}" />
+								${testObj.testSampleDisplayName }(${testObj.testObjectCode })
+							<a href="#" >>>>修改</a>
+						</span>
+					</c:otherwise>
+				</c:choose>
+			</c:if>
+		</c:forEach>
+		<table id="testObjectDetailTable" class="easyui-propertygrid" style="width:300px" data-options="
+				showGroup:false,
+				scrollbarSize:0
+				">
+		</table> 
+	</div>--%>
+</body>

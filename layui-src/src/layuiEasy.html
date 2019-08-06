@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./css/layui.css">
+  <link rel="stylesheet" type="text/css" href="./easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="./easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="./easyui-1.5.5.2/demo.css">
+  <script type="text/javascript" src="./easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="./easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <style>
+    .layui-table-cell {
+            height: auto;
+            line-height: 28px;
+	}
+  </style>
+</head>
+
+<body>
+  <h2>Keep Expandable Panel in Accordion</h2>
+  <p>Keep a expandable panel and prevent it from collapsing.</p>
+  <div style="margin:20px 0 10px 0;"></div>
+  <div class="easyui-accordion" style="width:500px;height:300px;">
+    <div title="Top Panel" data-options="iconCls:'icon-search',collapsed:false,collapsible:false" style="padding:10px;">
+      <input class="easyui-searchbox" prompt="Enter something here" style="width:300px;">
+    </div>
+    <div title="About" data-options="selected:true" style="padding:10px;">
+      <h3 style="color:#0099FF;">Accordion for jQuery</h3>
+      <p>Accordion is a part of easyui framework for jQuery. It lets you define your accordion component on web page
+        more easily.</p>
+    </div>
+    <div title="Title1" style="padding:10px">
+      <p>Content1</p>
+    </div>
+    <div title="Title2" style="padding:10px">
+      <p>Content2</p>
+    </div>
+  </div>
+  <ul class="layui-nav" lay-filter="navdemo">
+    <li class="layui-nav-item">
+      <a href="javascript:;">解决方案</a>
+      <dl class="layui-nav-child">
+        <!-- 二级菜单 -->
+        <dd><a href="javascript:;">移动模块</a></dd>
+        <dd><a href="javascript:;">后台模版</a></dd>
+        <dd><a href="javascript:;">电商平台</a></dd>
+        <dd><a href="javascript:;">弹出框</a></dd>
+      </dl>
+    </li>
+  </ul>
+  <table id="demo" lay-filter="demo"></table>
+
+  <script type="text/html" id="switchTpl">
+    <!-- 这里的 checked 的状态只是演示 -->
+    <input type="checkbox" name="sex" value="{{d.id}}" lay-skin="switch" lay-text="女|男" lay-filter="sexDemo" {{ d.id == 10003 ? 'checked' : '' }}>
+  </script>
+
+  <script type="text/html" id="seleceTp">
+    <select class="form-control input-sm" name="category" lay-filter="category" aria-invalid="false">
+      <option id="secondLevelId" value="0">择运维位置</option>
+      <option value="1">择运维位置1</option>
+      <option value="2">择运维位置2</option>
+      <option value="3">择运维位置3</option>
+      <option value="4">择运维位置4</option>
+    </select>
+  </script>
+  <form class="layui-form" action="">
+    <div class="layui-form-item">
+      <div class="layui-input-block">
+        <select class="form-control input-sm" name="category" lay-filter="category" aria-invalid="false">
+          <option id="secondLevelId" value="0">择运维位置</option>
+          <option value="1">择运维位置1</option>
+          <option value="2">择运维位置2</option>
+          <option value="3">择运维位置3</option>
+          <option value="4">择运维位置4</option>
+        </select>
+      </div>
+    </div>
+    <div class="layui-form-item">
+
+      <div class="layui-inline">
+        <label class="layui-form-label">范围</label>
+        <div class="layui-input-inline" style="width: 100px;">
+          <input type="text" name="price_min" placeholder="￥" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid">-</div>
+        <div class="layui-input-inline" style="width: 100px;">
+          <input type="text" name="price_max" placeholder="￥" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+  <script src="./jquery.min.js"></script>
+  <script src="./layui.js"></script>
+  <script src="./assets/global.js"></script>
+  <script type="text/html" id="DutyDepartSelect">
+    <form class="layui-form" action="">
+      <div class="layui-form-item">
+          <select class="form-control " name="category"   lay-filter="category" aria-invalid="false">
+            <option id="secondLevelId" value="0">择位置</option>
+            <option value="1">择位置1</option>
+            <option value="2">择位置2</option>
+            <option value="3">择位置3</option>
+            <option value="4">择位置4</option>
+          </select>
+      </div>
+    </form>
+</script>
+
+  <script>
+    //重新渲染表单
+    function renderForm() {
+      layui.use('form', function (form) {
+        // var form = layui.form();//高版本建议把括号去掉，有的低版本，需要加() lay-ignore 
+        form.render();
+      });
+    }
+    //注意：导航 依赖 element 模块，否则无法进行功能性操作
+    layui.use(['element', 'common', 'hello'], function () {
+      var element = layui.element;
+      var common = layui.common;
+      var hello = layui.hello;
+
+      //一些事件监听
+      element.on('nav(navdemo)', function (obj) {
+        hello.hello('World!'); //弹出 Hello World!
+        var dat = common.changeParentPlace(); //弹出 Hello World!
+        console.log('commons 模块返回值', dat)
+      });
+      //一些事件监听
+      element.on('tab(demo)', function (data) {
+        console.log(data);
+      });
+    });
+    $(function () {
+      $.getJSON('./demo1.json', function (data) {
+        // console.log('19', data)
+        tableData = data;
+      })
+      layui.use(['table', 'form'], function () {
+        var table = layui.table;
+        var form = layui.form;
+        tableRender(table, tableData);
+
+
+      })
+
+
+    })
+    function tableRender(table, tableData) {
+      table.render({
+        elem: '#demo',
+        page: true //开启分页
+        ,
+        // toolbar: true,
+        cols: [
+          [ //表头
+            {
+              field: 'arr', title: '数组', templet: function (d) {
+                var ulhtml = '<ul>'
+                console.log(d.arr)
+                for (var i = 0; i < d.arr.length; i++) {
+                  ulhtml += '<li>' + d.arr[i] + '</li>';
+                }
+                return ulhtml + '</ul>'
+              }
+            },
+            {
+              field: 'city', title: '城市2', templet: '#DutyDepartSelect '
+            },
+            {
+              field: 'username', title: '用户名', width: 180, templet: function (d) {
+                var btn = '<button name="username" onclick="username(\'' + d.id + '\');" class="layui-btn layui-btn-xs layui-hide">' +
+                  '<i class="layui-icon">&#xe642;</i>' +
+                  '</button>' + d.username;
+                return btn;
+              }
+            },
+            {
+              field: 'sex', title: '性别', width: 180, sort: true, templet: '#switchTpl', unresize: true
+            },
+
+            {
+              field: 'city', title: '城市', width: 130, templet: function (d) {
+                var dcity = parseInt(d.city)
+                var arr = ['不合格', '合格', '不判定']
+                var innerHtml = '<form class="layui-form" ><div class="layui-inline">'
+                  + '<div class="layui-input-inline">'
+                  + '<select lay-filter="selDome" class="selectDemo" data-id=' + d.id + ' lay-ignore  >'
+                for (var i = 0; i < arr.length; i++) {
+                  if (dcity === i) {
+                    innerHtml += '<option selected value=' + i + '>' + arr[i] + '</option>'
+                  } else {
+                    innerHtml += '<option  value=' + i + '>' + arr[i] + '</option>'
+                  }
+                }
+                innerHtml += '</select></div></div></form>';
+                return innerHtml;
+              }
+            },
+            {
+              field: 'city2', title: '城市2', width: 130, event: 'setSign',
+              templet: function (d) {
+                var dcity = parseInt(d.city)
+                console.log(dcity)
+                var arr = ['不合格', '合格', '不判定']
+                for (var i = 0; i < arr.length; i++) {
+                  if (dcity === i) {
+                    return arr[i];
+
+                  }
+                }
+              }
+            }
+          ]
+        ]
+        , data: tableData.data
+        , done: function () {
+          renderForm()
+        }
+      });
+
+      //监听单元格事件
+      table.on('tool(demo)', function (obj) {
+        var data = obj.data;
+        if (obj.event === 'setSign') {
+          var innerHtml = '  <dl  style="display:block" id="demodl"> <!-- 二级菜单 --> '
+          innerHtml += '    <dd><a href="#">移动模块</a></dd> '
+          innerHtml += '    <dd><a href="#">后台模版</a></dd> '
+          innerHtml += '    <dd><a href="#">电商平台</a></dd> '
+          innerHtml += '  </dl> '
+          // innerHtml += '</li></ul> '
+          tipIndex = layer.tips(innerHtml, this, {
+            time: 1000 * 1000
+            , skin: 'layuiTip-class'
+            , tips: [3, '#FFCCCC']
+            // , btn: ['确定', '取消']
+            // , btn1: function () {
+            //   var testObjectParamIds = "";
+            //   var index = 1;
+            //   $(":checked[name='referenceParam']").each(function () {
+            //     var testObjectParamId = $(this).val();
+            //     if (index == 1) {
+            //       testObjectParamIds += testObjectParamId;
+            //       index++;
+            //     } else {
+            //       testObjectParamIds += "," + testObjectParamId;
+            //     }
+            //   });
+
+            // 引用该规程到其他参数
+            // referenceToOtherParams(testObjectParamIds, data, tipIndex);
+            // }
+            // , btn2: function () {
+
+            // }
+          }
+          );	// 弹出框 1000秒后消失
+        }
+        // layer.prompt({
+        //   formType: 2
+        //   , title: '修改 ID 为 [' + data.id + '] 的用户签名'
+        //   , value: data.sign
+        // }, function (value, index) {
+        //   layer.close(index);
+
+        //   //这里一般是发送修改的Ajax请求
+
+        //   //同步更新表格和缓存对应的值
+        //   obj.update({
+        //     sign: value
+        //   });
+        // });
+
+      });
+
+      //   //监听行单击事件（单击事件为：rowDouble）
+      //   table.on('row(demo)', function (obj) {
+      //       var data = obj.data;
+
+      //       layer.alert(JSON.stringify(data), {
+      //         title: '当前行数据：'
+      //       });
+
+      //       //标注选中样式
+      //       obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+      //     });
+
+    }
+    // 点击应用到其他参数 下选择框
+    $(document).on("click", "#demodl", function (e) {
+      console.log(this)
+      console.log(e.target.innerHTML)
+      layer.close(layer.tips());
+      // if (e.target.checked) {
+      //   $("input:checkbox").prop("checked", "checked");
+      // } else {
+      //   $("input:checkbox").removeAttr("checked");
+      // }
+    });
+  </script>
+</body>
+
+</html>

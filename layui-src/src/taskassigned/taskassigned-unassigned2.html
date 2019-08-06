@@ -1,0 +1,55 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<html>
+ <head></head>
+ <body class="self-noscroll">
+  <title>任务列表</title> 
+	<script type="text/javascript">
+		//获得根目录
+		var strFullPath = window.document.location.href;
+		var strPath = window.document.location.pathname;
+		var pos = strFullPath.indexOf(strPath);
+		var prePath = strFullPath.substring(0, pos);
+		var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+		var path = prePath;
+		var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+		var basePath = prePath + postPath;
+		document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>");
+		document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+		document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/taskassigned/taskassigned-unassigned.js'><\/script>");
+	</script>
+	<script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+	
+	<table width="100%" id="taskList" toolbar="#taskListtb"></table>
+
+ 	<div id="taskListtb" style="padding:3px; height: auto">
+ 	
+ 		<!-- 快速查询输入框和按钮 -->
+	    <div name="searchColums" id="searchColums" class="datagrid-toolbar">
+		    <form id="commonQueryForm">
+        		<input type="text" name="quickQryParam" placeholder="输入样品编号/样品名称/工程部位/用途后回车即可查询" 
+        			class="layui-input" style="width:30%;float:left;">&nbsp;
+        		<!-- 当一个form中只有一个type='text'的input时,input会默认被绑定回车提交事件,所以呢,这里写个假的input耍下流氓 -->
+        		<input type="text" style="display:none">
+        		<input type="hidden" name="qryType" value="common"/>
+            	<a class="easyui-linkbutton" onclick="quickSearch()" plain="true" icon="icon-search">查询</a>
+            </form>
+	   </div>
+	   
+	   <!-- 功能按钮组 -->
+	   <div style="height:30px;" class="datagrid-toolbar">
+	      <span style="float:left;">
+	   		<a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-add" onclick="batchAssignTask()" id="">分配任务</a>
+	   		<a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-putout" onclick="backProcess()" >回退任务</a>
+	   	  </span>
+	   </div>
+	   <!-- 龄期到期提醒和超期未分配提醒 -->
+	   <div style="height:30px; display:none;" id="overdueDiv" class="datagrid-toolbar">
+	   		<a href="#" onclick="qryListOverdue()" id="overdueA" style="color:red;">
+	   			<span id="day1"></span>天内龄期到期(<span id="count1"></span>)!
+	   			超出委托日期<span id="day2"></span>天未分配(<span id="count2"></span>)!
+	   		</a>
+	   </div>
+	   <input type="hidden" id="taskId">
+   </div>
+</body>
+</html>

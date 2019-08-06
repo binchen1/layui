@@ -1,0 +1,210 @@
+<!-- <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@page import="org.jeecgframework.core.util.SysThemesUtil,org.jeecgframework.core.enums.SysThemesEnum"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta charset="utf-8" />
+  <title>试验检测管理信息系统</title>
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <link href="../../assets/css/asidenav.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../../assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="../../assets/css/menu.css" />
+  <script type="text/javascript" src="../../assets/js/common.js"></script>
+  <script src="plug-in/jquery-plugs/storage/jquery.storageapi.min.js"></script>
+  <script type="text/javascript" src="../../assets/js/asidenav.js"></script> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>试验检测管理信息系统</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/menuLayui.css">
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+
+</head>
+
+<body>
+  <div class="layui-layout-body">
+    <div class="layui-layout layui-layout-admin">
+      <!-- 头部区域（可配合layui已有的水平导航） -->
+      <div class="menu-header">
+        <div class="menu-header-left">
+          <div class="menu-header-left-img"><img src="../../assets/images/img_login_logo.png"></div>
+          <div class="menu-header-left-text">
+            <h2>试验检测管理信息系统</h2>
+            <p>Laboratory Information Management System</p>
+          </div>
+        </div>
+        <ul class="layui-nav layui-layout-left" lay-filter="nav-test" id="nav-test">
+          <li class="layui-nav-li"> <a href="#">
+              <img src="../../assets/images/main_menu_01.png">
+              <p>首页</p>
+            </a>
+          </li>
+          <li class="layui-nav-li"> <a href="#">
+              <img src="../../assets/images/main_menu_02.png">
+              <p>现场检测</p>
+            </a>
+          </li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_03.png">
+              <p>系统管理</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_04.png">
+              <p>检测业务</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_05.png">
+              <p>设备管理</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_06.png">
+              <p>单位管理</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_07.png">
+              <p>质量体系</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_08.png">
+              <p>查询统计</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_09.png">
+              <p>分室管理</p>
+            </a></li>
+          <li class="layui-nav-li"><a href="#">
+              <img src="../../assets/images/main_menu_10.png">
+              <p>后台统计</p>
+            </a></li>
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+          <div class="nav-right-img-box">
+            <img src="../../assets/images/user.png" class="">
+          </div>
+          <dl class="nav-right-dl">
+            <dd><a href="">功能搜索</a></dd>
+            <dd><a href="">修改密码</a></dd>
+            <dd><a href="">退出系统</a></dd>
+          </dl>
+        </ul>
+      </div>
+      <div id="side-div">
+        首页111111111
+      </div>
+      <div id="side-nav" style="display:none" class="side-nav">
+        <div class="layui-side layui-bg-black">
+          <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree" lay-filter="test" lay-shrink="all">
+              <li class="layui-nav-item layui-nav-itemed">
+                <a class="" href="javascript:;">所有商品</a>
+                <dl class="layui-nav-child">
+                  <dd class="layui-this"><a href="javascript:;">列表一</a></dd>
+                  <dd><a href="javascript:;">列表二</a></dd>
+                  <dd><a href="javascript:;">列表三</a></dd>
+                  <dd><a href="javascript:;">超链接</a></dd>
+                </dl>
+              </li>
+              <li class="layui-nav-item">
+                <a href="javascript:;">解决方案</a>
+                <dl class="layui-nav-child">
+                  <dd><a href="javascript:;">列表一</a></dd>
+                  <dd><a href="javascript:;">列表二</a></dd>
+                  <dd><a href="#">超链接</a></dd>
+                  <dd>
+                      <li class="layui-nav-item">
+                    <a class="" href="javascript:;">所有商品</a>
+                    <dl class="layui-nav-child">
+                      <dd><a href="javascript:;">列表一2</a></dd>
+                      <dd><a href="javascript:;">列表二2</a></dd>
+                      <dd><a href="#">超链接2</a></dd>
+                      <dd><a href="#">超链接2</a></dd>
+                    </dl>
+                    </li>
+                  </dd>
+                </dl>
+              </li>
+              <li class="layui-nav-item"><a href="#">云市场</a></li>
+              <li class="layui-nav-item"><a href="#">发布商品</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="layui-body">
+          <!-- 内容主体区域 -->
+          <div style="padding: 15px;" id="content">内容主体区域1 控制台</div>
+        </div>
+      </div>
+
+
+      <!-- 底部固定区域 -->
+      <div class="footer-bottom">
+        <p onclick="officialWebsite()"> 渝ICP备1002727号 @1998-2015 重庆海特科技发展有限公司 客服电话：（023）68628633 QQ：2850989605
+          USBKey驱动程序下载 </p>
+      </div>
+    </div>
+  </div>
+  <div id="asidenav-box"></div>
+  <script>
+    //JavaScript代码区域
+    layui.use('element', function () {
+      console.log('55555')
+      var element = layui.element;
+      element.on('nav(test)', function (elem) {
+        console.log('1111', elem); //得到当前点击的DOM对象
+        console.log($(this).html())
+        var thisHtml = $(this).html();
+        // debugger;
+        console.log(elem); //得到当前点击的DOM对象
+        elem.parent().siblings().removeClass('layui-nav-itemed')
+      });
+    });
+    $(function () {
+      $("#nav-test").on("click", "li", function () {      //只需要找到你点击的是哪个ul里面的就行
+        $("#nav-test img").each(function () {
+          var imgSrcAll = $(this).attr('src');
+          if (imgSrcAll.indexOf('main_menu_white') > -1) {
+            var imgSrcAll2 = imgSrcAll.replace('main_menu_white', 'main_menu')
+            $(this).attr('src', imgSrcAll2)
+          }
+        });
+        $(this).addClass('active').siblings().removeClass('active');
+        var imgSrc = $(this).find('img').attr('src');
+        if (imgSrc.indexOf('main_menu_white') > -1) { } else {
+          var imgSrc2 = imgSrc.replace('main_menu', 'main_menu_white')
+          $(this).find('img').attr('src', imgSrc2)
+        }
+        var thisHtml = $(this).find('p').html();
+        $('#content').html(thisHtml);
+        if ('首页' === thisHtml) {
+          $('#side-div').show();
+          $('#side-nav').hide();
+        } else {
+          $('#side-div').hide();
+          $('#side-nav').show();
+        }
+      });
+
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,330 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增检校参数</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增检校参数</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .layui-form-mid {
+      float: none;
+      padding: 0px !important;
+      margin-left: 80px;
+      margin-right: 0px;
+    }
+
+    .more-header {
+      padding: 8px;
+      border-bottom: 1px dashed;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-row">
+      <div class="layui-form-item">
+        <label class="layui-form-label"><span class="layui-color-red">* </span>检校项目：</label>
+        <div class="layui-input-block">
+          <input type="text" name="name" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">技术要求：</label>
+        <div class="layui-input-block">
+          <input type="text" name="skillLimit" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">检校周期：</label>
+        <div class="layui-input-block">
+          <div class="layui-input-inline" style="width:70px">
+            <input type="text" name="checkPeriod" onkeyup="InitObj.checkPeriodChange(event)" class="layui-input"
+              autocomplete="off">
+          </div>
+          <div class="layui-form-mid">
+            <select name="checkPeriodUnit">
+              <option value="Y">年</option>
+              <option value="M">月</option>
+              <option value="D">日</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">前次检校日期：</label>
+        <div class="layui-input-block">
+          <input type="text" name="preCheckDate" id="preCheckDate" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">下次检校日期：</label>
+        <div class="layui-input-block">
+          <input type="text" name="nextCheckDate" id="nextCheckDate" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">备注：</label>
+        <div class="layui-input-block">
+          <input type="text" name="remark" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">附件上传：</label>
+        <div class="layui-input-block" id="attachmentIdsDiv">
+          <input type="hidden" name="attachmentIds" class="layui-input" autocomplete="off">
+          <span class="layui-color-blue choiceShow"></span>
+          <a id="uploadA" class="layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+        </div>
+      </div>
+
+    </div>
+
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init(form)
+        laydate.render({ elem: '#preCheckDate', format: 'yyyy-MM-dd', trigger: 'click' })
+        laydate.render({ elem: '#nextCheckDate', format: 'yyyy-MM-dd', trigger: 'click' })
+        //选完文件后不自动上传
+      })
+    })
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': []
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+    }
+
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      // var filesArr = filesObj.files;
+      for (var i = 0; i < filesObj.files.length; i++) {
+        if (accessoryId === filesObj.files[i].id) {
+          filesObj.files.splice(i, 1);
+          break;
+        }
+      }
+      InitObj.addToForm(filesObj.files)
+    }
+    var InitObj = {
+      formLayerM: null, // form对象 
+      detailUrl: 'checkItemController.do?getById', // 查看详情url
+      saveUrl: 'checkItemController.do?saveItem', // 新增申请url
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      // detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      objId: GetQueryString("objId"), // 设备id
+      moreInfo: $('#moreInfo'),
+      attachmentIdsDiv: $('#attachmentIdsDiv'),
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.styleLayout(form);
+        if (this.editId) {
+          this.detailEdit();
+        }
+        form.render();
+        $('#uploadA').bind('click', function () {
+          // fileUpload.js中的方法
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArr) {
+        // var filesArr = filesArrs.slice(-filesObj.numbers);
+        var html = '', attachmentIds = '';
+        for (var i = 0; i < filesArr.length; i++) {
+          attachmentIds += filesArr[i].id + ','
+          html += '<u><a class="attachmentA layui-color-blue" target="_blank" href="' + filesArr[i].realpath +
+            '">' + filesArr[i].attachmenttitle + '</a></u> &nbsp;&nbsp;';
+        }
+        this.attachmentIdsDiv.find('input[name="attachmentIds"]').val(attachmentIds.slice(0, -1));
+        this.attachmentIdsDiv.find('.choiceShow').html(html);
+      },
+      moreFun: function () {
+        if (this.moreInfo.is(':hidden')) {
+          this.moreInfo.show();
+          this.moreInfo.find('input').attr('disabled', false)
+        } else {
+          this.moreInfo.hide();
+          this.moreInfo.find('input').attr('disabled', true)
+        }
+
+      },
+      // 检校周期输入校验
+      checkPeriodChange: function (event) {
+        console.log('检校周期')
+        var values = Number($(event.target).val());
+        if (!isPositiveInteger(values)) {
+          formTipFun('请输入正整数', $(event.target))
+          $(event.target).val('')
+        }
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 详情页面数据处理
+      detailEditData: function (data) {
+        console.log('detailEdit', data)
+        $('input[name="name"]').val(data.name);
+        $('input[name="skillLimit"]').val(data.skillLimit);
+        $('input[name="checkPeriod"]').val(data.checkPeriod);
+        $('select[name="checkPeriodUnit"]').val(data.checkPeriodUnit);
+        var preCheckDate = data.preCheckDate ? new Date(data.preCheckDate).Format("yyyy-MM-dd") : '';
+        var nextCheckDate = data.nextCheckDate ? new Date(data.nextCheckDate).Format("yyyy-MM-dd") : '';
+        $('input[name="preCheckDate"]').val(preCheckDate);
+        $('input[name="nextCheckDate"]').val(nextCheckDate);
+        $('input[name="remark"]').val(data.remark);
+        this.formLayerM.render();
+        // this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      filesCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          if ( res.obj.length > 0) {
+            var filesArr = res.obj[0].tEqFileVos;
+            for (var i = 0; i < filesArr.length; i++) {
+              filesObj.files.push({
+                'id': filesArr[i].attachmentId,
+                'realpath': filesArr[i].url || '',
+                'attachmenttitle': filesArr[i].name || ''
+              })
+            }
+            that.addToForm(filesObj.files)
+          }
+          return;
+        }
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+            that.detailEditData(res.obj)
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, { "id": this.editId }, this.detailEditCallback, false, true);
+        ajaxRequest('eqFileController.do?getFileGroupByRelationEntityId', { "relationEntityId": this.editId }, this.filesCallback, false, true);
+      },
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            console.log('saveParam', saveParam)
+            if (this.editId) {
+              saveParam.id = this.editId;
+            }
+            ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.name) {
+          queryParams.msg = '设备名称不能为空';
+          queryParams.element = $('input[name="name"]');
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        console.log('saveData', formdata)
+        if (this.dataRequired(formdata)) {
+          console.log('this.objId', this.objId)
+          formdata['TSEquipment.id'] = this.objId;
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 样式布局控制
+      styleLayout: function (form) {
+        var that = this;
+      }
+
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,247 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>修改委托单位</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>  -->
+  <style>
+    h3 {
+      margin: 10px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="height-full">
+    <form class="layui-form table-form" id="commonQueryForm">
+      <div class="layui-form-box">
+        <div class="table-box">
+          <h3 class="dy layui-color-red" style="display:none">请填写单位信息:</h3>
+          <div class="layui-form-item">
+            <label class="layui-form-label"><span class="layui-color-red">* </span>委托单位：</label>
+            <div class="layui-input-block">
+              <input type="text" name="unitName" class="layui-input" lay-verify="required" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">资质类型：</label>
+            <div class="layui-input-block" id="qualificationTypeDiv">
+              <select name="qualificationTypeId">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label">缴费单位名称：</label>
+            <div class="layui-input-block">
+              <input type="text" name="payUnitName" class="layui-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label">联系地址：</label>
+            <div class="layui-input-block">
+              <input type="text" name="contactAddress" class="layui-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label">备注：</label>
+            <div class="layui-input-block">
+              <input type="text" name="unitRemark" class="layui-input" autocomplete="off">
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        InitObj.init(form)
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象  
+      editId: GetQueryString("editId"), // 发放报告id
+      saveUrl: 'consignUnitController.do?doUpdate', // 保存数据
+      qualificationsUrl: 'departVersionController.do?getDefaultQualifications', // 获取资质类型
+      projectNameUrl: '', // 获取工程项目名称
+      projectNameIdUrl: '', // 获取工程项目对应的信息
+      contactPhoneUrl: '', // 获取送样人手机号对应的信息
+      unitName: $('input[name="unitName"]'),
+      qualificationType: $('select[name="qualificationTypeId"]'),
+      payUnitName: $('input[name="payUnitName"]'),
+      contactAddress: $('input[name="contactAddress"]'),
+      unitRemark: $('input[name="unitRemark"]'),
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form) {
+        this.formLayerM = form;
+        if (this.editId) {
+          console.log('this.editId', this.editId)
+          var parentRow = parent.dataGrid.datagrid('getSelected')
+          this.detailEditData(parentRow)
+          this.initQualificationType(parentRow.qualificationTypeId);
+        }
+      },
+
+
+
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+            console.log('saveParam', saveParam)
+            // ajaxRequest(this.saveUrl, { paramUtilStr: JSON.stringify(saveParam) }, this.saveAjaxCallback, false, true)
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true);
+            }
+            return true;
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+      },
+      // 获取资质类型回调及页面渲染
+      qualificationTypeCallback: function (res, selected) {
+        console.log('selected', selected)
+        var that = InitObj,
+          htm = '';
+        if (res.success) {
+          var rows = res.obj;
+          if (rows && rows.length > 0) {
+            // if (!selected) {
+            //   for (var i in rows) {
+            //     if ('1' == rows[i].isDefault) {
+            //       selected = rows[i].id;
+            //     } else {
+            //       // selected = '402882d35f38a15a015f38e07a9f0003'
+            //       selected = ''
+            //     }
+            //   }
+            // }
+            for (var i = 0; i < rows.length; i++) {
+              var selectAttribute = '';
+              if (selected == rows[i].id) {
+                selectAttribute = 'selected';
+              }
+              htm += '<option value="' + rows[i].id + '" ' + selectAttribute + '>' + rows[i].name + '</option>';
+            }
+          }
+        }
+        console.log(htm)
+        // that.qualificationType.html(that.qualificationType.html() + htm);
+        that.qualificationType.append(htm);
+        that.formLayerM.render()
+      },
+      // 获取资质类型
+      initQualificationType: function (selected) {
+        ajaxRequest(this.qualificationsUrl, {}, this.qualificationTypeCallback, false, true, selected)
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务 
+          $('a').hide();
+          $('select').attr('disabled', true);
+          $("input").attr('readonly', true);
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 编辑数据处理
+      detailEditData: function (data) {
+        this.unitName.val(data.name)
+        this.payUnitName.val(data.payUnitName)
+        this.contactAddress.val(data.contactAddress)
+        this.unitRemark.val(data.remark)
+        this.detailDisplay()
+        this.formLayerM.render()
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var saveParam = {
+            "name": formdata.unitName,
+            "qualificationTypeId": formdata.qualificationTypeId,
+            "payUnitName": formdata.payUnitName,
+            "contactAddress": formdata.contactAddress,
+            "remark": formdata.unitRemark
+          }
+          if (this.editId) {
+            saveParam.id = this.editId
+          }
+          return saveParam
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      // 保存报告回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj,
+          parentThat = parent;
+        if (!res.success) {
+          that.fristConfirm = !that.fristConfirm;
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid();
+          parentThat.reloadDataGrid0();
+          parentThat.reloadDataGrid1();
+          return;
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.unitName) {
+          queryParams.msg = '委托单位不能为空'
+          queryParams.element = $('input[name="unitName"]')
+          return false;
+        }
+        // if (!queryParams.qualificationTypeId) {
+        //   queryParams.msg = '资质类型不能为空'
+        //   queryParams.element = $('#qualificationTypeDiv')
+        //   return false;
+        // }
+
+        return true;
+      },
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "老大1",
+    "iconCls": "icon-save",
+    "checked" : false,
+    "taskCount": 100,
+    "children": [
+      {
+        "id": 11,
+        "name": "老二11",
+        "checked" : false
+      },
+      {
+        "id": 12,
+        "name": "老二12",
+        "state": "open",
+        "taskCount": 100,
+        "checked" : false,
+        "children": [
+          {
+            "id": 121,
+            "checked" : false,
+            "name": "张三121"
+          },
+          {
+            "id": 122,
+            "checked" : false,
+            "name": "张三122"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "checked" : false,
+    "name": "老大2",
+    "children": [
+      {
+        "id": 21,
+        "checked" : false,
+        "name": "老二21"
+      },
+      {
+        "id": 22,
+        "checked" : false,
+        "name": "老二22"
+      }
+    ]
+  }
+]

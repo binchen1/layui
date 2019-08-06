@@ -1,0 +1,852 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>样品流转主列表</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/system/log/logProcess.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .tb-box-form {
+      width: 100%;
+    }
+
+    .seniorText {
+      padding-right: 43%;
+    }
+  </style>
+</head>
+
+<body id="mailList">
+<iframe id='udrIframe' name='udrIframe' width='0' height='0' frameborder='none' src=''></iframe>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">待检测样品</li>
+      <li>在检样品</li>
+      <li>已留样样品</li>
+      <li>已处理样品</li>
+      <li>全部样品</li>
+    </ul>
+    <div id="tableBox" class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8">
+                <div class="layui-input-inline ordinary" style="width:370px">
+                  <input type="text" name="quickQryParam" class="layui-input" placeholder="输入样品编号/样品名称/规格型号后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline select-box" style="display:none">
+                  <select name="selected">
+                    <option value="1" selected="selected">留样已到期</option>
+                    <option value="0">留样未到期</option>
+                    <option value="2">留样处理审核通过</option>
+                  </select>
+                </div>
+                <div class="layui-input-inline ordinary">
+                  <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+                <div class="layui-input-inline senior seniorText" style="display:none;">
+                  高级查询
+                  <span id="retractIcon" onclick="InitObj.retractFun()">
+                    <i class="layui-icon layui-icon-up"></i>
+                  </span>
+                </div>
+                <div class="layui-input-inline">
+                  <div id="searchSwitch" style="display:none;">
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true">切换到高级查询</a>
+                  </div>
+                </div>
+                <div class="senior retract" style="display:none">
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">样品编号</label>
+                    <div class="layui-input-block">
+                      <input type="text" name="objectCode" class="layui-input" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">样品名称</label>
+                    <div class="layui-input-block">
+                      <input type="text" name="objectName" class="layui-input" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">规格型号</label>
+                    <div class="layui-input-block">
+                      <input type="text" name="standard" class="layui-input" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">委托日期</label>
+                    <div class="layui-input-block">
+                      <input type="text" name="consignTime" id="consignTime" class="layui-input" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="layui-form-item">
+                    <label class="layui-form-label">留样日期</label>
+                    <div class="layui-input-block">
+                      <input type="text" name="reserveTime" id="reserveTime" class="layui-input" autocomplete="off">
+                    </div>
+                  </div>
+                  <div>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+                      onclick="InitObj.seniorQuickSearch()">查询</a>
+                    <button class="easyui-linkbutton" type="reset" iconCls="icon-reload" plain="true">重置</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" class="easyui-linkbutton receive-ample" iconCls="icon-reload" plain="true">领取样品</a>
+            <a href="#" class="easyui-linkbutton collect-sample" iconCls="icon-save" plain="true">收样处留样</a>
+            <a href="#" class="easyui-linkbutton print-circulation" iconCls="icon-print" plain="true">打印样品流转单</a>
+            <a href="#" style="display:none" class="easyui-linkbutton test-sample" iconCls="icon-cut"
+              plain="true">测后样品处理</a>
+
+            <a href="#" style="display:none" class="easyui-linkbutton export-exl" iconCls="icon-redo"
+              plain="true">导出</a>
+            <a href="#" style="display:none" class="easyui-linkbutton handle-sample" iconCls="icon-cut"
+              plain="true">留样处理</a>
+            <a href="#" style="display:none" class="easyui-linkbutton print-label" iconCls="icon-print"
+              plain="true">打印留样标签</a>
+          </span>
+          <span id="isHideSpan" style="display:none">
+            <a href="#" class="easyui-linkbutton cancel-report" iconCls="icon-cancel" plain="true">作废样品</a>
+          </span>
+          <button class="layui-btn layui-btn-sm funBtn_show show"><i class="layui-icon">&#xe633;</i></button>
+        </div>
+
+
+      </div>
+
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+  <!-- <iframe id="udriframe" name="udriframe" width="0" height="0" frameborder="none" src=""></iframe> -->
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var that = InitObj;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          if (2 === data.index) {
+            that.initDataGrid(that.columnsFun(data.index), { 'qryType': that.qryType.val() })
+          } else {
+            that.initDataGrid(that.columnsFun(data.index), { 'qryType': '' })
+          }
+        });
+        laydate.render({
+          elem: '#reserveTime'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+        laydate.render({
+          elem: '#consignTime'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+        InitObj.init(form);
+      })
+
+    })
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      defaultUrl: '', //默认获取数据url
+      defaultUrl0: 'waitTestObjectController.do?datagrid', // 待检测样品
+      defaultUrl1: 'testingObjectController.do?datagrid', // 在捡样品
+      defaultUrl2: 'savedObjectController.do?datagrid', // 已留样样品
+      defaultUrl3: 'processedObjectController.do?datagrid', // 已处理样品
+      defaultUrl4: 'allObjectController.do?datagrid', // 全部样品
+      qryType: $("select[name='selected']"),
+      //receivePageUrl: './objectmanageReceive.html', // 领取样品url页面
+      receivePageUrl: 'waitTestObjectController.do?goObjectGetPage', // 领取样品url页面
+      cancelPageUrl: '', // 作废样品页面
+      undoIssueUrl: 'reportIssueController.do?undoIssue', //撤销登记
+      saveUrl: 'reportIssueController.do?saveOrUpdate', // 保存打印记录
+      formLayerM: null, // form对象 
+      dataGrid: null, // table对象
+      dataType: 0, // 0:待发放, 1:已发放
+      stateMsg: '', // 状态提示信息
+      receiveSample: $('#functionButton .receive-ample'), // 领取样品
+      collectSample: $('#functionButton .collect-sample'), // 收样处留样
+      printCirculation: $('#functionButton .print-circulation'), // 打印样品流转单
+      cancelSample: $('#functionButton .cancel-report'), // 作废样品
+      exportExl: $('#functionButton .export-exl'), // 导出
+      handleSample: $('#functionButton .handle-sample'), // 留样处理
+      testSample: $('#functionButton .test-sample'), // 测后样品处理
+      printLabel: $('#functionButton .print-label'), // 打印留样标签
+      isShow: $('#functionButton .funBtn_show'),  // 是否显示其他按钮 
+      applyType: 1, // :0:查询全部,1:只显示我提交的申请
+      searchType: 1,    // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      isHideSpan: $('#isHideSpan'),
+      isHide: true,
+      searchShow: true, // 普通搜索
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      queryParams: {}, // 查询条件
+      layuiIndex: '', // 弹出层index
+      rowSelect: [], // 选中的数据集
+      init: function (form) {
+         /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun(0), { 'qryType': '' })
+        this.commonQryKeyDown()
+        this.styleLayout();
+        this.btnFun(this.receiveSample, this.receivePageUrl, '领取样品')
+        this.btnFun(this.collectSample, this.receivePageUrl, '收样处留样')
+        this.btnFun(this.printCirculation, '', '打印样品流转单')
+        this.btnFun(this.cancelSample, 'objectDisposeController.do?invalid', '作废样品')
+        this.btnFun(this.exportExl, '', '导出')
+        this.btnFun(this.handleSample, this.receivePageUrl, '留样处理')
+        this.btnFun(this.testSample, this.receivePageUrl, '测后样品处理')
+        this.btnFun(this.printLabel, '', '打印留样标签')
+        form.render()
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var tipIndex;
+        this.rowSelect = [];
+        btnName.on('click', function () {
+          var that = InitObj, self = this, rows = that.dataGrid.datagrid('getSelections');
+          var auditId = "", getRows = that.dataGrid.datagrid('getRows');
+          that.rowSelect = rows
+          if ('导出' === openName) {
+            that.exportExcel();
+            return;
+          }
+          if (rows.length === 0) {
+            tipIndex = layer.tips('<span class="layui-color-white">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            var issueWayValue, isCollect = true, isAuditing = false, auditType = {}, auditTypeLen, auditId;
+            for (var i = 0; i < rows.length; i++) {
+              auditId += (i === 0 ? rows[i].auditId : "," + rows[i].auditId)
+              if ('1' !== rows[i].status) {
+                isCollect = false;
+              }
+              if (rows[i].auditType && !auditType[rows[i].auditType]) {
+                auditType[rows[i].auditType] = true
+              }
+
+            }
+
+            var consignIds = '';
+            for (var i = 0; i < rows.length; i++) {
+              if (i == 0) {
+                consignIds += rows[i].consignId;
+              } else {
+                consignIds += "," + rows[i].consignId;
+              }
+            }
+
+            if ('领取样品' === openName) {
+              layerOpenFun(openUrl + '&tabsStatus=0&flowType=receive', '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+            } else if ('作废样品' === openName) {
+              that.cancelFun(openUrl, rows)
+
+            } else if ('收样处留样' === openName) {
+              for (var ii = 0; ii < rows.length; ii++) {
+                for (var j = 0; j < rows[ii].icons.length; j++) {
+                  if ('auditing' === rows[ii].icons[j]) {
+                    isAuditing = true
+                  }
+                }
+              }
+
+              if (isAuditing) {
+                layer.msg('当前所选样品包含收样处已留样样品，请重新选择!', { icon: 2 })
+              } else {
+                layerOpenFun(openUrl + '&tabsStatus=1&flowType=collect&consignIds=' + consignIds,
+                  '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+              }
+              console.log('收样处留样', '收样处已留样的，批量选择后点击【收样处留样】按钮，提示：“当前所选样品包含收样处已留样样品，请重新选择！”')
+            } else if ('测后样品处理' === openName) {
+              layerOpenFun(openUrl + '&tabsStatus=3&flowType=receive&consignIds=' + consignIds, '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+
+            } else if ('留样处理' === openName) {
+              //申请类型 1:提前废弃,2:提前返还,3:到期利用,4提前利用
+              // var isCollect = true, isAuditing = false, auditType = {}, auditTypeLen, auditId;
+              // for (var i = 0; i < rows.length; i++) {
+              //   if ('1' !== rows[i].status) {
+              //     isCollect = false;
+              //   }
+              //   if (rows[i].auditType && !auditType[rows[i].auditType]) {
+              //     auditType[rows[i].auditType] = true
+              //   }
+              //   for (var j = 0; j < rows[i].icons.length; j++) {
+              //     if ('auditing' === rows[i].icons[j]) {
+              //       isAuditing = true
+              //     }
+              //   }
+              // }
+
+              auditTypeLen = Object.getOwnPropertyNames(auditType).length
+              if (isAuditing || 1 < auditTypeLen) {
+                if (isAuditing) {
+
+                  layer.msg('请选择未提交处理申请的数据!', { icon: 2 })
+
+                } else {
+                  layer.msg('请选择申请类型相同的样品!', { icon: 2 })
+                }
+                return
+              }
+
+              if ('0' === that.qryType.val()) { //未到期
+
+                layerOpenFun('objectAuditController.do?goObjectmanageAdvanceApplyPage', '留样提前处理申请', ['90%', '80%'], ['确定', '取消']);
+              } else {
+                if (isCollect) {
+                  if ('2' === that.qryType.val()) { //未到期
+                    layerOpenFun(openUrl + '&tabsStatus=4&flowType=collect&auditId=' + auditId, '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+                  } else {
+                    layerOpenFun(openUrl + '&tabsStatus=4&flowType=collect', '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+                  }
+
+                } else {
+                  if ('2' === that.qryType.val()) { //未到期
+                    layerOpenFun(openUrl + '&tabsStatus=4&flowType=receive&auditId=' + auditId, '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+                  } else {
+                    layerOpenFun(openUrl + '&tabsStatus=4&flowType=receive', '样品流转登记', ['90%', '80%'], ['确定', '取消']);
+                  }
+                }
+
+              }
+
+            } else if ('打印留样标签' === openName) {
+              var consignIds = [];
+              for (var index = 0; index < rows.length; index++) {
+                consignIds.push(rows[index].consignId);
+              }
+              var udrCommonPrint = new UdrCommonPrint(consignIds, 'RemainedSampleLable');
+              udrCommonPrint.printStart();
+            } else if ('打印样品流转单' === openName) {
+              var objectProcessIds = [];
+              for (var index = 0; index < rows.length; index++) {
+                var objectProcessId = rows[index].objectProcessId;
+                if(objectProcessId == undefined) objectProcessId = '';
+                objectProcessIds.push(objectProcessId);
+              }
+              var udrCommonPrint = new UdrCommonPrint(objectProcessIds, 'SampleFlowList');
+              udrCommonPrint.printStart();
+            }
+            return;
+          }
+        })
+        btnName.mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 打印邮寄单
+      printMailList: function () {
+        // var rows = this.dataGrid.datagrid('getSelections');
+        // for (var index = 0; index < rows.length; index++) {
+        //   var rand = Math.random();
+        //   var udrIframe = $("<iframe id='udriframe" + rand + "' name='udriframe" + rand + "' width='0' height='0' frameborder='none' src=''></iframe>");
+        //   $("#mailList").append(udrIframe);
+        //   udrIframe.attr('src', 'udrController.do?openUdrCommonTemplate&objectId=' + rows[index].reportId + '&type=ExpressTable');
+        // }
+      },
+      // 导出Excel
+      exportExcel: function () {
+        var queryParams, params = "";
+        // 区分回传的查询条件：1.普通查询     2.高级查询
+        if (this.searchType == 1) {
+          this.quickSearch();
+          console.log('普通查询')
+        } else {
+          this.seniorQuickSearch();
+          console.log('高级查询')
+        }
+        queryParams = this.queryParams
+        for (var key in queryParams) {
+          params += "&" + key + "=" + queryParams[key];
+        }
+        if (3 === this.dataType) {
+          window.location.href = "processedObjectController.do?exportXls" + encodeURI(params);
+        } else if (4 === this.dataType) {
+          window.location.href = "allObjectController.do?exportXls" + encodeURI(params);
+        }
+      },
+
+      // 刷新页面关闭弹出层
+      layerIndexClose: function (res) {
+        var that = InitObj;
+        if (res.success) {
+          layer.msg(res.msg, { icon: 6 })
+          that.reloadDataGrid(false)
+        } else {
+          layer.msg(res.msg, { icon: 5 })
+        }
+        layer.close(that.layerIndex)
+      },
+      // 作废样品
+      cancelFun: function (url, rows) {
+        var that = this;
+        layer.prompt({
+          formType: 2,
+          title: '作废样品原因',
+          area: ['300px', '50px'] //自定义文本域宽高
+        }, function (value, index, elem) {
+          for (var i = 0, arr = []; i < rows.length; i++) {
+            arr.push({
+              "testObjectId": rows[i].testObjectId,
+              "objectProcessId": rows[i].objectProcessId || '',
+              "operationType": '10',
+              "amount": '0',
+              "reason": value || ''
+            })
+          }
+          ajaxRequest(url, { params: JSON.stringify(arr) }, that.layerIndexClose, false, true)
+          that.layerIndex = index;
+        });
+
+      },
+      // 点击进入详情页
+      goDetail: function (did, event, status) {
+        layui.stope(event)
+        var openUrl = this.receivePageUrl + '&detail=detailPage', openName = '查看详情';
+        layerOpenFun(openUrl + '&editId=' + did, openName, ['90%', '80%'], []);
+      },
+      // 点击重新登记
+      goEdit: function (did, event, status) {
+        layui.stope(event)
+        var openUrl = this.receivePageUrl + '&editId=' + did, openName = '重新登记';
+        layerOpenFun(openUrl + '&editId=' + did, openName, ['90%', '80%'], ['确定', '取消']);
+      },
+      //点击状态弹出框
+      delHsCode: function (index, value, event) {
+        layui.stope(event)
+        var stateObj = { "sampleRoomSave": "收样处已留样", "invalid": "样品已作废样品", "auditing": "已提交处理申请" }
+        this.stateMsg = '<span class="layui-color-white">' + stateObj[value] + '</span>';
+        var tipIndex = layer.tips(this.stateMsg, '.delHsCode' + index, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+        $('.delHsCode' + index).mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 时间处理函数
+      dateStartEnd: function (queryParams, dataString) {
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams[dataString + 'Start'] = DateArr[0];
+          queryParams[dataString + 'End'] = DateArr[1];
+        } else {
+          queryParams[dataString + 'Start'] = '';
+          queryParams[dataString + 'End'] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function (excel) {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        delete queryParams['quickQryParam'];
+        delete queryParams['selected'];
+        if (!isDateStartEnd(queryParams['consignTime'])) {
+          $('#consignTime').val('');
+          queryParams['consignTime'] = '';
+        }
+        if (!isDateStartEnd(queryParams['reserveTime'])) {
+          $('#reserveTime').val('');
+          queryParams['reserveTime'] = '';
+        }
+        queryParams = this.dateStartEnd(queryParams, 'consignTime')
+        queryParams = this.dateStartEnd(queryParams, 'reserveTime')
+        delete queryParams['reserveTime'];
+        delete queryParams['consignTime'];
+        this.queryParams = queryParams
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function (excel) {
+        var searchValue = $("input[name='quickQryParam']").val();
+        if (2 === this.dataType) {
+          this.queryParams = { 'quickQryParam': searchValue, 'qryType': this.qryType.val() };
+          this.initDataGrid(this.columnsFun(2), this.queryParams)
+        } else {
+          this.queryParams = { 'quickQryParam': searchValue };
+          this.reloadDataGrid(true, this.queryParams);
+        }
+        console.log('this.queryParams', this.queryParams)
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 高级查询收起按钮
+      retractFun: function () {
+        if ($('.retract').is(':hidden')) {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i> ')
+        } else {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-down"></i> ')
+
+        }
+        $('.retract').toggle();
+        getTableHeight()
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        this.isShow.click(function (e) {
+          var that = InitObj;
+          if (that.isHide) {
+            that.isHideSpan.show();
+            that.isHide = !that.isHide;
+            $(this).removeClass("show"); //移除
+          } else {
+            that.isHideSpan.hide();
+            that.isHide = !that.isHide;
+            $(this).addClass("show"); // 追加样式
+          }
+        })
+        this.searchSwitch.click(function () {
+          var that = InitObj; 
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+            that.reloadDataGrid(true, {});
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+            that.reloadDataGrid(true, {});
+          }
+          that.formLayerM.render();
+          getTableHeight()
+        })
+
+      },
+
+      // 各tabs展示数据
+      columnsFun: function (num) {
+        this.dataType = num;
+        this.searchShow = true; // 切换为普通查询
+        if (0 === num) {
+          this.receiveSample.show(); // 领取样品
+          this.collectSample.show(); // 收样处留样
+          this.printCirculation.show(); // 打印样品流转单
+          this.cancelSample.show(); // 作废样品
+          this.isShow.show(); // 作废样品
+          this.exportExl.hide(); // 导出
+          this.handleSample.hide(); // 留样处理
+          this.testSample.hide(); // 测后样品处理
+          this.printLabel.hide(); // 打印留样标签
+        } else if (1 === num) {
+          this.receiveSample.hide(); // 领取样品
+          this.collectSample.hide(); // 收样处留样
+          this.printCirculation.hide(); // 打印样品流转单
+          this.cancelSample.show(); // 作废样品
+          this.isShow.show(); // 作废样品
+          this.exportExl.hide(); // 导出
+          this.handleSample.hide(); // 留样处理
+          this.testSample.show(); // 测后样品处理
+          this.printLabel.hide(); // 打印留样标签
+        } else if (2 === num) {
+          this.receiveSample.hide(); // 领取样品
+          this.collectSample.hide(); // 收样处留样
+          this.printCirculation.hide(); // 打印样品流转单
+          this.cancelSample.hide(); // 作废样品
+          this.isShow.hide(); // 作废样品
+          this.exportExl.hide(); // 导出
+          this.handleSample.show(); // 留样处理
+          this.testSample.hide(); // 测后样品处理
+          this.printLabel.show(); // 打印留样标签
+        } else {
+          this.receiveSample.hide(); // 领取样品
+          this.collectSample.hide(); // 收样处留样
+          this.printCirculation.show(); // 打印样品流转单
+          this.cancelSample.hide(); // 作废样品
+          this.isShow.hide(); // 作废样品
+          this.exportExl.show(); // 导出
+          this.handleSample.hide(); // 留样处理
+          this.testSample.hide(); // 测后样品处理
+          this.printLabel.hide(); // 打印留样标签
+          if (4 === num) {
+            this.searchSwitch.show()
+          } else {
+            this.searchSwitch.hide()
+          }
+        }
+        if (4 !== num) {
+          this.senior.hide();
+          this.ordinary.show();
+          this.searchType = 1;
+          this.searchSwitch.hide()
+          this.searchSwitch.find('.l-btn-text').text("切换到高级查询")
+          // $('.header-checkbox').hide()
+        } else {
+          // $('.header-checkbox').show()
+        }
+        if (2 === num) {
+          $('.tb-box-form').addClass('selectClass')
+          $('.select-box').show()
+        } else {
+          $('.tb-box-form').removeClass('selectClass')
+          $('.select-box').hide()
+        }
+        var columns = [];
+        // 约定测后处理方式
+        var processWay = {
+          '1': '废弃', '2': '退还/取回样品', '3': '检测方自行处理', '4': '留样',
+          '5': '保存于检测中心', '6': '随机抽样', 'default': ''
+        }
+        // 样品处理方式
+        var disposeWay = {
+          '3': '测后废弃', '4': '留样到期废弃',
+          '5': '留样到期返还', '6': '提前废弃', '7': '提前返还', '8': '利用', '9': '提前利用', '10': '作废', 'default': ''
+        }
+        // 样品状态
+        var statusObj = {
+          '00': '待检', '0': '在检', '1': '收样处留样', '2': '测后留样', '3': '测后废弃', '4': '留样到期废弃',
+          '5': '留样到期返还', '6': '提前废弃', '7': '提前返还', '8': '利用', '9': '提前利用', '10': '作废', 'default': ''
+        }
+        columns.push({ title: "testObjectId", field: "testObjectId", checkbox: true });
+        if (1 !== num) {
+          columns.push({
+            title: "标记", field: "icons", width: 50, formatter: function (value, row, index) {
+              var display = "";
+              var stateObj = {
+                "sampleRoomSave": { "name": "留", "colors": " layui-color-green " },
+                "invalid": { "name": "废", "colors": " layui-color-green " },
+                "auditing": { "name": "申", "colors": " layui-color-red " }
+              }
+
+              if (value) {
+                display += '<div class="text-center">'
+                $.each(value, function (i, v) {
+
+                  display += ' <span class="delHsCode' + index + ' span-round ' + stateObj[v].colors + '"'
+                  display += 'onmouseenter="InitObj.delHsCode(' + index + ',&quot;' + v + '&quot;,event)"'
+                  display += '>' + stateObj[v].name + '</span>';
+                })
+                display += '</div>'
+              }
+              return display;
+            }
+          });
+        }
+        if (2 === num && '2' === InitObj.qryType.val()) {
+          columns.push({
+            title: "申请类型", field: "auditType", width: 60, formatter: function (value, row, index) {
+
+              var typeObj = { '1': '提前废弃', '2': '提前返还', '3': '到期利用', '4': '提前利用', "default": '' }
+              return typeObj[value] || typeObj['default'];
+            }
+          });
+        }
+        if (4 === num) {
+          columns.push({
+            title: "样品状态", field: "status", width: 40, formatter: function (value, row, index) {
+              return statusObj[value] || statusObj['default'];
+            }
+          });
+        }
+        columns.push({ title: "样品编号", field: "testObjectCode", width: 90 });
+        columns.push({
+          title: "委托日期", field: "consignDate", width: 50, formatter: function (value, row, index) {
+            if (row.objectProcessId) { 
+            }
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({ title: "样品名称", field: "displayName", width: 90 });
+        columns.push({ title: "规格型号", field: "standard", width: 80 });
+        if (0 === num || 3 === num || 4 === num) {
+          columns.push({ title: "试样数量", field: "sampleNum", width: 50 });
+        }
+        if (0 === num || 1 === num) {
+          columns.push({
+            title: "检测人员", field: "testUsers", width: 80, formatter: function (value, row, index) {
+              return value;
+            }
+          });
+        }
+        if (1 === num || 3 === num || 4 === num) {
+          columns.push({ title: "领样数量", field: "getAmount", width: 50 });
+        }
+        if (1 === num) {
+          columns.push({
+            title: "领样日期", field: "objectGetTime", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "领样人员", field: "receiver", width: 50 });
+          columns.push({
+            title: "约定测后处理方式", field: "processWay", width: 50, formatter: function (value, row, index) {
+              return processWay[value] || processWay['default'];
+            }
+          });
+        }
+        if (2 === num || 3 === num || 4 === num) {
+          columns.push({ title: "留样数量", field: "savedAmount", width: 50 });
+        }
+        if (2 === num) {
+          columns.push({ title: "留样人员", field: "receiver", width: 50 });
+
+        }
+        if (2 === num || 4 === num) {
+          columns.push({
+            title: "留样日期", field: "reserveTime", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "留样期限（天）", field: "reserveDayLimit", width: 50 });
+        }
+        if (3 === num || 4 === num) {
+          columns.push({
+            title: "样品处理日期", field: "disposeTime", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({
+            title: "样品处理方式", field: "disposeWay", width: 50, formatter: function (value, row, index) {
+              return disposeWay[value] || disposeWay['default'];
+            }
+          });
+        }
+        if (0 !== num) {
+          columns.push({
+            title: "操作",
+            field: "opt",
+            width: 90,
+            formatter: function (value, row, index) {
+              var btns = '';
+              if ('10' !== row.status && '00' !== row.status) {
+                btns += '<button title="查看详情" class="layui-btn layui-btn-sm" '
+                btns += 'onclick="InitObj.goDetail(&quot;' + row.objectProcessId + '&quot;,event,&quot;' + row.status + '&quot;,' + index + ')">'
+                btns += '<i class="layui-icon">&#xe705;</i></button>';
+              }
+              if (1 === num || 2 === num) {
+                if ('2' !== InitObj.qryType.val()) {
+                  btns += '<button title="重新登记" class="layui-btn layui-btn-sm" '
+                  btns += 'onclick="InitObj.goEdit(&quot;' + row.objectProcessId + '&quot;,event,&quot;' + row.status + '&quot;)">'
+                  btns += '<i class="layui-icon">&#xe9aa;</i></button>'
+                }
+              }
+              btns += '<button title="查看日志" onclick="showLogs(\'6\',\'' + row.objectProcessId + '\',false);" class="layui-btn layui-btn-sm" ><i class="layui-icon">&#xe6b2;</i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+      },
+      // table渲染
+      initDataGrid: function (columns, queryParams) {
+        var urls = this['defaultUrl' + this.dataType];
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: urls,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          queryParams: queryParams,
+          toolbar: '#tb',
+          method: 'GET',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('743data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          }
+        });
+      },
+      // 打印留样标签
+      printRemainedSampleLable: function (consignId) {
+        var udrCommonPrint = new UdrCommonPrint([consignId], 'RemainedSampleLable');
+        udrCommonPrint.printStart();
+      },
+      // 打印退回签领表
+      printReturnSignTable: function (objectProcessId){
+        var udrCommonPrint = new UdrCommonPrint([objectProcessId], 'ReturnSignTable');
+        udrCommonPrint.printStart();
+      }
+    }
+
+  </script>
+</body>
+
+</html>

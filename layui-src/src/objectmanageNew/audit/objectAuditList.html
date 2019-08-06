@@ -1,0 +1,392 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>样品审核</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    .tb-box-form {
+      width: 100%;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">审核中</li>
+      <li>审核完成</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form id="commonQueryForm" class="layui-form">
+            <div class="layui-row">
+              <div class="layui-col-xs8">
+                <div class="layui-input-inline" style="width:80%">
+                  <input name="quickQryParam" class="layui-input" placeholder="输入编号/委托单位/工程项目后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs4 header-checkbox">
+                <input type="checkbox" name="write" lay-filter="checkboxChk" lay-skin="primary" title="只显示待我审核的申请"
+                  checked>
+
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" class="easyui-linkbutton funBtn_ok" style="display:none" data-funCode="objectDisposeAudit"
+              iconCls="iconfont icon-ok" plain="true">审核通过</a>
+            <a href="#" class="easyui-linkbutton funBtn_undo" style="display:none" data-funCode="objectDisposeAudit"
+              iconCls="iconfont icon-undo" plain="true">审核不通过</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+  <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          var that = InitObj;
+          if (0 === data.index) {
+            if (that.isLeader) {
+              $('.header-checkbox input').attr('title', '只显示待我审核的申请')
+              $('.header-checkbox span').html('只显示待我审核的申请')
+            } else {
+              $('.header-checkbox input').attr('title', '只显示我提交的申请')
+              $('.header-checkbox span').html('只显示我提交的申请')
+            }
+            $('.header-checkbox').show()
+          } else {
+            if (that.isLeader) {
+              $('.header-checkbox input').attr('title', '只显示我已审核的申请')
+              $('.header-checkbox span').html('只显示我已审核的申请')
+              $('.header-checkbox').show()
+            } else {
+              $('.header-checkbox').hide()
+            }
+          }
+          that.isBtnFun(data.index);
+        });
+        InitObj.init(form);
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      userId: $('#userId').val(), // 用户id  
+      defaultUrl: 'objectAuditController.do?datagrid', // 默认获取数据url 
+      iCommited: '1', // iCommited 我提交的:0:查询全部,1:查询我提交的
+      isLeader: false, // 是否为领导
+      waitMeAudit: '1', // waitMeAudit 我审核的:0:查询全部,1:待我审核的
+      iAudited: '1', // iAudited  我已审批:0:查询全部,1:查询我已审批的
+      applyPageUrl: 'objectAuditController.do?goObjectmanageAdvanceApplyPage', // 跳转到发起申请页面
+      auditPageUrl: ' objectAuditController.do?goObjectAuditListPassPage', // 跳转到审核页面
+      dataType: 0, //  0:审核中, 1:审核完成
+      stateMsg: '', // 状态提示信息
+      functionButton: $('#functionButton'),
+      okBtn: $('#functionButton .funBtn_ok'), // 审核通过
+      undoBtn: $('#functionButton .funBtn_undo'), // 审核不通过
+      isHide: true,
+      init: function (form) {
+        this.formLayerM = form;
+
+        this.commonQryKeyDown()
+        this.btnFun(this.okBtn, this.auditPageUrl, '审核通过')
+        this.btnFun(this.undoBtn, this.auditPageUrl, '审核不通过')
+        form.on('checkbox(checkboxChk)', function (data) {
+          var that = InitObj;
+          if (data.elem.checked) {
+            // iCommited 待我审批:0:查询全部,1:查询待我审批的
+            // iAudited  我已审批:0:查询全部,1:查询我已审批的
+            that.waitMeAudit = '1';
+            that.iAudited = '1';
+            that.iCommited = '1';
+            that.isBtnFun(that.dataType);
+          } else {
+            that.iAudited = '0';
+            that.iCommited = '0';
+            that.waitMeAudit = '0';
+            that.isBtnFun(that.dataType);
+          }
+        });
+        funCode('objectDisposeAudit', '', this.funCodeCallback)
+      },
+      funCodeCallback: function (res, objParam) {
+        var that = InitObj;
+        if (res.obj && res.obj.length > 0) {
+          if (objParam.codes === res.obj[0].functioncode) {
+            that.isLeader = true;
+            $('[data-funCode=' + objParam.codes + ']').show();
+          }
+        } else {
+          that.isLeader = false;
+          $('.header-checkbox input').attr('title', '只显示我提交的申请')
+          $('.header-checkbox span').html('只显示我提交的申请')
+        }
+        that.isBtnFun(0)
+      },
+
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, row = $('#dataGrid').datagrid('getSelections');
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            var isUserId = true; auditId = '';
+            for (var i = 0; i < row.length; i++) {
+              if (row[i].nowAuditUserId !== that.userId) {
+                isUserId = false;
+              }
+              auditId += row[i].id + ','
+            }
+            auditId = auditId.slice(0, auditId.length - 1)
+            if ('审核通过' === openName) {
+              if (isUserId) {
+                layerOpenFun(openUrl + '&auditId=' + auditId + '&isPass=30', openName, ['90%', '90%'], ['确定', '取消'])
+              } else {
+                layer.msg('当前所选包含您不能审核的数据，请重新选择！', { icon: 2 })
+              }
+            } else if ('审核不通过' === openName) {
+              if (isUserId) {
+                layerOpenFun(openUrl + '&auditId=' + auditId + '&isPass=40', openName, ['90%', '90%'], ['确定', '取消'])
+              } else {
+                layer.msg('当前所选包含您不能审核的数据，请重新选择！', { icon: 2 })
+              }
+            }
+            return;
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+
+      // 点击进入详情页
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.applyPageUrl + '&editId=' + did + '&detail=detailPage', openName = '查看报告详情';
+        layerOpenFun(openUrl, openName, ['90%', '90%'], [])
+      },
+      //点击状态弹出框
+      delHsCode: function (index, value, event) {
+        layui.stope(event)
+        var stateObj = { "sampleRoomSave": "收样处已留样", "invalid": "样品已作废样品", "auditing": "已提交处理申请" }
+        this.stateMsg = '<span class="layui-color-white">' + stateObj[value] + '</span>';
+        var tipIndex = layer.tips(this.stateMsg, '.delHsCode' + index, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+        $('.delHsCode' + index).mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var data = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, { quickQryParam: data.quickQryParam });
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      // 各tabs展示数据
+      columnsFun: function () {  // 0:审核中, 1:审核完成
+        var columns = [];
+        // 各tabs展示数据
+        if (this.dataType === 1) { // 0:审核中, 1:审核完成
+          columns.push({ title: "id", field: "id", hidden: true })
+        } else {
+          columns.push({ title: "id", field: "id", checkbox: true, width: 30 })
+        }
+
+        columns.push({
+          title: "标记", field: "icons", width: 50, formatter: function (value, row, index) {
+            var display = "";
+            var stateObj = {
+              "sampleRoomSave": { "name": "留", "colors": " layui-color-green " },
+              "invalid": { "name": "废", "colors": " layui-color-green " },
+              "auditing": { "name": "申", "colors": " layui-color-red " }
+            }
+            if (value) {
+              display += '<div class="text-center">'
+              $.each(value, function (i, v) {
+                display += ' <span class="delHsCode' + index + ' span-round ' + stateObj[v].colors + '"'
+                display += 'onmouseenter="InitObj.delHsCode(' + index + ',&quot;' + v + '&quot;,event)"'
+                display += '>' + stateObj[v].name + '</span>';
+              })
+              display += '</div>'
+            }
+
+            return display;
+          }
+        });
+        columns.push({ title: "样品编号", field: "testObjectCode", width: 80 })
+        columns.push({
+          title: "申请类型", field: "auditType", width: 40, formatter: function (value, row, index) {
+            var typeObj = { '1': '提前废弃', '2': '提前返还', '3': '到期利用', '4': '提前利用', "default": '' }
+            return typeObj[value] || typeObj['default'];
+          }
+        })
+        columns.push({
+          title: "申请日期", field: "applyTime", width: 30, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        })
+        columns.push({ title: "申请发起人", field: "applyUser", width: 30 })
+        if (0 === this.dataType) {
+
+          columns.push({ title: "流程状态", field: "nowAuditUserName", width: 40 })
+        } else {
+          columns.push({
+            title: "流程状态", field: "auditStatus", width: 40, formatter: function (value, row, index) {
+              var statusObj = { '10': '审核中', '20': '审核中断', '30': '审核通过', '40': '审核拒绝', "default": '' }
+              return statusObj[value] || statusObj['default'];
+            }
+          })
+
+        }
+        columns.push({ title: "样品名称", field: "displayName", width: 30 })
+        columns.push({ title: "规格型号", field: "standard", width: 30 })
+        columns.push({
+          title: "留样日期", field: "reserveTime", width: 30, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        })
+        columns.push({ title: "留样期限（天）", field: "reserveDayLimit", width: 30 })
+        columns.push({ title: "申请原因", field: "applyReason", width: 30 })
+        columns.push({
+          title: "操作",
+          field: "opt",
+          width: 50,
+          formatter: function (value, row, index) {
+            var btns = '';
+            btns += '<button title="查看详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      isBtnFun: function (num) {
+        this.dataType = num;
+        if (this.dataType === 1) { // 0:审核中, 1:审核完成
+          this.functionButton.hide();
+        } else {
+          this.functionButton.show()
+        }
+        this.initDataGrid(this.columnsFun());
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        var url, dataUrl = this.defaultUrl + '&auditStatus=' + this.dataType, that = this;
+        if (0 === this.dataType) {
+          // 待我审核:0:查询全部,1:查询待我审批的
+          url = (this.isLeader ?
+            '&waitMeAudit=' + this.waitMeAudit :
+            '&iCommited=' + this.iCommited)
+        } else { //我已审核:0:查询全部,1:查询我已审批的
+          url = (this.isLeader ?
+            '&iAudited=' + this.iAudited :
+            '')
+        }
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: dataUrl + url,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          method: 'get',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            // 重新渲染列表中 图标
+            $("a[name='reload']").linkbutton({
+              plain: true,
+              iconCls: 'iconfont icon-refresh'
+            });
+          },
+        });
+      },
+
+    }
+  </script>
+</body>
+
+</html>

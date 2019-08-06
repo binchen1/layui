@@ -1,0 +1,142 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>设置资质盖章</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    .layui-row>div {
+      min-height: 30px;
+      line-height: 22px;
+    }
+
+    .layui-row>div label {
+      display: inline-block;
+      width: 100%;
+    }
+
+    input {
+      height: 13px;
+    }
+
+    .layui-form-checkbox[lay-skin=primary] i {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <form id="commonQueryForm" class="layui-form" action="" lay-filter="example">
+    <div id="qualifications" class="layui-row row-margin">
+      <!-- <div class="layui-col-xs5 layui-col-xs-offset1">
+        <input type="checkbox" name="like1[write]" lay-skin="primary" title="写作 " checked="">
+      </div>  -->
+    </div>
+  </form>
+  <script>
+
+    $(function () {
+      InitObj.init();
+    });
+
+    var InitObj = {
+      defaultQualificationsUrl: 'departVersionController.do?getDefaultQualifications',
+      selectedQualificationsUrl: 'reportController.do?getSelectedQualifications',
+      saveQualificationsUrl: 'reportController.do?doSaveReportQualifications',
+      reportIds: GetQueryString("reportIds"), // 获取父页面传递过来的id
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function () {   // 页面初始化
+        this.getDefaultQualifications();    // 同步获取默认资质
+        this.getSelectedQualifications();   // 获取已选资质
+      },
+      getSelectedQualifications: function () { // 获取已选资质
+        var dataJson = { 'reportIds': this.reportIds };
+        ajaxRequest(this.selectedQualificationsUrl, dataJson, this.getSelectedQualificationsCallback, false);
+      },
+      getSelectedQualificationsCallback: function (res) {
+        if (!res.success) {
+          layer.msg("获取已选资质失败", { icon: 5 });
+          return;
+        }
+        var selectedQ = res.obj;
+        if (selectedQ) {
+          for (var i = 0; i < selectedQ.length; i++) {
+            $("input[value='" + selectedQ[i].id + "']").attr("checked", true);
+          }
+        }
+        layui.use(['form'], function () {
+          var form = layui.form;
+          form.render();
+        });
+      },
+      getDefaultQualifications: function () {
+        // 同步请求加载该检测机构具备的资质
+        ajaxRequest(this.defaultQualificationsUrl, {}, this.getDefaultQualificationsCallback, false, false);
+      },
+      getDefaultQualificationsCallback: function (res) {
+        if (!res.success) {
+          layer.msg("获取资质失败", { icon: 5 });
+          return;
+        }
+        var qualifications = res.obj;
+        if (!qualifications) {
+          return;
+        }
+
+        var defaultQ = "";
+        console.info("qualifications", qualifications);
+        /**
+        * <div class="layui-col-xs5 layui-col-xs-offset1">
+    <input type="checkbox" name="like1[write]" lay-skin="primary" title="写作 " checked="">
+  </div>
+        */
+        for (var i = 0; i < qualifications.length; i++) {
+          defaultQ += '<div class="layui-col-xs5 layui-col-xs-offset1">';
+          defaultQ += '<input type="checkbox" name="qualification' + i + '"  value="' + qualifications[i].id
+            + '" lay-skin="primary">' + qualifications[i].name;
+          defaultQ += '</div>';
+        }
+        $("#qualifications").append(defaultQ);
+        layui.use(['form'], function () {
+          var form = layui.form;
+          form.render();
+        });
+      },
+      openCallback: function () { // 点击确定按钮，返回值给上级页面
+        var qIds = "";
+        $(":checked").each(function (index, ele) {
+          if (index == 0) {
+            qIds += ele.value;
+          } else {
+            qIds += "," + ele.value;
+          }
+        });
+        var dataJson = { 'reportIds': this.reportIds, 'qualificationIds': qIds };
+        ajaxRequest(this.saveQualificationsUrl, dataJson, this.saveQualificationsCallBack);
+        return "1";
+      },
+      saveQualificationsCallBack: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, [])
+        } else {
+          parent.layer.close(that.parentIndex);
+          parent.layerAlertFun('操作成功', 6, [])
+
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,190 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>年度检校计划</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+</head>
+
+<body>
+  <div id="tableBox" class="height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" style="display:inline-block" data-funCode="" class="easyui-linkbutton funBtn_addPlan"
+            iconCls="iconfont icon-add" plain="true">新增检校计划</a>
+        </span>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'layer'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        InitObj.init();
+      })
+    })
+    var InitObj = {
+      defaultUrl: 'checkPlanController.do?datagrid', //默认获取数据url
+      detailEditPage: 'checkPlanController.do?goCheckPlanEdit',
+      addPlan: $('.funBtn_addPlan'), // 新增检校计划
+      init: function () {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.initDataGrid(this.columnsFun())
+        this.styleLayout();
+        this.btnFun(this.addPlan, this.detailEditPage, '新增检校计划');
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        btnName.on('click', function () {
+          if ('新增检校计划' === openName) {
+            layerOpenFun(openUrl, "新增检校计划", ['90%', '80%'], ['确定', '取消']);
+            return;
+          }
+        })
+      },
+      // 删除
+      goDetele: function (did) {
+        console.log('点击了删除')
+        ajaxRequest('equipmentNewController.do?delEq', { 'id': did }, this.deteleCallback, true, true);
+      },
+      deteleCallback: function (res) {
+        console.log('deteleCallback', res)
+        if (res.success) {
+          InitObj.reloadDataGrid();
+          layerAlertFun(res.msg, 6, []);
+        } else {
+          layerAlertFun(res.msg, 5, []);
+        }
+      },
+      // 编辑
+      goEdit: function (did, event) {
+        console.log('点击了编辑')
+        layui.stope(event);
+        layerOpenFun(this.detailEditPage + '&editId=' + did, "编辑检校计划", ['90%', '80%'], ['确定', '取消']);
+      },
+      // 提交
+      goSubmit: function (event) {
+        console.log('点击了提交(补)')
+        layui.stope(event);
+        // layerOpenFun(openUrl, "新增设备", ['90%', '80%'], ['确定', '取消']);
+      },
+      // 详情
+      goDetail: function (id, event) {
+        console.log('点击了详情')
+        layui.stope(event);
+        layerOpenFun(this.detailEditPage + '&editId=' + id + '&detail=detailPage', "设备详情", ['90%', '80%']);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var queryParams = {
+          'quickQryParam': $("input[name='quickQryParam']").val()
+        };
+        this.reloadDataGrid(true, queryParams);
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [];
+        columns.push({ title: "id", field: "id", hidden: true });
+        columns.push({
+          title: "年/月", field: "planType", width: 80, formatter: function (value, row, index) {
+            console.log('value年/月', value, typeof value)
+            console.log('value年/月', row.planMouth, typeof row.planMouth)
+            if ('1' === value) { //1:年度计划,2:月度计划
+              return row.planYear;
+            } else {
+              var planMouth = row.planMouth.length < 2 ? '0' + row.planMouth : row.planMouth;
+              return row.planYear + '/' + planMouth;
+            }
+          }
+        });
+        columns.push({ title: "科室", field: "planDepartName", width: 110 });
+        columns.push({ title: "创建人", field: "createName", width: 80 });
+        columns.push({
+          title: "创建时间", field: "createDate", width: 110, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          }
+        });
+        columns.push({
+          title: "计划状态", field: "planStatus", width: 150, formatter: function (value) {
+            var statusObj = { "10": "填写中", "20": "审批中", "30": "审批拒绝", "40": "审批通过" };
+            return statusObj[value] || '';
+          }
+        });
+        columns.push({ title: "备注", field: "remark", width: 150 });
+        columns.push({
+          title: "操作", field: "opt", width: 120,
+          formatter: function (value, row, index) {
+            var btns =
+              '<button title="删除(列表未删除)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetele(&quot;' +
+              row.id + '&quot;)" ><i class="iconfont icon-delete"></i></button>';
+            btns += '<button title="编辑" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-edit"></i></button>';
+            btns += '<button title="提交(补)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goSubmit(event)"' +
+              '><i class="iconfont icon-submit"></i></button>';
+            btns += '<button title="详情" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-detail"></i></button>';
+
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'createDate', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            funCode();
+            getTableHeight()
+          }
+        });
+      },
+
+      // 样式布局控制
+      styleLayout: function () {
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,114 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+</head>
+
+<body>
+  <div class="height-full">
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+      })
+      InitObj.init();
+    })
+    function openCallback() {
+      return InitObj.openCallback()
+    }
+    // 初始化页面
+    var InitObj = {
+      defaultUrl: '', //默认获取数据url 
+      datagrid: null, // table返回对象
+      rowIndex: '', // 选中行
+      rowName: '', //选中name
+      initData: parent.contracts, // table数据
+      defaultId: GetQueryString("defaultId"), // table数据中默认选中的数据
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function () {
+        this.initDataGrid(this.columnsFun())
+      },
+      openCallback: function () {
+        return this.initData[this.rowIndex]
+      },
+      defaultSelectRow: function (defaultId) {
+        console.log('defaultSelectRow', defaultId)
+        for (var i = 0; i < this.initData.length; i++) {
+          console.log('this.initData[i].id',this.initData[i].id)
+          if (defaultId === this.initData[i].id) {
+            console.log('i',i)
+            this.dataGrid.datagrid('selectRow', i)
+            return 
+          }
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        return [[
+          { title: "id", field: "id", checkbox: true, width: 50 },
+          { title: "合同名称", field: "name", width: 50 },
+        ]]
+      },
+      // // 关联检测任务 table
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          data: this.initData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          fitColumns: true,
+          scrollbarSize: 0,
+          columns: columns,
+          onLoadSuccess: function (data) {
+            console.log('成功', data)
+            // 调分页 文本显示 common.js函数
+            that.initData = data.rows
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            that.rowIndex = rowIndex;
+            that.rowName = value;
+          }
+        });
+        this.defaultSelectRow(this.defaultId)
+      }
+    }
+
+  </script>
+</body>
+
+</html>

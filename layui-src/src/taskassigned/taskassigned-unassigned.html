@@ -1,0 +1,351 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>待分配任务</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <div id="tableBox" class="height-full">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="quickQryParam" class="layui-input" placeholder="输入样品编号/样品名称/工程部位/用途后回车即可查询"
+                    title="输入样品编号/样品名称/工程部位/用途后回车即可查询" autocomplete="off">
+                  <input type="hidden" name="qryType" value="common" />
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" style="display: none" data-funCode="goTaskAssign" class="easyui-linkbutton funBtn_assignTask"
+              iconCls="iconfont icon-reload" plain="true">分配任务</a>
+            <a href="#" style="display: none" data-funCode="unAssignRollback" class="easyui-linkbutton funBtn_process"
+              iconCls="iconfont icon-undo" plain="true">退回</a>
+          </span>
+          <div style="height:30px;line-height: 30px; display: none; padding:0px 5px;" id="overdueDiv"
+            class="datagrid-toolbar">
+            <a href="#" onclick="qryListOverdue()" id="overdueA" style="color:red;">
+              <span id="day1"></span>天内龄期到期(<span id="count1"></span>)!
+              超出委托日期<span id="day2"></span>天未分配(<span id="count2"></span>)!
+            </a>
+          </div>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+      <input type="hidden" id="taskId">
+      <iframe id='udrIframe' name='udrIframe' width='0' height='0' frameborder='none' src=''></iframe>
+    </div>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init();
+      })
+    })
+    //退回后的回调函数,刷新列表数据
+    function rollbackCallBack() {
+      InitObj.quickSearch();
+    }
+    //获取选中行(提供给弹窗子页面使用的重要方法,勿删)
+    function getSelectRows() {
+      return $('#dataGrid').datagrid('getChecked');
+    }
+    //关闭分配任务弹窗的方法,这个方法是在分配任务子页面上调用的,勿删
+    function closeAssignWindow() {
+      console.log('closeAssignWindow')
+      layer.msg("操作成功");
+      // layer.close(allotWindowIndex);
+      InitObj.reloadDataGrid(false, {});
+    }
+    //查询龄期临近和超过指定时间没有分配完成的样品信息
+    function qryListOverdue() {
+      var queryParams = { qryType: "overdue" };
+      console.log(queryParams)
+      InitObj.reloadDataGrid(true, queryParams);
+    }
+    var InitObj = {
+      defaultUrl: 'unAssignedTaskController.do?datagrid', //默认获取数据url
+      batchAssignAllPageUrl: 'unAssignedTaskController.do?goAllotByObjectPage', // 任务分配url页面 
+      batchAssignPageUrl: 'unAssignedTaskController.do?goAllotByParamPage', // 任务分配url页面 
+      batchAssign: $('#functionButton .funBtn_assignTask'), // 分配任务
+      backProcess: $('#functionButton .funBtn_process'), // 退回
+      queryParams: {}, // 查询条件
+      gridname: '',
+      nowColor: "red",
+      init: function () {
+        console.log('1111')
+        // 搜素按钮回车键盘
+        this.commonQryKeyDown()
+        // common.js里的此函数是获取按钮或功能权限的 勿删
+        funCode()
+        // 其他页面调用传入taskid的情况下直接打开任务分配子窗口
+        this.beCallSoOpenConsignWindow()
+        // 查询龄期临近和超期未分配的样品数量
+        this.qryOverdueMsg()
+        this.initDataGrid(this.columnsFun())
+        this.btnFun(this.batchAssign, '', '分配任务')
+        this.btnFun(this.backProcess, '', '退回')
+      },
+      // 查询龄期临近和超期未分配的样品数量
+      qryOverdueMsg: function () {
+        $.ajax({
+          type: "POST",
+          url: "unAssignedTaskController.do?qryOverdueMsg",
+          data: "",
+          dataType: "json",
+          success: function (data) {
+            if (data.success) {
+              $("#day1").html(data.attributes.howLangToAge);
+              $("#count1").html(data.attributes.countPeriod);//临期样品数量
+              $("#day2").html(data.attributes.overDate);
+              $("#count2").html(data.attributes.countNotAssign);//超期未分配样品数量
+              if (data.attributes.countPeriod > 0 || data.attributes.countNotAssign > 0) {
+                $("#overdueDiv").show();
+                setInterval("InitObj.changeColorRandom('overdueA')", 500);
+              }
+            } else {
+              layer.msg(data.msg);
+              $("#overdueDiv").hide();
+            }
+            getTableHeight()
+          }
+        });
+      },
+      //随机替换元素颜色(不重复)
+      changeColorRandom: function (domId) {
+        var color = ['red', 'green', 'black'];
+        var newColor = color[parseInt(Math.random() * color.length)];
+        while (newColor === InitObj.nowColor) {
+          newColor = color[parseInt(Math.random() * color.length)];
+        }
+        $("#" + domId).css('color', newColor);
+        InitObj.nowColor = newColor;
+      },
+      //其他页面通过url传参的方式调用该页面时,如果带有任务id,默认打开任务分配子窗口
+      beCallSoOpenConsignWindow: function () {
+        //这里这样写可能是为了其他页面跳转分配任务时,直接在地址后面带参数到该页面,就可以打开分配子页面吧
+        var id = GetQueryString("id");
+        if (id != null && id != "") {
+          var taskId = GetQueryString("taskId");
+          var url = "taskAssignedController.do?goTaskAssigned&consignId=" + id + "&taskId=" + taskId;
+          // layerCreateWindow('分配人员', url, ['确定', '关闭'], ['80%', '100%']);
+          layerOpenFun(url, '分配人员', ['确定', '关闭'], ['100%', '100%']);
+        }
+      },
+      //查看委托详情
+      goDetail: function (id) {
+        //var url = 'consignController.do?goEdit&id=' + id + '&detail=detailPage';
+        var url = 'unAssignedTaskController.do?goConsignDetailPage&id=' + id + '&detail=detailPage';
+        console.log(url)
+        // layerCreateWindow('委托详情', url, ['确定', '关闭'], ['30%', '30%'], "", "", "1");
+        layerOpenFun(url, '委托详情', ['100%', '100%'], [])
+      },
+      // 点击功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, ids = "", rows = that.dataGrid.datagrid('getSelections');
+          if (!rows || rows.length === 0) {
+            tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            if ('分配任务' === openName) {
+              that.batchAssignTask(rows)
+              // layerOpenFun(that.infoButtonPageUrl + "&id=" + ids, openName, ['100%', '100%'], []);
+              return;
+            } else if ('退回' === openName) {
+              if (1 !== rows.length) {
+                tipIndex = layer.tips('<span style="color:#fff">请选择一个样品</span>', self, {
+                  tips: 3,
+                  skin: 'tips-msg',
+                  time: 20000
+                });
+                return;
+              }
+              showRollbackPage('taskAssign', rows[0].sampleId);
+              return;
+            }
+
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+      // 点击按钮以及双击也是调此函数
+      batchAssignTask: function (rows) {
+        var openUrl = this.batchAssignAllPageUrl;
+        if (0 === rows.length) {
+          var taskAssignType = rows[0].taskAssignType;
+          if (taskAssignType == '1') {
+            openUrl = this.batchAssignPageUrl;
+          }
+        }
+        layerOpenFun(openUrl, '任务分配', ['80%', '100%'], ['确定', '取消'], '', 'submitAssign');
+      },
+      /***
+	  * 打印任务分配清单
+	  * weiheng 20190227
+	  */
+      printTaskDistribution: function (testTaskIdArr) {
+        var udrCommonPrint = new UdrCommonPrint(testTaskIdArr, 'taskDistribution');
+        udrCommonPrint.printStart();
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            that.quickSearch()
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        this.dataGrid.datagrid('uncheckAll');
+        this.dataGrid.datagrid('clearChecked');
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [];
+        columns.push({ field: 'consignId', title: '委托ID', hidden: true })
+        columns.push({ field: 'workFlowTaskId', title: '流程任务ID', hidden: true })
+        columns.push({ field: 'sampleId', title: '样品id', checkbox: true, width: 100 })
+        columns.push({
+          field: 'status', title: '标记', width: 57,
+          formatter: function (value, row) {
+            if (value == '2') {
+              return '<strong style="color:red;" title="退回重新流转的样品">&nbsp;退</strong>';
+            }
+          }
+        })
+        columns.push({ field: 'test_sample_display_name', title: '样品名称', width: 200 })
+        columns.push({ field: 'test_object_code', title: '样品编号', sortable: true, width: 150 })
+        columns.push({ field: 'standard', title: '规格型号', width: 200 })
+        columns.push({ field: 'partAndUse', title: '工程部位/用途', width: 250 })
+        columns.push({
+          field: 'consign_date', title: '委托日期', sortable: true,
+          formatter: function (value, row) {
+            var html = ''
+            if ('***' === value) {
+              html += '***'
+            } else {
+              html += (value ? new Date(value).Format('yyyy-MM-dd') : '');
+            }
+
+            return html;
+          },
+          width: 150
+        })
+        columns.push({
+          field: 'require_report_date', title: '要求报告日期',
+          formatter: function (value, row) {
+            // return value ? new Date().format('yyyy-MM-dd', value) : '';
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          },
+          width: 150
+        })
+        columns.push({
+          field: 'opt', title: '操作', width: 100,
+          formatter: function (value, row) {
+            var infoButton = '<a href="#" title="查看委托详情" style="display: none" data-funCode="unAssignGoConsignInfo" onclick="InitObj.goDetail(\'' + row.consignId + '\')" class="layui-btn layui-btn-sm"><i class="iconfont icon-detail"></i></a>';
+            return infoButton;
+          }
+        })
+        return [columns];
+      },
+
+      // table数据渲染
+      initDataGrid: function (columns) {
+        var that = this;
+        console.log(this.defaultUrl)
+        this.dataGrid = $('#dataGrid').datagrid({
+          idField: 'sampleId',
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true,
+          scrollbarSize: 0,
+          sortName: 'consign_date', //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          sortOrder: 'asc',
+          columns: columns,
+          loadMsg: loadMsgDatagrid,
+          onClickRow: function (rowIndex, rowData) {
+            console.log(rowIndex, rowData)
+            // that.gridname = 'taskList';
+          },
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            getPagerFun('#dataGrid')
+            funCode()
+          },
+          onDblClickRow: function (index, row) {
+            //双击事件,进入任务分配
+            $('#dataGrid').datagrid('clearSelections');
+            $('#dataGrid').datagrid('checkRow', index);
+            if ($('.funBtn_assignTask').is(':hidden')) {
+              layerAlertFun('您没有任务分配权限，请添加', '5')
+            } else {
+              that.batchAssignTask([row]);
+            }
+          }
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

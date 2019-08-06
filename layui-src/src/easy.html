@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Fluid Accordion - jQuery EasyUI Demo</title>
+  <link rel="stylesheet" type="text/css" href="./easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="./easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="./easyui-1.5.5.2/demo.css">
+  <script type="text/javascript" src="./easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="./easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <style>
+    body {
+      overflow: auto !important;
+    }
+    
+    .easyui-layout{
+       height:508px !important 
+    }
+    .testTaskParams {
+      border: 1px solid #D3D3D3;
+      height: 20px;
+      padding: 5px;
+      background: #f3f3f3;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="easyui-layout" fit="true">
+    <div data-options="region:'north',split:true" style="height:150px;padding-left: 10px;padding-top: 10px;">
+      <strong>任务编号：${testTask.testTaskCode}</strong>
+      <input type="hidden" id="testTaskIdHidden" value="${testTask.id}" />
+      <div style="padding-top: 10px;">
+        <a class="easyui-linkbutton" onclick="getRelationReportList()" data-options="iconCls:'icon-save'">提交报告</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-print'">打印空表</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-undo'">任务回退</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-tip'">通知修改委托</a>
+        <a class="easyui-linkbutton" onclick="goSampleFlowRecordPage()" data-options="iconCls:'icon-edit'">样品流转登记</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-man'">查看日志</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-edit'">龄期登记</a>
+      </div>
+      <div style="padding-top: 5px;">
+        检测：
+      </div>
+      <div style="padding-top: 5px;">
+        报告编号：
+      </div>
+    </div>
+
+    <div data-options="region:'east',title:'检测结论：',split:true" style="width:330px;">
+      <!-- <jsp:include page="testTaskConclusion.jsp" flush="true" /> --> 检测结论：
+
+    </div>
+    <div data-options="region:'west',title:'数据文件及报告：',split:true" style="width:450px; ">
+      <!-- <jsp:include page="testTaskFile.jsp" flush="true" /> --> 数据文件及报告：
+    </div>
+    <div data-options="region:'center',title:'检测样品：'" style="padding:5px;overflow-x:scroll;">
+      <!-- <jsp:include page="testSampleDetail.jsp" flush="true" /> --> 检测样品：
+    </div>
+  </div>
+  <div style="background:red;height:300px">
+    啦啦啦啦啦啦啦
+  </div>
+  <div class="testTaskParams">检测参数：</div>
+  <div data-options="region:'south',title:'检测参数：',split:true" style="height:240px;">
+    <!-- <jsp:include page="testTaskParams.jsp" flush="true" /> --> 检测参数：
+  </div>
+  <div id="cc" class="easyui-layout" style="width:600px;height:400px;padding-right: 10px;background:red;">
+    <div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>
+    <div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div>
+    <div data-options="region:'east',title:'East',split:true" style="width:100px;"></div>
+    <div data-options="region:'west',title:'West',split:true" style="width:100px;"></div>
+    <div data-options="region:'center',title:'center title'" style="padding:5px;background:#eee;"></div>
+  </div>
+</body>
+
+</html>

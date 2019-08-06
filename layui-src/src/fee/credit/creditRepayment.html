@@ -1,0 +1,399 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>信用回款登记</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    .layui-input-span {
+      line-height: 24px;
+      display: inline-block;
+    }
+
+    #tableBox {
+      /* padding:15px; */
+    }
+
+    #commonQueryForm .layui-form-label {
+      width: 75px;
+    }
+
+    #commonQueryForm .layui-input-block {
+      margin-left: 85px;
+    }
+
+    .tb-box-btn {
+      padding-left: 10px;
+      margin: 10px auto;
+    }
+
+    .layui-form-item .layui-input-inline {
+      width: auto;
+    }
+
+    .layui-form-mid {
+      padding: 2px 0 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="tableBox" class="height-full">
+    <div class="tb-box" id="tb">
+      <div class="tb-box-form">
+        <form id="commonQueryForm" class="layui-form">
+          <div class="layui-row">
+            <div class="layui-col-xs7" id="consignUnitDiv">
+              <input id="consignUnitIdHidden" value="" type="hidden" />
+              <input id="unitCreditIdHidden" name="creditId" value="" type="hidden" />
+              <label class="layui-form-label">委托单位：</label>
+              <div class="layui-input-block">
+                <span class="choiceShow layui-input-span" id="consignUnitName"></span>
+                <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+                  onclick="InitObj.consignUnitFun()">选择</a>
+              </div>
+            </div>
+            <div class="layui-col-xs5">
+              <div class="layui-form-item">
+                <label class="layui-form-label">挂账额度：</label>
+                <div class="layui-input-inline">
+                  <span class="layui-input-span" id="creditLineShow">0</span>
+                </div>
+                <div class="layui-form-mid"></div>
+              </div>
+            </div>
+            <div class="layui-col-xs7">
+              <label class="layui-form-label">缴费单位：</label>
+              <div class="layui-input-block">
+                <input type="text" name="payUnit" autocomplete="off" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-col-xs5">
+              <div class="layui-form-item">
+                <label class="layui-form-label">已用额度：</label>
+                <div class="layui-input-inline">
+                  <span class="layui-input-span" id="usedFeeShow">0</span>
+                </div>
+                <div class="layui-form-mid"></div>
+              </div>
+            </div>
+            <div class="layui-col-xs7">
+              <label class="layui-form-label">收费日期：</label>
+              <div class="layui-input-block">
+                <input type="text" name="date" class="layui-input" id="availabilityDate" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-col-xs5">
+              <div class="layui-form-item">
+                <label class="layui-form-label">可用额度：</label>
+                <div class="layui-input-inline">
+                  <span class="layui-input-span" id="banlanceShow">0</span>
+                </div>
+                <div class="layui-form-mid"></div>
+              </div>
+            </div>
+            <div class="layui-col-xs7">
+              <label class="layui-form-label">支付方式：</label>
+              <div class="layui-input-block">
+                <input type="radio" name="way" lay-filter="paidType" value="1" title="现金" checked>
+                <input type="radio" name="way" lay-filter="paidType" value="2" title="转账">
+                <input type="radio" name="way" lay-filter="paidType" value="3" title="支票">
+              </div>
+            </div>
+            <div class="layui-col-xs5">
+              <div class="layui-form-item">
+                <label class="layui-form-label">本次收取：</label>
+                <div class="layui-input-inline">
+                  <input type="text" name="fee" id="payMoneyInput" onblur="InitObj.getCreditUseDetail()"
+                    autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">元</div>
+              </div>
+            </div>
+            <div id="checkNumberBox" style="display: none;">
+              <div class="layui-col-xs7">
+                <label class="layui-form-label">支票号：</label>
+                <div class="layui-input-block">
+                  <input type="text" name="chequeCode" autocomplete="off" class="layui-input">
+                </div>
+              </div>
+              <div class="layui-col-xs5">
+                <label class="layui-form-label">支付经办人：</label>
+                <div class="layui-input-block">
+                  <input type="text" name="chequeOperator" autocomplete="off" class="layui-input">
+                </div>
+              </div>
+            </div>
+            <div id="transferBox" style="display: none;">
+              <div class="layui-col-xs7">
+                <label class="layui-form-label">转入账户：</label>
+                <div class="layui-input-block">
+                  <input type="text" name="transferIntoAccount" autocomplete="off" class="layui-input">
+                </div>
+              </div>
+              <div class="layui-col-xs5">
+                <label class="layui-form-label">转账时间：</label>
+                <div class="layui-input-block">
+                  <input type="text" name="transferDate" id="transferDate" autocomplete="off" class="layui-input">
+                </div>
+              </div>
+              <div class="layui-col-xs7">
+                <label class="layui-form-label">转出账户：</label>
+                <div class="layui-input-block">
+                  <input type="text" name="transferOutAccount" autocomplete="off" class="layui-input">
+                </div>
+              </div>
+            </div>
+
+            <div class="layui-col-xs12">
+              <label class="layui-form-label">备注：</label>
+              <div class="layui-input-block">
+                <input type="text" name="remark" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="tb-box-btn">费用明细：<span class="rf" id="datagridMsg"></span></div>
+    </div>
+    <table class="easyui-datagrid width-full" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['laydate', 'layer', 'element', 'form'], function () {
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        var element = layui.element;
+        var form = layui.form;
+        form.render();
+        //监听折叠
+        element.on('collapse(collapse-content)', function (data) {
+          // console.log('data', data)
+        });
+        InitObj.init(laydate, form);
+        laydate.render({
+          elem: '#availabilityDate',
+          trigger: 'click'
+        });
+        laydate.render({
+          elem: '#transferDate',
+          trigger: 'click'
+        });
+      });
+    })
+
+    var InitObj = {
+      laydateLayerM: null,
+      formLayerM: null,
+      defaultUrl: 'creditUseDetailController.do?datagridForRepayment', //获取挂账记录的url
+      creditUrl: 'creditController.do?getCreditByUnitId', //查询单位信用明细的URL
+      saveUrl: 'creditRepaymentController.do?doRepayment',  //保存本次回款的url,窗体上点击确定时调用
+      parentIndex: parent.layer.getFrameIndex(window.name),//本页面id,关闭时使用
+      fristConfirm: true, //是否第一次点击提交  
+      dataGrid: null,
+      consignUnit: $('#consignUnitDiv'), // 委托单位
+      consignUnitId: GetQueryString('unitId'),
+      consignUnitName: GetQueryString('unitName'),
+      creditId: '',
+      payMoney: '',
+
+      checkNumberBox: $('#checkNumberBox'), // 支票 3
+      transferBox: $('#transferBox'), // 转账 2
+      init: function (laydate, form) {   // 页面初始化
+        this.laydateLayerM = laydate;
+        this.formLayerM = form;
+        //初始化委托单位信息
+        if (this.consignUnitId && this.consignUnitId.length > 10) {
+          this.consignUnit.find('.choiceShow').html(decodeURI(this.consignUnitName));
+          this.consignUnit.find('#consignUnitIdHidden').val(this.consignUnitId);
+          this.getUnitCredit();
+        }
+        if (this.creditId && this.payMoney) {
+          this.initDataGrid(this.columnsFun());
+        }
+        //设置收费方式监听
+        this.formLayerM.on('radio(paidType)', function (data) {
+          var that = InitObj;
+          if ('2' === data.value) {
+            that.transferBox.show();
+            that.checkNumberBox.hide();
+          } else if ('3' === data.value) {
+            that.transferBox.hide();
+            that.checkNumberBox.show();
+          } else {
+            that.transferBox.hide();
+            that.checkNumberBox.hide();
+          }
+        });
+      },
+
+      // 选择委托单位
+      consignUnitFun: function () {
+        var url = 'reportCreateController.do?goUnitProjectChoosePage';
+        layerOpenFun(url, '选择委托单位', ['80%', '60%'], ['确定', '取消'], this.consignUnitLayerCallback)
+      },
+      // 选择委托单位回调 layer
+      consignUnitLayerCallback: function (res, index) {
+        var that = InitObj;
+        layer.close(index)
+        var firstVal = that.consignUnit.find('#consignUnitIdHidden').val()
+        if (firstVal !== res.id) {
+          that.consignUnit.find('.choiceShow').html(res.name)
+          that.consignUnit.find('#consignUnitIdHidden').val(res.id)
+        }
+        that.getUnitCredit()
+      },
+
+      //选择单位后,查询单位的信用详细信息
+      getUnitCredit: function () {
+        var consignUnitId = this.consignUnit.find('#consignUnitIdHidden').val();
+        ajaxRequest(this.creditUrl, { consignUnitId: consignUnitId }, this.unitCreditCallback, true, false)
+      },
+      unitCreditCallback: function (res) {
+        var that = InitObj;
+        if (res && res.success) {
+          if (res.obj) {
+            that.creditId = res.obj.id;
+            $("#unitCreditIdHidden").val(res.obj.id);
+            $("#creditLineShow").html(formatMoney(getFloatStr(res.obj.creditLine), 2, '￥ '));
+            $("#usedFeeShow").html(formatMoney(getFloatStr(res.obj.usedFee), 2, '￥ '));
+            $("#banlanceShow").html(formatMoney(getFloatStr(res.obj.banlance), 2, '￥ '));
+            // $("#creditLineShow").html(res.obj.creditLine);
+            // $("#usedFeeShow").html(res.obj.usedFee);
+            // $("#banlanceShow").html(res.obj.banlance);
+          }
+        } else if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+        } else {
+          layerAlertFun('查询单位挂账信息失败,没有响应', 5, []);
+        }
+      },
+
+      //查询信用使用明细的datagrid数据
+      getCreditUseDetail: function () {
+        this.payMoney = $("#payMoneyInput").val();
+        var usedFeeShow = $('#usedFeeShow').html();
+        usedFeeShow = parseFloat(getFloatStr(usedFeeShow));
+        if (parseInt(usedFeeShow) < parseInt(this.payMoney)) {
+          layer.msg("当前单位已挂账额度:" + usedFeeShow + ",本次最多收取:" + usedFeeShow);
+          this.payMoney = usedFeeShow;
+          $("#payMoneyInput").val(usedFeeShow);
+        }
+        this.initDataGrid(this.columnsFun());
+      },
+
+      openCallback: function () { // 点击确定按钮，返回值给上级页面
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          parentThat.reloadDataGrid(false);
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+
+      // 保存数据处检查
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+
+        if (this.dataRequired(formdata)) {
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+        return false;
+      },
+
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.creditId) {
+          queryParams.msg = '单位信用ID不能为空'
+          queryParams.element = $('#consignUnitName')
+          return false;
+        }
+        if (!queryParams.fee) {
+          queryParams.msg = '收费金额不能为空'
+          queryParams.element = $('input[name="fee"]')
+          return false;
+        } else {
+          var usedFeeShow = $('#usedFeeShow').html();
+          usedFeeShow = parseFloat(getFloatStr(usedFeeShow));
+          if (parseInt(usedFeeShow) < parseInt(queryParams.fee)) {
+            queryParams.msg = '收费金额不能大于已用金额'
+            queryParams.element = $('input[name="fee"]')
+            return false;
+          }
+        }
+        return true;
+      },
+
+      //datagrid处理
+      columnsFun: function () {
+        var columns = [];
+        columns.push({ title: "ID", field: "id", hidden: true });
+        columns.push({ title: "creditId", field: "creditId", hidden: true });
+        columns.push({ title: "feeDetailBaseId", field: "feeDetailBaseId", hidden: true });
+        columns.push({ title: "编号", field: "feeObjectSn", width: 30 });
+        columns.push({
+          title: "费用生成日期", field: "createDate", width: 20, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({ title: "应缴费用", field: "payable", width: 30 });
+        columns.push({ title: "待缴费用", field: "waitPayment", width: 30 });
+        columns.push({ title: "扣除费用", field: "repaymentPageFee1", width: 30 });
+        columns.push({ title: "扣除后费用", field: "repaymentPageFee2", width: 30 });
+        columns.push({ title: "备注", field: "remark", width: 30 });
+
+        return [columns];
+      },
+
+      //datagrid数据初始化
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&creditId=' + this.creditId + '&payMoney=' + this.payMoney,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          toolbar: '#tb',
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            $("#datagridMsg").html(data.msg);
+          }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>

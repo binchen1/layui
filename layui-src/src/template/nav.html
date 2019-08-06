@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="../css/layui.css">
+  <style>
+    .layuiTip-class.layui-layer-tips {
+      border: 1px solid #666;
+    }
+
+    .layui-layer-tips i.layui-layer-TipsL {
+      display: none;
+    }
+
+    body .layui-layer-tips .layui-layer-content {
+      box-shadow: 0 0 0 #000;
+      color: #000;
+    }
+
+    body .layui-layer-btn {
+      background: #FFCCCC;
+      padding: 0 0 10px 30px;
+    }
+
+    body .layui-layer-btn a,
+    body .layui-layer-btn .layui-layer-btn0 {
+      height: 22px;
+      line-height: 22px;
+      background-color: #5BAAEB;
+      color: #fff;
+    }
+
+    /* body .layui-table-tips-main{display:none} */
+    /* body .layui-table-tips-c{display:none} */
+  </style>
+</head>
+
+<body>
+
+  <table id="demo" lay-filter="demo"></table>
+
+  <ul class="layui-nav" lay-filter="">
+    <li class="layui-nav-item">
+      <a href="javascript:;">解决方案</a>
+      <dl class="layui-nav-child">
+        <!-- 二级菜单 -->
+        <dd><a href="">移动模块</a></dd>
+        <dd><a href="">后台模版</a></dd>
+        <dd><a href="">电商平台</a></dd>
+      </dl>
+    </li>
+  </ul>
+
+  <form class="layui-form" action="">
+    <div class="layui-form-item">
+      <div class="layui-input-block">
+        <select class="form-control input-sm" name="category" lay-filter="category" aria-invalid="false">
+          <option id="secondLevelId" value="0">择运维位置</option>
+          <option value="1">择运维位置1</option>
+          <option value="2">择运维位置2</option>
+          <option value="3">择运维位置3</option>
+          <option value="4">择运维位置4</option>
+        </select>
+      </div>
+    </div>
+  </form>
+  <script src="../jquery.min.js"></script>
+  <script src="../layui.js"></script>
+  <script src="../assets/global.js"></script>
+  <!-- <script type="text/html" id="DutyDepartSelect">
+    <form class="layui-form" action="">
+    <div class="layui-form-item">
+    <div class="layui-input-block">
+    <select  class="form-control input-sm" name="category" lay-filter="category" aria-invalid="false">
+        <option value="0">请选择运维位置</option>
+        <option value="1">请选择运维位置1</option>
+        <option value="2">请选择运维位置2</option>
+        <option value="3">请选择运维位置3</option>
+        <option value="4">请选择运维位置4</option>
+    </select>
+  </div>
+</div>
+</form>
+</script> -->
+  
+  <script>
+    //注意：导航 依赖 element 模块，否则无法进行功能性操作
+    layui.use(['element', 'form'], function (form) {
+      var element = layui.element;
+      var form = layui.form;
+      //…
+      form.on('select(category)', function (data) {
+        console.log('96',data);
+      });
+    });
+  </script>
+  <script>
+
+    //使用拓展模块
+    layui.use(['common'], function () {
+      var common = layui.common;
+      console.log(common)
+      common.hello('World!'); //弹出 Hello World!
+      common.changeParentPlace();
+    });
+
+    //注意：导航 依赖 element 模块，否则无法进行功能性操作
+    $(function () {
+      $.getJSON('../demo1.json', function (data) {
+        console.log('19', data)
+        tableData = data;
+      })
+      layui.use(['table', 'form'], function () {
+        var table = layui.table;
+        var form = layui.form;
+        var category = 0;
+        var categoryName = '';
+        form.on('select(category)', function (data) {
+          category = data.value;
+          categoryName = data.elem[data.elem.selectedIndex].text;
+          form.render('select');
+        });
+        tableRender(table, tableData, form);
+      })
+
+    })
+    function tableRender(table, tableData, form) {
+      table.render({
+        elem: '#demo',
+        page: true //开启分页
+        ,
+        cols: [
+          [ //表头
+            { field: 'id', title: 'ID', width: 80, sort: true, fixed: 'left' },
+            {
+              field: 'username', title: '用户名', width: 80, templet: function (d) {
+                // console.log(d)
+                var btn = '<button name="username" onclick="username(\'' + d.id + '\');" class="layui-btn layui-btn-xs layui-hide">' +
+                  '<i class="layui-icon">&#xe642;</i>' +
+                  '</button>' + d.username/* .replace(/;/g, "<br/>") onchange="selectDemo(this)" */;
+                return btn;
+              }
+            },
+            {
+              field: 'sex', title: '性别', width: 30, sort: true,
+            },
+            {
+              field: 'city', title: '城市2', width: 180, templet: '#DutyDepartSelect '
+            },
+            {
+              field: 'city', title: '城市', width: 130, templet: function (d) {
+                var dcity = parseInt(d.city)
+                var arr = ['不合格', '合格', '不判定']
+                var innerHtml = '<form class="layui-form" ><div class="layui-inline">'
+                  + '<div class="layui-input-inline">'
+                  + '<select lay-filter="selDome" class="selectDemo" data-id=' + d.id + ' lay-ignore  >'
+                for (var i = 0; i < arr.length; i++) {
+                  if (dcity === i) {
+                    innerHtml += '<option selected value=' + i + '>' + arr[i] + '</option>'
+                  } else {
+                    innerHtml += '<option  value=' + i + '>' + arr[i] + '</option>'
+                  }
+                }
+                innerHtml += '</select></div></div></form>';
+                return innerHtml;
+              }
+            },
+            { field: 'sign', title: '签名', width: 80 },
+            {
+              field: 'experience', title: '积分', width: 80, sort: true
+            },
+            { field: 'score', title: '评分', width: 80, sort: true },
+            { field: 'classify', title: '职业', width: 80 },
+            { field: 'wealth', title: '财富', width: 135, sort: true },
+            {
+              field: 'id', title: '操作', align: 'center', minWidth: 150, templet: function (d) {
+                var buttonGroup = '<div class="layui-btn-group">';
+                buttonGroup += '<button type="button" title="查看详情" class="layui-btn layui-btn-sm" ';
+                buttonGroup += ' onClick="window.open(\'http://www.doc88.com/tag/' + d.baseStandardName + '\')"><i class="layui-icon">&#xe705;</i></button>';
+                buttonGroup += '<button type="button" title="应用到其他参数" lay-event="referenceToOtherParams" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe621;</i></button>';
+                buttonGroup += '<button type="button" title="取消引用" lay-event="doDelete" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe640;</i></button>';
+                buttonGroup += '</div>';
+                return buttonGroup;
+              }
+            }
+          ]
+        ]
+        , data: tableData.data
+        , done: function (res, curr, count) {
+          //如果是异步请求数据方式，res即为你接口返回的信息。
+          //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+          console.log(res);
+
+          //得到当前页码
+          console.log(curr);
+
+          //得到数据总量
+          console.log(count);
+          layui.use('form', function () {
+            var form = layui.form;//高版本建议把括号去掉，有的低版本，需要加()
+            form.render();
+          });
+        }
+      });
+
+      // 鼠标移动事件
+      var tdSelector = "td[data-field='username']";
+      $(tdSelector).each(function () {
+        $(this).on("mouseover mouseout", function () {
+          if (event.type == "mouseover") {
+            $(this).find("button").removeClass("layui-hide");
+          } else if (event.type == "mouseout") {
+            $(this).find("button").addClass("layui-hide");
+          }
+        });
+      });
+    }
+    // 下拉选项
+    function selectDemo(a) {
+      console.log($(a).attr('data-id'));
+      console.log($(a).val());
+    }
+    function selectDemo2(a) {
+      console.log(a)
+      console.log($(a).attr('data-id'));
+      console.log($(a).val());
+      layui.use('form', function () {
+        var form = layui.form;//高版本建议把括号去掉，有的低版本，需要加()
+        form.render();
+      });
+    }
+    function username() {
+      console.log('111')
+      var index = layer.tips();
+      layer.close(index);
+    }
+    layui.use(['table'], function () {
+      var $ = layui.$
+        , table = layui.table;
+
+      table.on('tool(demo)', function (obj) {
+        console.log('240', obj)
+        var data = obj.data;
+        // 取消引用
+        if (obj.event === 'doDelete') {
+          deleteUseStandard(obj, data);
+        } else if (obj.event === 'referenceToOtherParams') {
+          var innerHtml = '<div>'
+          var strlen = obj.data.paramList.length
+          var paramList1 = obj.data.paramList.slice(1, strlen - 1);
+          var paramList = paramList1.split(',')
+          innerHtml += '<p>将当前规程应用到以下参数</p>'
+          for (var i = 0; i < paramList.length; i++) {
+            innerHtml += '<div>';
+            innerHtml += '<input type="checkbox" name="referenceParam" style="vertical-align:middle;" value=' + paramList[i].id + ' >';
+            innerHtml += '<span style="vertical-align:middle;margin-left:5px;" >' + paramList[i] + '</span>';
+            innerHtml += '</div>';
+          }
+          innerHtml += '</div>';
+          tipIndex = layer.tips(innerHtml, this, {
+            time: 1000 * 1000,
+            tips: [4, '#FFCCCC']
+            , skin: 'layuiTip-class'
+            , btn: ['确定', '取消']
+            , btnAlign: 'r'
+            , btn1: function () {
+              var testObjectParamIds = "";
+              var index = 1;
+              $(":checked[name='referenceParam']").each(function () {
+                var testObjectParamId = $(this).val();
+                if (index == 1) {
+                  testObjectParamIds += testObjectParamId;
+                  index++;
+                } else {
+                  testObjectParamIds += "," + testObjectParamId;
+                }
+              });
+              // 引用该规程到其他参数
+              referenceToOtherParams(testObjectParamIds, data, tipIndex);
+            }
+            , btn2: function () {
+
+            }
+          }
+          );	// 弹出框 1000秒后消失
+        } else if (obj.event === 'edit') {
+          console.log('biji')
+        }
+
+      });
+    });
+
+    $(".layui-nav").on("click", '.layui-nav-item', function (event) {
+      event.preventDefault;
+      console.log('12', this)
+    });
+  </script>
+</body>
+
+</html>

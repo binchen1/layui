@@ -1,0 +1,265 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>提交审核</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .layui-input-block {
+      margin-left: 0;
+    }
+
+    .layui-form-label {
+      margin-bottom: 10px;
+
+    }
+
+    .auditPersons {
+      height: 60px;
+    }
+
+    .layui-textarea {
+      min-height: 60px;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-form-item auditBox" style="display:none">
+      <label class="layui-form-label text-left">审核人员：</label>
+    </div>
+    <div class="layui-input-block auditPersons auditBox" style="display:none">
+      <div id="auditPersonsBox"></div>
+      <a class="layui-btn layui-btn-sm" id="auditPersonsAdd">
+        <i class="layui-icon">&#xe61f;</i>
+      </a>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label text-left" id="opinionTitle">提交意见：</label>
+      <div class="layui-input-block">
+        <textarea name="applyReason" placeholder="请输入内容" class="layui-textarea"></textarea>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form', 'upload'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var upload = layui.upload;
+        InitObj.init(form)
+        //选完文件后不自动上传
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      // detailUrl: ' processPersonController.do?getGroupPerson', // 查看详情url
+      saveUrl: 'contractAuditController.do?addAudit', // 新增申请
+      saveImplementUrl: 'contractController.do?doTerminate', // 新增保存执行合同没有审核人员的
+      addAddressPageUrl: 'processTypeController.do?goProcessTypePage',
+      type: GetQueryString("type"), // 审核类型：5.合同新增 6.合同修改 7.合同终止 8.合同违约扣款
+      relationObjId: GetQueryString("relationObjId"), // 获取父页面传递过来的合同ID
+      parentDataJson: parent.InitObj.dataJson, // 违约扣款审核数据
+      business: true, // 业务控制参数 是否显示报告重打修改需要审批
+      auditPersonsAdd: $('#auditPersonsAdd'), // 审核人员 点击按钮
+      auditPersonsBox: $('#auditPersonsBox'), // 审核人员盒子
+      auditPersons: [], // 审核人员 保存数据
+      auditPersonsData: [], // 审核人员  临时保存数据
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true,
+      init: function (form, upload) {
+        this.formLayerM = form;
+        if ('7' === this.type) {
+          ajaxRequest('tSBusinessParamController.do?getBusinessParam', { "key": 'CONTRACT_MANAGE_4' }, this.businessCallback, false, false);
+          $('#opinionTitle').html('终止合同意见：');
+        } else {
+          $('.auditBox').show();
+        }
+        this.btnFun(this.auditPersonsAdd, 'reportRedoAuditController.do?goAuditUserChoosePage&auditPersonsData=',
+          '审核人员')
+        form.render();
+      },
+      //  查询业务参数：报告重打修改是否需要审批
+      businessCallback: function (res) {
+        var that = InitObj;
+        if ('Y' === res.obj) {
+          that.business = true;
+          $('.auditBox').show();
+        } else {
+          that.business = false;
+          $('.auditBox').hide();
+        }
+      },
+
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            var url = this.saveUrl, dataJson = {};
+            if ('7' === this.type) {
+              if (this.business) {
+                url === this.saveImplementUrl;
+                dataJson = {
+                  "id": saveParam.relationObjId,
+                  "applyReason": saveParam.applyReason,
+                }
+              } else {
+                dataJson = saveParam
+              }
+            } else if ('8' === this.type) {
+              saveParam.deduct = this.parentDataJson.deduct;
+              ajaxRequest('contractAuditController.do?submitDeductionAudit', saveParam, this.saveAjaxCallback, true, true);
+              return;
+            } else {
+              dataJson = saveParam
+            }
+            ajaxRequest(url, saveParam, this.saveAjaxCallback, true, true);
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (formdata) {
+        if ('7' === this.type) {
+          if (this.business) { // 无业务参数
+            if (this.auditPersons.length === 0) {
+              formdata.msg = '审核人员不能为空';
+              formdata.element = this.auditPersonsAdd;
+              return false;
+            }
+          } else {
+            return true;
+          }
+        } else {
+          if (this.auditPersons.length === 0) {
+            formdata.msg = '审核人员不能为空';
+            formdata.element = this.auditPersonsAdd;
+            return false;
+          }
+        }
+
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var requiredParam = {
+            "type": this.type,
+            "relationObjId": this.relationObjId,
+            "applyReason": formdata.applyReason,
+            "auditPersons": JSON.stringify(this.auditPersons)
+          }
+          return requiredParam;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        console.log('saveAjaxCallback', res)
+        var parentThat = parent.InitObj;
+        var parentparentThat = parent.parent.InitObj,
+          that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          var msg = res.msg || "操作失败";
+          layerAlertFun(msg, 5, []);
+          parentThat.fristConfirm = true;
+          return;
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          if (parentThat.closeFun) { // 编辑页面过来的
+            parentThat.closeFun(res.msg);
+            parentThat.fristConfirm = true;
+          } else { // 主页面打开的
+            parent.layer.close(that.parentIndex); //再执行关闭 
+            parentThat.reloadDataGrid(false);
+          }
+          return;
+        }
+      },
+      // 审核人员删除
+      addPersonsRem: function (res) {
+        for (var i = 0; i < this.auditPersonsData.length; i++) {
+          if (res === this.auditPersonsData[i].userId) {
+            this.auditPersonsData.splice(i, 1)
+            break;
+          }
+        }
+        this.addPersonsCallback(this.auditPersonsData)
+      },
+      // 审核人员回调 
+      addPersonsCallback: function (res, index) {
+        index ? layer.close(index) : '';
+        var that = InitObj;
+        that.auditPersonsData = [];
+        that.auditPersons = [];
+        var html = ''
+        for (var i = 0; i < res.length; i++) {
+          that.auditPersonsData.push({
+            "userId": res[i].userId,
+            "realName": res[i].userName || res[i].realName
+          })
+          that.auditPersons.push({
+            "userId": res[i].userId,
+            "auditSequence": i + 1
+          })
+          if (i === 0) {
+            html += '<div class="btnClose"><span>' + that.auditPersonsData[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          } else {
+            html += '<b class="layui-btn layui-btn-sm unReturn"><i class="layui-icon">&#xe65c;</i></b>'
+            html += '<div class="btnClose"><span>' + that.auditPersonsData[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          }
+        }
+        that.auditPersonsBox.html(html);
+      },
+      // 审核人员  及 报告编号
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('审核人员' === openName) {
+            layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.auditPersonsData))), openName,
+              ['95%', '95%'], ['确定', '取消'], that.addPersonsCallback)
+          }
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,86 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+
+<body>
+  <script type="text/javascript" src="plug-in/easyui-1.5.5.2/jquery.min.js"></script>
+  <form class="layui-form" action="">
+    <div class="layui-form-item" style="padding: 15px 0 0 0">
+      <label class="layui-form-label">复核时间：</label>
+      <div class="layui-input-block">
+        <input type="text" id="reviewDate" name="reviewDate" style="width:140px;" id="reviewDate"
+          lay-verify="reviewDate" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" placeholder="请选择">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">确认意见：</label>
+    </div>
+    <div class="layui-form-item">
+      <textarea id="comment" name="comment" required lay-verify="required" placeholder="请输入确认意见" class="layui-textarea"
+        style="margin: 0 15px 0 25px; width:350px;"></textarea>
+    </div>
+  </form>
+</body>
+<script>
+  var reportIds = GetQueryString("reportIds");	// 报告ID
+  var isAgree = GetQueryString("isAgree");	// 是否同意: 1.同意	0.不同意
+  
+  layui.use(['laydate', 'form', 'layer'], function () {
+    var laydate = layui.laydate
+      , form = layui.form
+      , layer = layui.layer
+      , $ = layui.$;
+
+    laydate.render({
+      elem: '#reviewDate' //指定元素
+      , trigger: 'click'
+      , isInitValue: true
+      , value: dateformatter(new Date())
+    });
+
+    form.render();
+  });
+
+  // 提交复核结果
+  var currentLayuiIndex,fristConfirm = true;
+  function doTaskReview(layerIndex, isDetail) {
+    currentLayuiIndex = layerIndex;
+    // 非空校验
+    var comment = $("#comment").val();
+    var reviewDate = $("#reviewDate").val();
+		/* if(comment == ''){
+			layer.msg("确认意见不能为空！", {icon: 5});
+			return;
+		} else */ if (reviewDate == '') {
+      layer.msg("复核时间不能为空！", { icon: 5 });
+      return;
+    }
+    // 提交
+    var url = "testTaskReviewController.do?doTaskReview";
+    var dataJson = { 'reportIds': reportIds, 'isAgree': isAgree, 'comment': comment, 'reviewDate': reviewDate };
+    if(fristConfirm){
+      fristConfirm=!fristConfirm;
+      ajaxRequest(url, dataJson, submitCallBack, true, true, isDetail);
+    }
+  }
+
+  // 回调函数
+  function submitCallBack(res, isDetail) {
+    if (res.success) {
+      layer.alert('复核提交成功', function () {
+        if (isDetail) {
+          window.parent.goReviewCommentDetail()
+
+        } else {
+          parent.reloadDataGrid(true, {})
+        }
+        parent.layer.close(currentLayuiIndex);
+      });
+    } else {
+      fristConfirm=!fristConfirm;
+      layer.msg("复核提交失败！", { icon: 5 });
+    }
+  }
+
+</script>

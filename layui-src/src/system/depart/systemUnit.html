@@ -1,0 +1,85 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单位管理tabs</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" type="text/css" href="../../assets/css/list.css" />
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单位管理tabs</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <style>
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li id="fristLi" class="layui-this">单位信息</li>
+      <li>资质管理</li>
+      <li>授权管理</li>
+    </ul>
+    <div class="layui-tab-content" id="iframeBox">
+      <iframe class="width-full" style="height:98%" name="waitAssign" frameborder="none"
+        src="unitVersionController.do?goVersionListPage"></iframe>
+    </div>
+  </div>
+  <script>
+    // width="100%" height="100%"
+    $(function () {
+      layui.use(['element'], function () {
+
+        var element = layui.element;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          if (0 === data.index) {
+            // var htmls = '<iframe name="waitAssign" class="height-full width-full" frameborder="none" src="unAssignedTaskController.do?goListUnAssignedPage"></iframe>'
+            var htmls = '<iframe name="waitAssign" class="height-full width-full" frameborder="none" src="unitVersionController.do?goVersionListPage"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else if (1 === data.index) {
+            // var htmls = '<iframe name="myAssigned" class="height-full width-full" frameborder="none" src="assignedTaskController.do?goListAssignedPage"></iframe>'
+            var htmls = '<iframe name="waitAssign" class="height-full width-full" frameborder="none" src="qualificationController.do?goQualificationListPage"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else {
+            var htmls = '<iframe name="waitAssign" class="height-full width-full" frameborder="none" src="authedController.do?goAuthedListPage"></iframe>'
+            $('#iframeBox').html(htmls)
+
+          }
+        });
+      })
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,692 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增/编辑设备</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增/编辑设备</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .layui-form-mid {
+      float: none;
+      padding: 0px !important;
+      margin-left: 80px;
+      margin-right: 0px;
+    }
+
+    .more-header {
+      padding: 8px;
+      border-bottom: 1px dashed;
+      margin-bottom: 10px;
+    }
+
+    .layui-btn-upload {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-row">
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>设备名称：</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">设备编号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="equipmentSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">档案编号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="archiveSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">资产编号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="assetSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">检测管理编号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="testManageSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">规格型号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="standard" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">量程：</label>
+          <div class="layui-input-block">
+            <input type="text" name="eqRange" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">精度：</label>
+          <div class="layui-input-block">
+            <input type="text" name="assetSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">外型尺寸：</label>
+          <div class="layui-input-block">
+            <input type="text" name="accuracy" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>保管人：</label>
+          <input type="hidden" name="keeperId">
+          <div class="layui-input-block">
+            <input type="text" name="keeperName" onkeyup="InitObj.staffChange('keeper',event)" class="layui-input"
+              autocomplete="off">
+            <a onclick="InitObj.staffFun('keeper')" class="layui-btn layui-btn-xs layui-btn-upload"><i
+                class="iconfont icon-add"></i>选择</a>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">使用人：</label>
+          <input type="hidden" name="userId">
+          <div class="layui-input-block combobox-box">
+            <select name="userName" class="easyui-combobox">
+              <option value="1">使用人1</option>
+              <option value="2">使用人2</option>
+              <option value="3">使用人3</option>
+            </select>
+          </div>
+        </div>
+      </div> -->
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">使用人：</label>
+          <input type="hidden" name="userId">
+          <div class="layui-input-block">
+            <input type="text" name="userName" onkeyup="InitObj.staffChange('user',event)" class="layui-input"
+              autocomplete="off">
+            <a onclick="InitObj.staffFun('user',event)" class="layui-btn layui-btn-xs layui-btn-upload"><i
+                class="iconfont icon-add"></i>选择</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>所属单位：</label>
+          <div class="layui-input-block">
+            <input type="text" name="unitName" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>所属部门：</label>
+          <div class="layui-input-block combobox-box">
+            <input id="departId" value="" name="departId">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">存放地点：</label>
+          <div class="layui-input-block">
+            <input type="text" name="storageSite" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>设备状态：</label>
+          <div class="layui-input-block">
+            <select name="status"></select>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>设备类别(补)：</label>
+          <div class="layui-input-block">
+            <select name="type">
+              <option value="1">设备类别1</option>
+              <option value="2">设备类别2</option>
+              <option value="3">设备类别3</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">检校类型：</label>
+          <div class="layui-input-block">
+            <select name="checkType"></select>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">检校周期：</label>
+          <div class="layui-input-block">
+            <div class="layui-input-inline" style="width:70px">
+              <input type="text" name="checkPeriod" onkeyup="InitObj.checkPeriodChange(event)" class="layui-input"
+                autocomplete="off">
+            </div>
+            <div class="layui-form-mid">
+              <select name="checkPeriodUnit">
+                <option value="Y">年</option>
+                <option value="M">月</option>
+                <option value="D">日</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">前次检校日期：</label>
+          <div class="layui-input-block">
+            <input type="text" name="preCheckDate" id="preCheckDate" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">下次检校日期：</label>
+          <div class="layui-input-block">
+            <input type="text" name="nextCheckDate" id="nextCheckDate" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div onclick="InitObj.moreFun()" class="layui-color-blue more-header">更多信息 &gt;&gt;</div>
+    <div class="layui-row" style="display: none;" id="moreInfo">
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">供应商：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="supplierName" readonly="true" unselectable="on"
+              class="layui-input">
+            <input type="hidden" name="supplierId">
+            <a onclick="InitObj.supplierFun()" class="layui-btn layui-btn-xs layui-btn-upload"><i
+                class="iconfont icon-add"></i>选择</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">供应商电话：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="supplierTel" readonly="true" unselectable="on" class="layui-input"
+              autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">购置日期：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="buyDate" id="buyDate" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">出厂编号：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="factorySn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">生产厂家：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="factory" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">功率：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="power" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">出厂日期：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="productionDate" id="productionDate" class="layui-input"
+              autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">数量：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="quantity" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">净值：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="netValue" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">出厂价：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="factoryPrice" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">运杂费：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="transportFee" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">安装费：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="installFee" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">折旧费：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="depreciationFee" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">复杂系数(机)：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="coefficientMachine" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">复杂系数(电)：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="coefficientElectronic" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">复杂系数(热)：</label>
+          <div class="layui-input-block">
+            <input type="text" disabled="true" name="coefficientHot" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init(form)
+        //选完文件后不自动上传
+        laydate.render({ elem: '#preCheckDate', format: 'yyyy-MM-dd', trigger: 'click' })
+        laydate.render({ elem: '#nextCheckDate', format: 'yyyy-MM-dd', trigger: 'click' })
+        laydate.render({ elem: '#buyDate', format: 'yyyy-MM-dd', trigger: 'click' })
+        laydate.render({ elem: '#productionDate', format: 'yyyy-MM-dd', trigger: 'click' })
+      })
+    })
+
+    var InitObj = {
+      formLayerM: null, // form对象 
+      detailUrl: 'equipmentNewController.do?getById', // 查看详情url
+      saveUrl: 'equipmentNewController.do?saveEq', // 新增申请url
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      moreInfo: $('#moreInfo'),
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, // 是否第一次点击提交
+      staffName: '', // 保管人还是使用人
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.styleLayout(form);
+        getListByGroupId('402882cd5f998a58015f9998ff71001b', this.dictGroupCallback, 'status')
+        getListByGroupId('402882206b72e01e016b72f8bfd80001', this.dictGroupCallback, 'type')
+        getListByGroupId('402882cd5f998a58015f998cea300000', this.dictGroupCallback, 'checkType')
+        if (this.editId) {
+          this.detailEdit();
+          this.moreInfo.show();
+          this.moreInfo.find('input').attr('disabled', false)
+        } else {
+          ajaxRequest('orgController.do?getOrgComboTree', {}, this.orgComboCallback, false, true);
+        }
+        form.render();
+      },
+      moreFun: function () {
+        if (this.moreInfo.is(':hidden')) {
+          this.moreInfo.show();
+          this.moreInfo.find('input').attr('disabled', false)
+        } else {
+          this.moreInfo.hide();
+          this.moreInfo.find('input').attr('disabled', true)
+        }
+
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      dictGroupCallback: function (res, names) {
+        console.log('dictGroupCallback', res, names)
+        if (res.obj && res.obj.length > 0) {
+          var html = '';
+          $.each(res.obj, function (i, v) {
+            html += '<option value="' + v.typename + '">' + v.typename + '</option>'
+          })
+        }
+        $('select[name="' + names + '"]').html(html);
+        InitObj.formLayerM.render();
+      },
+      // 获取所属部门信息
+      orgComboCallback: function (res, departId) {
+        console.log('获取所属部门信息', res)
+        if (res && res.length > 0) {
+          $('#departId').combotree({
+            data: res,
+            panelHeight: 200,
+            width: 157,
+            textField: 'text',
+            valueField: 'id',
+            onLoadSuccess: function (node, data) {
+              $('#departId').combotree('setValue', departId || '');
+            }
+          });
+          // $('#departId').combotree('setValue', "4028822064ca61770164ca6594d30004");
+        }
+      },
+      // 检校周期输入校验
+      checkPeriodChange: function (event) {
+        console.log('检校周期')
+        var values = Number($(event.target).val());
+        if (!isPositiveInteger(values)) {
+          formTipFun('请输入正整数', $(event.target))
+          $(event.target).val('')
+        }
+        // if (values) {
+        //   if (values < 1) {
+        //     formTipFun('请输入正整数', $(event.target))
+        //     $(event.target).val('')
+        //   }
+        // } else {
+        //   formTipFun('请输入正整数', $(event.target))
+        //   $(event.target).val('')
+        // }
+      },
+      // 选择供应商
+      supplierFun: function () {
+        layerOpenFun('supplierController.do?goSupplierList', "选择供应商", ['90%', '80%'], ['确定', '取消'], this.supplierLayerCall);
+      },
+      // 输入人员
+      staffChange: function (staffName, event) {
+        this.staffName = staffName;
+        $('input[name="' + this.staffName + 'Id"]').val('');
+      },
+      // 选择人员
+      staffFun: function (staffName) {
+        this.staffName = staffName;
+        layerOpenFun('userController.do?goNowTopOrgUserTrees', "选择人员", ['90%', '80%'], ['确定', '取消'], this.staffLayerCall);
+      },
+      staffLayerCall: function (res, index) {
+        console.log('选择人员回调', res)
+        layer.close(index);
+        var that = InitObj;
+        if (res.length > 0) {
+          $('input[name="' + that.staffName + 'Id"]').val(res[0].id);
+          $('input[name="' + that.staffName + 'Name"]').val(res[0].name);
+        }
+      },
+      supplierLayerCall: function (res, index) {
+        layer.close(index);
+        if (res.length > 0) {
+          $('input[name="supplierName"]').val(res[0].name);
+          $('input[name="supplierId"]').val(res[0].id);
+          $('input[name="supplierTel"]').val(res[0].tel);
+        }
+      },
+      // 详情页面数据处理
+      detailEditData: function (datas) {
+        // if (data.listFile.length > 0) {
+        //   var html = '';
+        //   for (var i = 0; i < data.listFile.length; i++) {
+        //     html += data.listFile[i].title + '; '
+        //   }
+        // } else {
+        // }
+        $('input[name="name"]').val(datas.name);
+        $('input[name="equipmentSn"]').val(datas.equipmentSn);
+        $('input[name="archiveSn"]').val(datas.archiveSn);
+        $('input[name="assetSn"]').val(datas.assetSn);
+        $('input[name="testManageSn"]').val(datas.testManageSn);
+        $('input[name="standard"]').val(datas.standard);
+        $('input[name="eqRange"]').val(datas.eqRange);
+        $('input[name="assetSn"]').val(datas.assetSn);
+        $('input[name="accuracy"]').val(datas.accuracy);
+        $('input[name="keeperId"]').val(datas.keeperId);
+        $('input[name="keeperName"]').val(datas.keeperName);
+        $('input[name="userId"]').val(datas.userId);
+        $('input[name="userName"]').val(datas.userName);
+        $('input[name="unitName"]').val(datas.unitName);
+        // $('input[name="departId"]').val(datas.departId);
+        ajaxRequest('orgController.do?getOrgComboTree', {}, this.orgComboCallback, false, true, datas.departId);
+        $('input[name="storageSite"]').val(datas.storageSite);
+        $('select[name="status"]').val(datas.status);
+        $('select[name="type"]').val(datas.type);
+        $('select[name="checkType"]').val(datas.checkType);
+        $('input[name="checkPeriod"]').val(datas.checkPeriod);
+        $('select[name="checkPeriodUnit"]').val(datas.checkPeriodUnit);
+        var preCheckDate = datas.preCheckDate ? new Date(datas.preCheckDate).Format("yyyy-MM-dd") : '';
+        $('input[name="preCheckDate"]').val(preCheckDate);
+        var nextCheckDate = datas.nextCheckDate ? new Date(datas.nextCheckDate).Format("yyyy-MM-dd") : '';
+        $('input[name="nextCheckDate"]').val(nextCheckDate);
+
+        $('input[name="supplierName"]').val(datas.supplierName);
+        // $('input[name="supplierId"]').val(datas.supplierId);
+        $('input[name="supplierTel"]').val(datas.supplierTel);
+        var buyDate = datas.buyDate ? new Date(datas.buyDate).Format("yyyy-MM-dd") : '';
+        $('input[name="buyDate"]').val(buyDate);
+        $('input[name="factorySn"]').val(datas.factorySn);
+        $('input[name="factory"]').val(datas.factory);
+        $('input[name="power"]').val(datas.power);
+        var productionDate = datas.productionDate ? new Date(datas.productionDate).Format("yyyy-MM-dd") : '';
+        $('input[name="productionDate"]').val(productionDate);
+        $('input[name="quantity"]').val(datas.quantity);
+        $('input[name="netValue"]').val(datas.netValue);
+        $('input[name="factoryPrice"]').val(datas.factoryPrice);
+        $('input[name="transportFee"]').val(datas.transportFee);
+        $('input[name="installFee"]').val(datas.installFee);
+        $('input[name="depreciationFee"]').val(datas.depreciationFee);
+        $('input[name="coefficientMachine"]').val(datas.coefficientMachine);
+        $('input[name="coefficientElectronic"]').val(datas.coefficientElectronic);
+        $('input[name="coefficientHot"]').val(datas.coefficientHot);
+
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        console.log('detailEditCallback', res)
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, { "id": this.editId }, this.detailEditCallback, false, true)
+      },
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            if (this.editId) {
+              saveParam.id = this.editId;
+            }
+            // ajaxRequest(this.saveUrl, { moduleParamStr: JSON.stringify(saveParam) }, this.saveAjaxCallback, true, true)
+            ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.name) {
+          queryParams.msg = '设备名称不能为空';
+          queryParams.element = $('input[name="name"]');
+          return false;
+        }
+        if (!queryParams.keeperName) {
+          queryParams.msg = '保管人不能为空';
+          queryParams.element = $('select[name="keeperName"]').parent();
+          return false;
+        }
+        if (!queryParams.unitName) {
+          queryParams.msg = '所属单位不能为空';
+          queryParams.element = $('input[name="unitName"]').parent();
+          return false;
+        }
+        if (!queryParams.departId) {
+          queryParams.msg = '所属部门不能为空';
+          queryParams.element = $('input[name="departId"]').parent();
+          return false;
+        }
+        if (!queryParams.status) {
+          queryParams.msg = '设备状态不能为空';
+          queryParams.element = $('select[name="status"]').parent();
+          return false;
+        }
+        if (!queryParams.type) {
+          queryParams.msg = '设备类别不能为空';
+          queryParams.element = $('select[name="type"]').parent();
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          formdata['supplier.id'] = formdata.supplierId;
+          delete formdata['supplierId'];
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        console.log('res', res)
+        var parentThat = parent.InitObj, that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 样式布局控制
+      styleLayout: function (form) {
+        var that = this;
+
+      }
+
+    }
+  </script>
+</body>
+
+</html>

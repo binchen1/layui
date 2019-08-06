@@ -1,0 +1,151 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>待我复核</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/testbusiness/testTaskReview/taskReview.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+  <style>
+    .datagrid-cell,
+    .datagrid-cell-group,
+    .datagrid-header-rownumber,
+    .datagrid-cell-rownumber {
+      white-space: nowrap;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <div class="height-full" data-options="region: 'center'">
+      <div class="tb-box" id="toolbar">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" id="queryParam" name="queryParam" class="layui-input"
+                    placeholder="输入编号/样品名称/工程部位/用途（回车即可查询）..." autocomplete="off">
+                  <input id="dataType" name="dataType" type="hidden" value="2" />
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton btn-4-search" plain="true" icon="iconfont icon-search">查询</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a style="display:none" data-funCode="doTaskReview" class="easyui-linkbutton btn-4-ReviewAgree" plain="true"
+              icon="iconfont icon-ok" id="goReview1">复核同意</a>
+            <a style="display:none" data-funCode="doTaskReview" class="easyui-linkbutton btn-4-ReviewAgree" plain="true"
+              icon="iconfont icon-cancel" id="goReview0">复核不同意</a>
+          </span>
+        </div>
+      </div>
+      <table id="testingDataTable" class="easyui-datagrid"></table>
+    </div>
+  </div>
+  <script>
+    layui.use(['element', 'layer'], function () {
+      var element = layui.element;
+      var layer = layui.layer;
+    })
+    var goReview1 = $('#goReview1'), goReview0 = $('#goReview0');
+    btnFun(goReview1, '1')
+    btnFun(goReview0, '0')
+    // 功能按钮
+    function btnFun(btnName, num) {
+      var tipIndex;
+      btnName.on('click', function () {
+        var self = this, row = $('#testingDataTable').datagrid('getSelections');
+        if (!row || row.length === 0) {
+          console.log('if', btnName)
+          tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+            tips: 3,
+            skin: 'tips-msg',
+            time: 20000
+          });
+          return;
+        } else {
+          goReviewComment(num)
+        }
+      })
+      btnName.mouseleave(function () {
+        setTimeout(function () {
+          layer.close(tipIndex)
+        }, 500)
+      });
+    }
+
+    // 跳转复核审批页面， isAgree：1.同意  0.不同意
+    function goReviewComment(isAgree) {
+      // 取试验检测任务的ID
+      var rows = $("#testingDataTable").datagrid("getSelections");
+      //var taskIds = '';
+      var reportIds = '';
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        if (i == 0) {
+          //taskIds += row.id;
+          reportIds += row.rid;
+        } else {
+          //taskIds += ',' + row.id;
+          reportIds += ',' + row.rid;
+        }
+      }
+
+      // 弹出新页面
+      var url = 'testTaskReviewController.do?goReviewComment';
+      url += '&reportIds=' + reportIds;
+      url += '&isAgree=' + isAgree;
+      var title = '';
+      if (isAgree == '1') {
+        title = '复核确认【同意】';
+      } else if (isAgree == '0') {
+        title = '复核确认【不同意】';
+      }
+
+      layui.use(['layer', 'form'], function () {
+        var layer = layui.layer;
+
+        var layerIndex = layer.open({
+          skin: 'mylayui-layer-molv',
+          maxmin: false,
+          type: 2,
+          title: title,
+          content: url,
+          btn: ['确定', '取消'],
+          area: ['400px', '470px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            var iframeWin = window[layero.find('iframe')[0]['name']];
+
+            //调用子容器的方法
+            iframeWin.doTaskReview(layerIndex);
+          }
+        });
+      });
+    }
+
+  </script>
+</body>
+
+</html>

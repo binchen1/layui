@@ -1,0 +1,204 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>合同审核通过</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+
+</head>
+
+<body>
+  <div>
+    <form class="layui-form" id="commonQueryForm">
+      <div class="layui-form-item">
+        <label class="layui-form-label">审核意见：</label>
+      </div>
+      <div class="textarea-box">
+        <textarea name="auditOpinion" placeholder="请输入内容" class="layui-textarea"></textarea>
+      </div>
+      <div id="logBox" class="layui-hide">
+        <div class="layui-form-item ">
+          <label class="layui-form-label">流转日志：</label>
+        </div>
+        <div class="textarea-box">
+          <table class="easyui-datagrid" id="dataGrid"></table>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        InitObj.init();
+      })
+    })
+    var InitObj = {
+      defaultUrl: 'reportAuditController.do?getReportDetailGeneral', // 默认url
+      isPassUrl: 'contractAuditController.do?doAudit', // 审核url
+      logUrl: 'tSLogProcessController.do?getProcessLogList',
+      auditId: GetQueryString("auditIds"), // 获取父页面传递过来的id
+      objectProcessId: '', // 查看流转日志的id
+      isPass: GetQueryString("isPass"), //  是否通过:  '30' 审核通过，'40' 审核不通过
+      auditIdList: [],
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      logBox: $('#logBox'),
+      fristConfirm: true, //是否第一次点击提交
+      init: function () {
+        // this.getDetail()
+        console.log('auditId', this.auditId, 'isPass', this.isPass)
+        this.auditIdList = this.auditId.split(',')
+        console.log('this.auditIdList', this.auditIdList)
+        if (this.auditIdList.length === 1) {
+          this.objectProcessId = parent.$('#dataGrid').datagrid('getSelections')[0].id
+          console.log('this.objectProcessId', this.objectProcessId)
+          this.initDataGrid(this.columnsFun()) // 勿删
+        }
+      },
+      openCallback: function () {
+        var saveParam = this.saveData()
+        if (this.saveData()) {
+          var data = {
+            'auditIds': this.auditId,
+            'isPass': this.isPass,
+            'auditOpinion': saveParam.auditOpinion
+          }
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(this.isPassUrl, data, this.saveAjaxCallback, true, true);
+          }
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj,
+          that = InitObj;
+        
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          return;
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (requiredParam) {
+        console.log('dataRequired', requiredParam.auditOpinion)
+        if (!requiredParam.auditOpinion) {
+          requiredParam.msg = '审核意见不能为空';
+          requiredParam.element = $('textarea[name="auditOpinion"]');
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var requiredParam = $('#commonQueryForm').serializeJSON();
+        console.log('saveData', this.dataRequired(requiredParam))
+        if (this.dataRequired(requiredParam)) {
+          // 保存数据
+          return requiredParam;
+        } else {
+          formTipFun(requiredParam.msg, requiredParam.element)
+        }
+        return false;
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {
+        var columns = [];
+        columns.push({
+          title: "id",
+          field: "id",
+          hidden: true
+        });
+        columns.push({
+          field: 'content',
+          title: '内容',
+          width: 160
+        });
+        columns.push({
+          field: 'opinion',
+          title: '处理意见',
+          width: 160
+        });
+        columns.push({
+          field: 'objectSn',
+          title: '对象编号',
+          width: 100
+        });
+        columns.push({
+          field: 'createName',
+          title: '处理人',
+          width: 50
+        });
+        columns.push({
+          field: 'createDate',
+          title: '时间',
+          width: 100,
+          sortable: true,
+          formatter: function (value, row) {
+            return new Date(value).Format("yyyy-MM-dd hh:mm:ss")
+          },
+          sorter: function (a, b) {
+            return (a > b ? 1 : -1)
+          }
+        });
+        return [columns];
+
+      },
+      // table渲染
+      initDataGrid: function (columns) {
+        this.logBox.removeClass('layui-hide').addClass('layui-show')
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.logUrl,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: false,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          remoteSort: false,
+          queryParams: {
+            'objectType': 7,
+            'objectId': this.objectProcessId,
+            'relationQry': false
+          },
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+
+
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+
+    }
+  </script>
+</body>
+
+</html>

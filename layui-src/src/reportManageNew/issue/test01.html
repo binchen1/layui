@@ -1,0 +1,205 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<style>
+  #fileUpload>div {
+    height: 40px!important;
+    line-height:40px;
+}
+</style>
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/webuploader/webuploader.css'>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/webuploader/webuploader.min.js'><\/script>");
+    
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/signature-canvas/jq-signature.min.js'><\/script>");
+</script>
+
+<form id="form" method="POST" action="sampleSenderController.do?${empty sampleSenderEntity ? 'doAdd' : 'doUpdate'}">
+
+  <input id="id" name="id" type="hidden" value="${sampleSenderEntity.id }">
+  <input id="btn_sub" type="hidden" class="btn-4-submit">
+  <input id="signatureImageSrc" name="signatureImageSrc" type="hidden" value="${sampleSenderEntity.signatureImageSrc}">
+
+  <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+    <%-- <tr>
+            <td align="right" style="width: 130px;">
+                <label class="Validform_label"><span style="color: #F00000">*</span>账号:</label>
+            </td>
+            <td class="value">
+                <input id="account" name="account" class="inputxt" datatype="*" value='${sampleSenderEntity.account}'>
+            </td>
+           <td rowspan="6" style="width: 30%; background: #FFF">
+                <img src="" style="width: 100%;">
+            </td>
+        </tr> --%>
+    <c:choose>
+      <c:when test="${empty sampleSenderEntity}">
+        <tr>
+          <td align="right">
+            <label class="Validform_label"><span style="color: #F00000">*</span>手机号/账号:</label>
+          </td>
+          <td class="value">
+            <input id="contactPhone" name="contactPhone" class="inputxt" datatype="/^1[3-8]+\d{9}$/" maxlength="11"
+              errormsg="手机号格式不正确" nullmsg="请输入手机号" value='${sampleSenderEntity.contactPhone}'>
+          </td>
+        </tr>
+      </c:when>
+      <c:otherwise>
+        <input id="contactPhone" type="hidden" value='${sampleSenderEntity.contactPhone}'>
+      </c:otherwise>
+    </c:choose>
+    <tr>
+      <td align="right">
+        <label class="Validform_label"><span style="color: #F00000">*</span>姓名:</label>
+      </td>
+      <td class="value">
+        <input id="name" name="name" class="inputxt" datatype="*" value='${sampleSenderEntity.name}'>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">联系地址:</label>
+      </td>
+      <td class="value">
+        <input id="contactAddress" name="contactAddress" class="inputxt" value='${sampleSenderEntity.contactAddress}'>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">邮编:</label>
+      </td>
+      <td class="value">
+        <input id="zipCode" name="zipCode" class="inputxt" value='${sampleSenderEntity.zipCode}'>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">签名图片:</label>
+      </td>
+      <td class="value">
+
+        <!-- <div id="fileUpload"></div> -->
+        <!-- <a class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="uploadSignPhoto()">签名</a> -->
+        <!-- <a class="easyui-linkbutton saveSign" data-options="iconCls:'icon-save'" onclick="saveSignature()">保存</a><br/> -->
+
+        <div style="width:300px; display:inline-block;" class="js-signature" data-width="300" data-height="200"
+          data-border="1px solid black" data-line-color="#000" data-auto-fit="true">
+        </div>
+      </td>
+    </tr>
+  </table>
+</form>
+
+<script>
+  $(function () {
+
+    initImages($('#signatureImageSrc').val());
+
+    var uploader = WebUploader.create({
+      auto: true,
+      swf: basePath + '/plug-in/webuploader/Uploader.swf',
+      server: basePath + '/uploadController.do?upload',
+      pick: '#fileUpload',
+      multiple: false,
+      accept: {
+        extensions: 'png,jpg',
+        mimeTypes: 'image/*'
+      }
+    });
+
+    uploader.on('uploadSuccess', function (file, data) {
+      if (data.success) {
+        if (data.obj[0] && data.obj[0].realpath) {
+          var path = data.obj[0].realpath;
+          $('#signatureImageSrc').val(path);
+          initImages(path);
+        }
+      }
+    });
+
+    if ($('.js-signature').length) {
+      $('.js-signature').jqSignature();
+    }
+  });
+
+  //初始化表单验证改为传值的方式，方便其他页面动态修改
+  function initValidForm(configs) {
+    $("#form").Validform(configs);
+  }
+
+  function initImages(uri) {
+    if (uri) {
+      $('#form img').attr('src', uri);
+    }
+  }
+  var layerIndex = 0;
+  function uploadSignPhoto() {
+	  /*   var url='uploadController.do?goUpload';
+	    layerIndex=layerCreateWindow('上传签名',url,['确定','关闭'],['90%','90%'],'') */
+  }
+  function uploadSuccess(data) {
+    if (data.obj[0] && data.obj[0].realpath) {
+      var path = data.obj[0].realpath;
+      $('#signatureImageSrc').val(path);
+      layer.close(layerIndex);
+      initImages(path);
+    }
+  }
+
+  function dataURLtoFile(dataurl, filename) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  }
+  var signChanged = false;
+  $('.js-signature').eq(0).on('jq.signature.changed', function () {
+    signChanged = true;
+  });
+
+  function saveSignature() {
+    if (signChanged) {
+      var dataurl = $('.js-signature').eq(0).jqSignature('getDataURL');
+      initImages(dataurl);
+      var fd = new FormData();
+      fd.append('file', dataURLtoFile(dataurl, 'test.png'));
+      $.ajax({
+        url: "uploadController.do?upload&folderId=",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: fd,
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+          if (data.obj[0] && data.obj[0].realpath) {
+            var path = data.obj[0].realpath;
+            $('#signatureImageSrc').val(path);
+          }
+        }
+      });
+    }
+
+  }
+</script>

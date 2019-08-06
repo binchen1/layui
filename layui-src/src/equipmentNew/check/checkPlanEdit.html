@@ -1,0 +1,447 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增检校计划</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增检校计划</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <script src="./add.js"></script> -->
+  <style></style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-form-item">
+      <label class="layui-form-label">计划类型：</label>
+      <div class="layui-input-block" id="planTypeDiv">
+        <input class="layui-bg-blue" type="radio" lay-filter="planType" name="planType" value="1" title="年度计划" checked>
+        <input class="layui-bg-blue" type="radio" lay-filter="planType" name="planType" value="2" title="月度计划">
+      </div>
+    </div>
+    <div class="layui-form-item" id="planYearDiv">
+      <label class="layui-form-label">计划年份：</label>
+      <div class="layui-input-block">
+        <input type="text" class="layui-input" name="planYear" placeholder="请输入" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item" id="planMouthDiv" style="display: none">
+      <label class="layui-form-label">计划月份：</label>
+      <div class="layui-input-block">
+        <input type="text" class="layui-input" name="planMouth" placeholder="请输入" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">计划科室：</label>
+      <div class="layui-input-block combobox-box">
+        <input id="planDepart" value="" name="planDepart">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label"></label>
+      <div class="layui-input-block">
+        <a class="layui-btn layui-bg-blue layui-btn-xs" onclick="InitObj.autoFitEqByPlan()"
+          href="javascript:void(0);">自动按计划年月应用设备列表</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <table class="easyui-datagrid" id="dataGridBottom" style="min-height:200px;"></table>
+    </div>
+  </form>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        var upload = layui.upload;
+        InitObj.init(form, laydate)
+      })
+    })
+
+    var InitObj = {
+      formLayerM: null, // form对象 
+      laydateLayerM: null, // form对象 
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      saveUrl: 'checkPlanController.do?savePlan',
+      detailEditUrl: 'checkPlanController.do?getById', // 指定检校计划
+      detailEditTableUrl: 'checkPlanController.do?datagridPlanDetail', // 指定检校计划明细
+      dataGridData: [], // 底部table
+      // dataGridDataEdit: [], // 底部table 编辑
+      bottomInput: null, // 脚部table
+      planTypeDiv: $('#planTypeDiv'), //类型
+      planYearDiv: $('#planYearDiv'), // 年
+      planMouthDiv: $('#planMouthDiv'), // 月
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form, laydate) {
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.styleLayout(form);
+        this.initDataGrid(this.columnsFun());
+        if (this.editId) {
+          this.detailEdit();
+        } else {
+          ajaxRequest('orgController.do?getOrgComboTree', {}, this.orgComboCallback, false, true);
+        }
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true).removeClass('layui-input').css({ 'border': 'none', 'background-color': 'transparent' });
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+            console.log('saveParam', saveParam)
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              if (this.editId) {
+                saveParam.id = this.editId;
+              }
+              ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true)
+            }
+            return true;
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+      },
+      // 自动按计划年月应用设备列表
+      autoFitEqByPlan: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var data = { "planType": formdata.planType, "planYear": formdata.planYear, "planMouth": formdata.planMouth, "planDepart": formdata.planDepart }
+          ajaxRequest('checkPlanController.do?autoFitEqByPlan', data, this.tableRenderFun, false, true);
+
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+
+      },
+      // 自动按计划年月应用设备列表 回调
+      autoFitEqByPlanCall: function (res) {
+        // var that = InitObj;
+        // that.dataGridData = res.obj || res.rows || [];
+        // console.log('that.dataGridData', that.dataGridData)
+        // var existTableObjs = that.dataGridBottom.datagrid('getData');
+        // console.log('existTableObjs', existTableObjs)
+        // existTableObjs.total = existTableObjs.total + that.dataGridData.length;
+        // existTableObjs.rows.concat(that.dataGridData);
+        // that.dataGridBottom.datagrid('loadData', existTableObjs);
+        // that.initDataGrid(that.columnsFun());
+      },
+      // 获取计划科室信息
+      orgComboCallback: function (res, planDepart) {
+        console.log('获取计划科室信息', res)
+        if (res && res.length > 0) {
+          $('#planDepart').combotree({
+            data: res,
+            panelHeight: 200,
+            width: 157,
+            textField: 'text',
+            valueField: 'id',
+            onLoadSuccess: function (node, data) {
+              $('#planDepart').combotree('setValue', planDepart || '');
+            }
+          });
+        }
+      },
+
+      detailEditData: function (data) {
+        console.log('detailEditData', data)
+        this.planYearDiv.show().find('input').val(data.planYear);
+        if (data.planType === '1') {
+          // planTypeDiv:$('#planTypeDiv'), //存放类型 1:年度计划, 2:月度计划
+          this.planTypeDiv.find('input[value="1"]').attr('checked', true).siblings().attr('checked', false)
+          this.planMouthDiv.hide();
+        } else {
+          this.planTypeDiv.find('input[value="2"]').attr('checked', true).siblings().attr('checked', false)
+          this.planMouthDiv.show().find('input').val(data.planMouth);
+        }
+        ajaxRequest('orgController.do?getOrgComboTree', {}, this.orgComboCallback, false, true, data.planDepart);
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailEditUrl, { "planId": this.editId }, this.detailEditCallback, true, true);
+        ajaxRequest(this.detailEditTableUrl, { "planId": this.editId }, this.tableRenderFun, true, true);
+      },
+      tableRenderFun: function (res) {
+        console.log('19999', res)
+        var that = InitObj;
+        // that.dataGridDataEdit = res.rows || [];
+        // if (res.rows) {
+        //   that.dataGridDataEdit = res.rows;
+        // }
+        that.dataGridData = res.obj || res.rows || [];
+        console.log('that.dataGridData', that.dataGridData)
+        var existTableObjs = that.dataGridBottom.datagrid('getData');
+        console.log('existTableObjs', existTableObjs)
+        // existTableObjs.total = that.dataGridData.length + that.dataGridDataEdit.length;
+        // existTableObjs.rows = that.dataGridData.concat(that.dataGridDataEdit);
+        existTableObjs.total = that.dataGridData.length;
+        existTableObjs.rows = that.dataGridData;
+        that.dataGridBottom.datagrid('loadData', existTableObjs);
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        console.log('dataRequired', queryParams)
+        var planType = this.planTypeDiv.find('input:checked').val();
+        console.log('planType', planType, typeof planType)
+        if (!queryParams.planYear) {
+          queryParams.msg = '计划年份不能为空';
+          queryParams.element = this.planYearDiv.find('input');
+          return false;
+        }
+        if (!queryParams.planMouth && '2' === planType) {
+          queryParams.msg = '计划月份不能为空';
+          queryParams.element = this.planMouthDiv.find('input');
+          return false;
+        }
+        if (!queryParams.planDepart) {
+          queryParams.msg = '计划年份科室不能为空';
+          queryParams.element = $('input[name="planDepart"]').siblings('input');
+          return false;
+        }
+        if (queryParams.planYear) {
+          if (!/^\d{4}$/.test(queryParams.planYear)) {
+            queryParams.msg = '请输入正确的年份';
+            queryParams.element = this.planYearDiv.find('input');
+            return false;
+          }
+        }
+        if (queryParams.planMouth && '2' === planType) {
+          if (!/^(0?[1-9]|1[0,2])$/.test(queryParams.planMouth)) {
+            queryParams.msg = '请输入正确的月份';
+            queryParams.element = this.planMouthDiv.find('input');
+            return false;
+          }
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var saveParam = this.saveDataObj(formdata), planDetailStr = [];
+          console.log('saveParam', saveParam)
+          for (var i = 0; i < saveParam.length; i++) {
+            var equipmentIdIndex = '', idIndex = '';
+            if (saveParam[i].equipmentId) { // 编辑
+              equipmentIdIndex = saveParam[i].equipmentId;
+              idIndex = saveParam[i].id;
+            } else { // 引用的数据
+              equipmentIdIndex = saveParam[i].id;
+              idIndex = '';
+            }
+            planDetailStr.push({ "id": idIndex, "equipmentId": equipmentIdIndex, "planCheckTime": saveParam[i].nextCheckDate, "remark": saveParam[i].remark })
+          }
+          // formdata.planDetailStr = JSON.stringify(saveParam);
+          console.log('planDetailStr', planDetailStr)
+          formdata.planDetailStr = JSON.stringify(planDetailStr);
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 删除
+      goDetele: function (did, event) {
+        console.log('点击了删除', did, event)
+        layui.stope(event);
+        // layerOpenFun(openUrl, "新增设备", ['90%', '80%'], ['确定', '取消']);
+        var existTableObjs = this.dataGridBottom.datagrid('getData');
+        for (var i = 0; i < existTableObjs.rows.length; i++) {
+          if (did === existTableObjs.rows[i].id) {
+            existTableObjs.rows.splice(i, 1);
+            break;
+          }
+        }
+        // for (var j = 0; j < this.dataGridDataEdit.length; j++) {
+        //   if (did === this.dataGridDataEdit[j].id) {
+        //     this.dataGridDataEdit.splice(j, 1);
+        //     break;
+        //   }
+        // }
+        this.dataGridBottom.datagrid('loadData', existTableObjs);
+
+      },
+
+      bottomTableRender: function () {
+        // that.bottomInput.find('input').attr('disabled', false).css('border-color', '#ccc');
+        // that.bottomInput.find('select').attr('disabled', false);
+      },
+      submitData: function (data, key, value, strKey) {
+        var num = key.split(strKey);
+        data[num[1]][strKey] = value;
+      },
+      saveDataObj: function (queryParams) {
+        if (this.dataGridBottom) {
+          var dataObjs = this.dataGridBottom.datagrid('getData');
+          console.log('dataObjs', dataObjs)
+          for (var key in queryParams) {
+            if (key.indexOf('nextCheckDate') > -1) {
+              this.submitData(dataObjs.rows, key, queryParams[key], 'nextCheckDate');
+              delete queryParams[key];
+            }
+            if (key.indexOf('remark') > -1) {
+              this.submitData(dataObjs.rows, key, queryParams[key], 'remark');
+              delete queryParams[key];
+            }
+          }
+          return dataObjs.rows;
+        } else {
+          return [];
+        }
+      },
+      applyTitleAttribute: function (value, row, index, field) {
+        var values = value || '';
+        return '<input type="text" autocomplete="off" name="' + field + index + '" class="layui-input" id="" value="' + values + '">';
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = []; that = this;
+        columns.push({ title: "ID", field: "id", hidden: true })
+        columns.push({ title: "设备资产编号", field: "assetSn", width: 35 });
+        columns.push({ title: "设备名称", field: "name", width: 35 });
+        columns.push({ title: "规格型号", field: "standard", width: 35 });
+        columns.push({ title: "所属处室", field: "departName", width: 35 });
+        columns.push({
+          title: "前次检校时间", field: "preCheckDate", width: 35, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          }
+        })
+        columns.push({ title: "检校周期", field: "checkPeriod", width: 35 });
+        columns.push({
+          title: "计划检校时间", field: "nextCheckDate", width: 35, formatter: function (value, row, index) {
+            var values = (value ? new Date(value).Format("yyyy-MM-dd") : '');
+            return '<input type="text" class="layui-input" autocomplete="off" name="nextCheckDate' + index + '"  id="nextCheckDate' + index + '" value="' + values + '">';
+          }
+        });
+        columns.push({ title: "检校类型", field: "checkType", width: 35 });
+        columns.push({ title: "设备存放地", field: "storageSite", width: 35 });
+        columns.push({
+          title: "备注", field: "remark", width: 30,
+          formatter: function (value, row, index) {
+            return that.applyTitleAttribute(value, row, index, 'remark')
+          }
+        })
+
+        columns.push({
+          title: "操作", field: "opt", width: 35,
+          formatter: function (value, row, index) {
+            var btns =
+              '<a  title="删除" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetele(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-delete"></i></a>';
+            return btns;
+          }
+        })
+        return [columns];
+      },
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGridBottom = $('#dataGridBottom').datagrid({
+          data: this.dataGridData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('onLoadSuccess', data)
+            that.bottomInput = $('#dataGridBottom').siblings('.datagrid-view2').find('.datagrid-body');
+            // if (!that.detail) {
+            //   that.bottomTableRender();
+            // }
+            that.detailDisplay();
+            for (var i = 0; i < data.rows.length; i++) {
+              that.laydateLayerM.render({
+                elem: '#nextCheckDate' + i, //指定元素
+                trigger: 'click'
+              });
+            }
+            that.formLayerM.render()
+          }
+        });
+      },
+      // js行为交互
+      styleLayout: function (form) {
+        var that = this;
+        form.on('radio(planType)', function (data) {
+          console.log('data.value', data.value, typeof data.value)
+          if ('1' === data.value) {
+            that.planMouthDiv.hide();
+          } else {
+            that.planMouthDiv.show();
+          }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>

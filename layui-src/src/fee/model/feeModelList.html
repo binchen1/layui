@@ -1,0 +1,131 @@
+
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>部分收费/全部</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/fee/model/feeModel.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+  <style>
+    .datagrid-cell, .datagrid-cell-group, 
+    .datagrid-header-rownumber, 
+    .datagrid-cell-rownumber {
+        white-space: nowrap;
+    }
+  </style>
+
+</head>
+<body >
+  <div class="layui-tab-brief">
+    <div class="height-full">
+      <div id="feeModelListtb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <input id="isShowSearchId" type="hidden" value="false" />
+            <input id="_sqlbuilder" name="sqlbuilder" type="hidden" />
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="paymentCompany" class="layui-input" placeholder="请输入委托单位" autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs8 senior seniorText" style="display:none;">
+                高级查询
+              </div>
+              <div class="layui-col-xs4" id="searchSwitch">
+                <a href="###" class="easyui-linkbutton" iconCls="icon-reload" plain="true">切换到高级查询</a>
+              </div>
+            </div>
+            <div class="senior" style="display:none">
+              <div class="layui-form-item">
+                <label class="layui-form-label">编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignCode" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">单位</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignUnit" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item ">
+                <label class="layui-form-label">工程项目</label>
+                <div class="layui-input-block">
+                  <input type="text" name="project" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">合同名称</label>
+                <div class="layui-input-block">
+                  <input type="text" name="contractName" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">费用生成日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="ConsignDate" id="ConsignDate" class="layui-input" readonly autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">收费日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="TransferSucTime" id="TransferSucTime" class="layui-input" readonly
+                    autocomplete="off">
+                </div>
+              </div>
+              <div>
+                <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.seniorQuickSearch()">查询</a>
+                <button class="easyui-linkbutton" id="reset" type="reset" iconCls="icon-reload" plain="true">重置</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" onclick="InitObj.doBitchFee(event)" class="easyui-linkbutton" iconCls="icon-edit" plain="true">收费</a>
+            <a href="#" onclick="InitObj.doBitchSelect()" class="easyui-linkbutton" iconCls="icon-tip" plain="true">批量选择</a>
+            <a href="#" onclick="InitObj.ExportXls()" class="easyui-linkbutton" iconCls="icon-redo" plain="true">导出</a>
+            <a href="#" onclick="InitObj.doNewCharge(event)" class="easyui-linkbutton" iconCls="icon-add" plain="true">新增收费</a>
+            <a href="#" onclick="InitObj.printAll()" class="easyui-linkbutton" iconCls="icon-print" plain="true">打印</a>
+            <a href="#" onclick="InitObj.printDetail()" class="easyui-linkbutton" iconCls="icon-print" plain="true">打印费用明细</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="feeModelList" toolbar="#feeModelListtb"></table>
+    </div>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['layer', 'element', 'laydate', 'form'], function () {
+        var layer = layui.layer;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init(form, laydate)
+      })
+    })
+
+  </script>
+
+</body>
+</html>

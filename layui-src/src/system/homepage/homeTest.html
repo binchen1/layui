@@ -1,0 +1,561 @@
+<!-- <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/home.css" />
+  <script type="text/javascript" src="plug-in/Highcharts-5.0.14/code/highcharts.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/home.js"></script> -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/home.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script type="text/javascript" src="../../Highcharts-5.0.14/code/highcharts.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <script src="./home.js"></script>
+
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <div class="layui-container">
+    <div class="layui-row layui-col-space15">
+      <div class="layui-col-xs9">
+        <div class="layui-row">
+          <div class="layui-col-xs10 header">
+            <img class="lf" src="plug-in/assets/images/user.png">
+            <p><span>hi</span> 超级用户,下午好！欢迎登录“博试云”试验检测管理信息系统。</p>
+            <h3>当前角色：<span>收样员</span>
+              <u class="layui-color-blue">切换角色</u>
+              <u class="layui-color-blue">修改密码</u>
+              <u class="layui-color-blue">退出系统</u>
+              <u class="layui-color-blue">帮助视频</u>
+              <u class="layui-color-blue">帮助系统</u>
+            </h3>
+          </div>
+          <div class="layui-col-xs2 text-right">
+            <u class="layui-color-blue">原工作台模式</u>
+          </div>
+        </div>
+        <div class="process-box">
+          <h4 class="detail-header">检测业务主流程</h4>
+          <div class="process" id="process">
+          </div>
+        </div>
+
+        <h4 class="detail-header">收样信息</h4>
+
+        <div class="layui-row " id="myDetail"></div>
+        <!-- 饼图 -->
+        <div>
+          <h4 class="detail-header">人员情况</h4>
+          <div>
+            <div id="criclePie"></div>
+          </div>
+        </div>
+        <!-- 横向柱状图 -->
+        <div>
+          <h4 class="detail-header">工时统计</h4>
+          <div>
+            <div id="chartBar"></div>
+          </div>
+        </div>
+        <!-- 柱状图 -->
+        <div>
+          <h4 class="detail-header">收费统计统计图
+            <a class="rf" onclick="InitObj.headerTabs(event,'收费统计图')">
+              <i class="abtn"> 日</i>
+              <i class="abtn"> 月</i>
+              <i class="abtn abtn-bg"> 年</i>
+            </a>
+          </h4>
+          <div>
+            <div id="chartColumn"></div>
+          </div>
+        </div>
+        <!-- 折线图 -->
+        <div>
+          <h4 class="detail-header">收样统计图
+            <a class="rf" onclick="InitObj.headerTabs(event,'收样统计图')">
+              <i class="abtn"> 日</i>
+              <i class="abtn"> 月</i>
+              <i class="abtn abtn-bg"> 年</i>
+            </a>
+          </h4>
+          <div>
+            <div id="chartLine"></div>
+          </div>
+        </div>
+        <div>
+          <h4 class="detail-header"> 双折线显示图 </h4>
+          <div>
+            <div id="container" style="min-width:400px;height:400px"></div>
+          </div>
+        </div>
+        <!-- 任务情况 -->
+        <div>
+          <h4 class="detail-header">任务情况 </h4>
+          <div>
+            <div id="taskUl">
+              <ul>
+                <li>RW2018-28-001 <em>（要求报告日期即将到期，请尽快处理）</em><span class="rf">2018-11-21</span></li>
+                <li>RW2018-28-001 <em>（要求报告日期）</em><span class="rf">2018-11-21</span></li>
+                <li>RW2018-28-001 <em>（要求报告日期即将到期，请尽快处理）</em><span class="rf">2018-11-21</span></li>
+                <li>RW2018-28-001 <em>（要求报告日理）</em><span class="rf">2018-11-21</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- 消息通知 -->
+      <div class="layui-col-xs3">
+        <h4>通知 <u class="layui-color-blue rf">更多通知</u> </h4>
+        <div class="layui-collapse" lay-accordion="" lay-filter="test" id="collapse"> </div>
+        <h4 class="text-center"> <u class="layui-color-blue ">更多通知</u> </h4>
+      </div>
+    </div>
+
+  </div>
+
+
+  <script>
+    var chart = Highcharts.chart('container', {
+      chart: {
+        type: 'column'
+      },
+      title: {
+        text: ''
+      },
+      subtitle: {
+        text: ''
+      },
+      xAxis: {
+        categories: [
+          '一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'
+        ],
+        crosshair: true
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          text: ''
+        }
+      },
+      tooltip: {
+        // head + 每个 point + footer 拼接成完整的 table
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+          '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+      },
+      plotOptions: {
+        column: {
+          borderWidth: 0
+        }
+      },
+      series: [{
+        name: '东京',
+        data: [49.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4]
+      }, {
+        name: '纽约',
+        data: [83.6, 78.8, 98.5, 93.4, 106.0, 84.5, 105.0, 104.3, 91.2, 83.5, 106.6, 92.3]
+      }, {
+        name: '伦敦',
+        data: [48.9, 38.8, 39.3, 41.4, 47.0, 48.3, 59.0, 59.6, 52.4, 65.2, 59.3, 51.2]
+      }, {
+        name: '柏林',
+        data: [42.4, 33.2, 34.5, 39.7, 52.6, 75.5, 57.4, 60.4, 47.6, 39.1, 46.8, 51.1]
+      }]
+    });
+  </script>
+  <script>
+    //注意：折叠面板 依赖 element 模块，否则无法进行功能性操作
+    layui.use(['element', 'form'], function () {
+      var element = layui.element;
+      var form = layui.form;
+      InitObj.init(element)
+    });
+    var InitObj = {
+      elementLayerM: null,
+      consignDB: 'homePageController.do?consignDataBlock',
+      cosignChart: 'homePageController.do?cosignLineChart',
+      noticeArr: noticeArr,
+      processArr: processArr,
+      detailArr: detailArr,
+      criclePie: null, // 饼图
+      chartBar: null, // 横向柱状图
+      chartColumn: null, // 柱状图
+      chartLine: null, // 折线图
+      init: function (element) {
+        console.log('noticeArr', noticeArr)
+        console.log('processArr', processArr)
+        console.log('detailArr', detailArr)
+        this.elementLayerM = element
+        this.renderHtmlChart(element)
+        // this.ajaxFun()
+        this.ajaxFun2()
+      },
+      renderHtmlChart: function (element) {
+        this.styleLayout(element)
+        this.collapseHtml()
+        this.processHtml()
+        this.blockHtml()
+        this.optionsData()
+      },
+      ajaxFun: function () {
+        ajaxRequest(this.consignDB, {}, this.consignDBAjaxCallback, false, true)
+        ajaxRequest(this.cosignChart, { 'timeUnit': 2 }, this.cosignChartAjaxCallback, false, true)
+      },
+      consignDBAjaxCallback: function (res) {
+        console.log('consignDBAjaxCallback', res)
+      },
+      cosignChartAjaxCallback: function (res) {
+        console.log('cosignChartAjaxCallback', res)
+      },
+      optionsData: function () {
+        Highcharts.setOptions({
+          // colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572'],
+          chart: {
+            backgroundColor: {
+              linearGradient: [0, 0, 500, 500],
+              stops: [
+                [0, 'rgb(255, 255, 255)'],
+                // [0, 'rgb(255, 0, 0)'],
+                [1, 'rgb(240, 240, 255)']
+              ]
+            },
+            borderWidth: 0,
+            plotBackgroundColor: 'rgba(255, 255, 255, .9)',
+            // plotBackgroundColor: 'rgba(255, 255, 0, .8)',
+            plotShadow: true,
+            plotBorderWidth: 10,
+            style: {
+              fontFamily: "",
+              fontSize: '22px',
+              fontWeight: 'bold',
+              color: 'red'
+            },
+          },
+          credits: {
+            enabled: false     //不显示LOGO 
+          }
+        });
+        this.chartLine = {
+          chart: {
+            // type: 'line'
+            type: 'line'
+          },
+          title: {
+            text: ''
+          },
+          colors: ['#4472C4', '#ED7D31'],
+          xAxis: {
+            categories: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '']
+          },
+          yAxis: {
+            title: {
+              text: '委托单数量及样品数量'
+            }
+          },
+          tooltip: {
+            crosshairs: true,
+            shared: true
+          },
+          plotOptions: {
+            line: {
+              dataLabels: {
+                // 开启数据标签
+                enabled: true
+              },
+              // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+              enableMouseTracking: true
+            }
+          },
+          series: [{
+            name: '委托单',
+            data: [325, 413, 190, 0, 132, 408, 128, 459, 202, 469, 192, 203]
+          }, {
+            name: '样品',
+            data: [368, 413, 186, 434, 131, 404, 123, 458, 201, 466, 0, 203]
+          }],
+        };
+        this.chartColumn = {
+          chart: {
+            type: 'column'
+          },
+          title: {
+            text: '收费合计'
+          },
+          colors: ['#4472C4'],
+          xAxis: {
+            type: 'category',
+            categories: [
+              '一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'
+            ],
+            crosshair: true
+          },
+          yAxis: {
+            title: {
+              text: ''
+              // text: '人口 (百万)'
+            }
+          },
+          legend: {
+            // enabled: false
+          },
+          tooltip: {
+            // shared: true
+            // pointFormat: '人口总量: <b>{point.y:.1f} 百万</b>'
+          },
+          series: [{
+            name: '总人口',
+            data: [7127, 36826, 8243, 9198, 23295, 5780, 22524, 18620, 23610, 38247, 28790, 39666],
+            dataLabels: {
+              enabled: false,
+              rotation: -90,
+              color: '#FFFFFF',
+              align: 'right',
+              format: '{point.y:.1f}', // :.1f 为保留 1 位小数
+              y: 10
+            }
+          }]
+        }
+        this.criclePie = {
+          chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+          },
+          title: {
+            // text: '2018 年浏览器市场份额'
+            text: ''
+          },
+          tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+          },
+          plotOptions: {
+            pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              dataLabels: {
+                enabled: false
+              },
+              showInLegend: true
+            }
+          },
+          series: [{
+            name: '人员情况',
+            colorByPoint: true,
+            data: [{
+              name: '七月',
+              y: 61.41,
+              sliced: true,
+              selected: true
+            }, {
+              name: '一月',
+              y: 11.84
+            }, {
+              name: '二月',
+              y: 10.85
+            }, {
+              name: '三月',
+              y: 4.67
+            }, {
+              name: '四月',
+              y: 4.18
+            }, {
+              name: '五月',
+              y: 7.05
+            },]
+          }]
+        }
+        this.chartBar = {
+          chart: {
+            type: 'bar'
+          },
+          title: {
+            text: '堆叠条形图'
+          },
+          xAxis: {
+            categories: ['张三', '李四', '王五', '李二', '周闪', '米大', '刘二', '开朗', '郎朗']
+          },
+          yAxis: {
+            min: 0,
+            title: {
+              text: '水果消费总量'
+            }
+          },
+          legend: {
+            /* 图例显示顺序反转
+             * 这是因为堆叠的顺序默认是反转的，可以设置 
+             * yAxis.reversedStacks = false 来达到类似的效果 
+             */
+            reversed: true
+          },
+          plotOptions: {
+            series: {
+              stacking: 'normal'
+            }
+          },
+          series: [{
+            name: '工时情况',
+            data: [328, 258, 244, 235, 221, 209, 202, 198, 168]
+          }]
+        }
+
+      },
+      ajaxFun2: function () {
+        $.getJSON('../../data/table/demo1.json', function (data) {
+          console.log('data', data)
+          var options = InitObj.chartLine;
+          var options2 = InitObj.chartColumn;
+          var options3 = InitObj.criclePie;
+          var options4 = InitObj.chartBar;
+          if (data.length === 0) {
+            options.series[0].data = []
+            $.each(data, function (i, v) {
+              options.series[0].data.push(v.number)
+            })
+          }
+
+          Highcharts.chart('chartLine', options);
+          Highcharts.chart('chartColumn', options2);
+          Highcharts.chart('criclePie', options3);
+          Highcharts.chart('chartBar', options4);
+          // new Highcharts.Chart('chartColumn', options2);
+        });
+      },
+      // 各区块 展示
+      blockHtml: function () {
+        var widths = $('#myDetail').width(), len = this.detailArr.length;
+        var colWidth = (widths / len) / widths * 100;
+        console.log('colWidth', colWidth)
+        var html = ''
+        $.each(this.detailArr, function (i, v) {
+          html += '<div class="myDetail-item" style="width: ' + colWidth + '%;">'
+          html += '  <div style="background:' + v.bg + ' ;">'
+          html += '    <div>'
+          html += '      <span>' + v.name + ' </span>'
+          html += '      <a href="#" class="rf" onclick="InitObj.blockTabs(event)">'
+          html += '        <i class="abtn abtn-bg">月</i>'
+          html += '        <i class="abtn">年</i>'
+          html += '     </a>'
+          html += '    </div>'
+          html += '    <p class="text-center"> <b>' + v.numFrist + '</b> ( <b>' + v.numlast + ' </b> ) </p>'
+          html += '    <h4>查看详情&gt;&gt;<span class="rf">退回（' + v.numBreack + ' ）</span></h4>'
+          html += '  </div>'
+          html += '</div>'
+        })
+
+        // $('#myDetail').append(html)
+        $('#myDetail').html(html)
+      },
+      // 流程页面跳转
+      processJumpPage: function () {
+        console.log('点击了流程页面跳转')
+      },
+      // 区块年月切换
+      blockTabs: function (event) {
+        console.log('this', $(this))
+        console.log('this', event.target)
+        $(event.target).addClass('abtn-bg').siblings().removeClass('abtn-bg')
+      },
+      // 各图标年月日切换
+      headerTabs: function (event) {
+        $(event.target).addClass('abtn-bg').siblings().removeClass('abtn-bg')
+      },
+      // 流程进程
+      processHtml: function () {
+        var html = '', len = this.processArr.length - 1;
+        $.each(this.processArr, function (i, v) {
+          // console.log(i, v)
+          html += ' <div class="process-content" onclick="InitObj.processJumpPage()">'
+          html += '  <div class="text-center">'
+          html += '    <div class="process-content-span">'
+          html += '      <img class="layui-circle" src="' + v.imgs + '">'
+          html += '      <span class="layui-circle">' + v.num + '</span>'
+          html += '    </div>'
+          html += '    <p>' + v.name + '</p>'
+          html += '  </div>'
+          html += '</div>'
+          if (len !== i) {
+            html += '<div>'
+            html += '  <b class="layui-btn layui-btn-sm layui-btn-primary unReturn">'
+            html += '    <i class="layui-icon">&#xe65c;</i>'
+            html += '  </b>'
+            html += '</div>'
+          }
+        })
+        $('#process').append(html)
+      },
+      // 通知 手风琴
+      collapseHtml: function () {
+        console.log('noticeArr', this.noticeArr)
+        var html = ''
+        $.each(this.noticeArr, function (i, v) {
+          html += '<div class="layui-colla-item">'
+          if (0 === i) {
+            html += '  <h2 class="layui-colla-title layui-color-blue">' + v.titleDate + ' ' + v.title + ' </h2>'
+            console.log('if', i)
+            html += '  <div class="layui-colla-content layui-show">'
+          } else {
+            html += '  <h2 class="layui-colla-title">' + v.titleDate + ' ' + v.title + ' </h2>'
+            console.log('else', i)
+            html += '  <div class="layui-colla-content ">'
+          }
+          html += '    <h5>' + v.textTitle + '</h5>'
+          html += '   <p style="text-indent:2em;">' + v.textContent + '    </p>'
+          html += '   <h5 class="text-right">' + v.textName + '</h5>'
+          html += '   <h5 class="text-right">' + v.textDate + '</h5>'
+          html += '  </div>'
+          html += '</div>'
+
+        })
+        $('#collapse').append(html)
+        this.elementLayerM.render()
+      },
+      styleLayout: function (element) {
+        element.on('collapse(test)', function (data) {
+          console.log(data.show); //得到当前面板的展开状态，true或者false
+          // if (data.show) {
+          data.title.addClass('layui-color-blue').parent().siblings().children('.layui-colla-title').removeClass('layui-color-blue')
+          // }
+          console.log(data.title); //得到当前点击面板的标题区域DOM对象
+          console.log(data.content); //得到当前点击面板的内容区域DOM对象
+        });
+      },
+    }
+  </script>
+
+</body>
+
+</html>

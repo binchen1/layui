@@ -1,0 +1,589 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<%-- <t:base type="jquery,easyui,tools"/> --%>
+
+<head>
+  <style type="text/css">
+
+  </style>
+  <title>费用</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+
+</head>
+
+
+<script type="text/javascript">
+  /* document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>"); */
+  document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/fee/model/feeModel.js'><\/script>");
+  document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/tools/css/metrole/common.css' type='text/css'>");
+  document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/ace/css/font-awesome.css' type='text/css'>");
+
+  // 委托费用信息
+  var consignFees = '${consignFees}';
+  var consignFeeDataArray = eval(consignFees);
+  var jq;
+  layui.use(['element', 'laydate', 'form', 'table', 'layer'], function () {
+    jq = layui.$
+      , element = layui.element
+      , laydate = layui.laydate
+      , form = layui.form
+      , layer = layui.layer
+      , table = layui.table;
+
+    //var index = parent.layer.getFrameIndex(window.name);
+    //parent.layer.iframeAuto(index);
+
+    //执行一个laydate实例
+    laydate.render({
+      elem: '#chargeDate' //指定元素
+      , isInitValue: true
+      , value: dateformatter(new Date())
+    });
+    laydate.render({
+      elem: '#transferTime' //指定元素
+      , isInitValue: true
+      , value: dateformatter(new Date())
+      , trigger: 'click'
+    });
+
+    // 初始化表单的值
+    form.val("form", {
+      "paymentCompany": "${feeModelPage.paymentCompany}" // "name": "value"
+      , "feeTotal": "${feeModelPage.feeTotal}"
+      , "consignUnitName": "${consignUnitEntity.name}"
+      , "feePaid": "${feeModelPage.feePaid}"
+      , "pay": "${feeModelPage.feeTotal - feeModelPage.feePaid}"
+      , "notPaid": "${feeModelPage.feeTotal - feeModelPage.feePaid}"
+      , "paidType": "FeeDetailCash" // 默认现金收费
+    });
+    jq("#feeTotal").text("${feeModelPage.feeTotal}");
+    jq("#feePaid").text("${feeModelPage.feePaid}");
+    jq("#notPaid").text("${feeModelPage.feeTotal - feeModelPage.feePaid}");
+    jq("#consignUnitName").text("${consignUnitEntity.name}");
+
+    // 渲染表单
+    form.render();
+
+    // table 加载
+    table.render({
+      elem: '#consignTable'
+      //,height: 250
+      //,page: true
+      , cols: [[ //标题栏
+        { field: 'consignCode', title: '委托编号', align: 'center', minWidth: 90 }
+        , { field: 'total', title: '合计金额', align: 'center', width: 90 }
+        , { field: 'feeDiscount', title: '优惠金额', align: 'center', width: 90 }
+        , { field: 'feeTotal', title: '应缴费用', align: 'center', width: 90 }
+        , { field: 'feePaid', title: '已缴费用', align: 'center', width: 90 }
+        , { field: 'notPaid', title: '未缴费用', align: 'center', width: 90 }
+        , { field: 'contractId', title: '关联合同', align: 'center', width: 90 }
+        //,{field: 'feeId', title: '费用ID', align:'center', style:'display:none;', width: 0}
+        , { field: 'id', title: '操作', toolbar: '#operateBar', align: 'center', minWidth: 90 }
+      ]]
+      , data: consignFeeDataArray
+      /* ,done: function(res, curr, count){
+        jq("[data-field='feeId']").css('display','none');
+      } */
+    });
+
+    //监听工具条
+    table.on('tool(consignDatas)', function (obj) {
+      var data = obj.data;
+      var feeId = data.feeId;
+      var objectId = data.objectId;
+      var title = "费用详情";
+      if (obj.event === 'goDetail') {
+        // 跳转费用详细页
+        // goDetailInParant(feeId, objectId, 'FeeConsign', '80%', '90%', 'auto');
+        parent.InitObj.goDetail(feeId, objectId, 'FeeConsign');
+      } else if (obj.event === 'doDelete') {
+        layer.confirm('确认删除？', function (index) {
+          // 从  consignFeeDataArray 数组里移除该条数据
+          var temp;
+          for (var i = 0; i < consignFeeDataArray.length; i++) {
+            if (consignFeeDataArray[i].feeId == data.feeId) {
+              temp = consignFeeDataArray[i];
+              feeCalculation(consignFeeDataArray[i].feeTotal, consignFeeDataArray[i].feePaid, consignFeeDataArray.length)
+              break;
+            }
+          }
+          consignFeeDataArray.removeByValue(temp);
+          // 从页面的table中删除该数据
+          obj.del();
+          layer.close(index);
+        });
+      }
+    });
+
+    // 判断，是否可编辑本次缴费金额
+    payEditable(jq);
+
+    // radio选中事件: transfer 1.转账  2.支票  3.合同  4.信用
+    form.on('radio(paidType)', function (data) {
+      if (data.value == 'FeeDetailContract') {  // 按合同收费，一次缴清全额，不可编辑
+        // jq("input[name='pay']").val("${feeModelPage.feeTotal - feeModelPage.feePaid}").attr("readonly", "readonly").css("color", "red");
+        jq("input[name='pay']").attr("readonly", "readonly").css("color", "red");
+        jq("div[feeType='1'],div[feeType='2']").addClass('layui-hide');
+        jq("div[feeType='3']").removeClass('layui-hide');
+      } else if (data.value == 'FeeDetailTransfer') { // 转账
+        jq("div[feeType='2'],div[feeType='3']").addClass('layui-hide');
+        jq("div[feeType='1']").removeClass('layui-hide');
+        payEditable(jq);
+      } else if (data.value == 'FeeDetailCheck') {  // 支票
+        jq("div[feeType='1'],div[feeType='3']").addClass('layui-hide');
+        jq("div[feeType='2']").removeClass('layui-hide');
+        payEditable(jq);
+      } else {
+        jq("div[feeType='1'],div[feeType='2'],div[feeType='3']").addClass('layui-hide');
+        payEditable(jq); // 判断，是否可编辑本次缴费金额
+      }
+    });
+
+    // radio事件，选择合同时，根据合同重新计算委托费用
+    form.on('radio(contractRadio)', function (data) {
+
+      var contractId = data.value; // 合同ID 
+      var consignIds = "";  // 委托ID
+      for (var i = 0; i < consignFeeDataArray.length; i++) {
+        if (i == 0) {
+          consignIds += consignFeeDataArray[i].id;
+        } else {
+          consignIds += "," + consignFeeDataArray[i].id;
+        }
+      }
+
+      // 重新计算金额
+      /* var index;
+      jq.ajax({
+      url: basePath + '/feeModelController.do?getConsignFeesByContract',  
+        data: {
+          contractId: contractId,
+          consignIds: consignIds
+        },  
+        dataType: "json",  
+        type: "POST",  
+        beforeSend: function(){
+          index = SHOW_LOAD_LAYER('正在重新计算费用...');
+        },
+        success: function (res) {  
+          CLOSE_LOAD_LAYER(index);
+            if(res.success){
+              jq("input[name='pay']").val(parseFloat(res.obj).toFixed(2));
+              layer.msg('系统已根据当前所选合同重新计算费用，请核实！', {icon: 6});
+            } else {
+              layer.msg(res.msg, {icon: 6});
+            }
+      }
+    }); */
+    });
+
+    //监听折叠
+    element.on('collapse(contractInfo)', function (data) {
+      //layer.msg('展开状态：'+ data.show);
+    });
+
+    // 若有可选合同，则默认缴费方式是按合同缴费 paidType" lay-filter="paidType" value="FeeDetailContract
+    if (${ defaultContract } == 1){
+    jq("input[value='FeeDetailContract']").attr("checked", "checked");
+    jq("input[name='pay']").val("${feeModelPage.feeTotal - feeModelPage.feePaid}").attr("readonly", "readonly").css("color", "red");
+    jq("div[feeType='1'],div[transfer='2']").addClass('layui-hide');
+    jq("div[feeType='3']").removeClass('layui-hide');
+
+    // 自动勾选第一个合同
+    jq("div[feeType='3']").find(":radio").first().attr("checked", "checked");
+
+    form.render('radio');
+  } else {  // 没有可用的合同供选择，禁用合同选项
+    jq("input[value='FeeDetailContract']").attr("disabled", "true");
+  }
+  var fristConfirm = true;
+  // 提交表单（收费操作）
+  form.on('submit(isSubmit)', function (data) {
+    // 收费金额不能为0
+    var payMoney = jq("input[name='pay']").val();
+    var notPaid = jq('input[name="notPaid"]').val();
+    if (parseFloat(payMoney).toFixed(2) <= 0.00) {
+      layer.alert('缴费金额必须为正数', { title: '提示' });
+      return;
+    }
+    if (!payable()) {
+      return
+    }
+    // 获取所有的委托费用ID（t_fee_）
+    var feeIds = getFeeIds();
+    var dataObj = data.field;
+    dataObj.feeIds = feeIds;
+    // ajax 提交收费操作
+    if (fristConfirm) {
+      fristConfirm = !fristConfirm;
+      var index;
+      jq.ajax({
+        url: basePath + '/feeModelController.do?doUpdateConsignFee',
+        data: dataObj,
+        dataType: "json",
+        type: "POST",
+        beforeSend: function () {
+          index = SHOW_LOAD_LAYER('正在处理...');
+        },
+        success: function (res) {
+          CLOSE_LOAD_LAYER(index);
+          if (res.success) {
+            layer.msg(res.msg, { icon: 6 })
+            parent.InitObj.reloadDataGrid(true);  //刷新父页面
+            var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+            parent.layer.close(index);  // 关闭layer
+            // 关闭当前弹出层
+            // layer.alert(res.msg, {
+            //   title: '提示'
+            // }, function () {
+            //   window.parent.location.reload(); //刷新父页面
+            //   var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+            //   parent.layer.close(index);  // 关闭layer
+            // })
+          } else {
+            fristConfirm = !fristConfirm;
+            layer.msg(res.msg, { icon: 5 })
+          }
+        }
+      });
+    } else {
+      console.log('数据提交中...')
+      
+    }
+  });
+
+  // 用jquery初始化事件
+  initEvent(jq);
+    
+  });// layui初始化结束
+
+  // 费用重新计算
+  function feeCalculation(feeTotal, feePaid, len) {
+    var feeTotalHtml = jq('input[name="feeTotal"]').val()
+    var feePaidHtml = jq('input[name="feePaid"]').val()
+    var feeTotalBalance = (feeTotalHtml - feeTotal).toFixed(2)
+    var feePaidBalance = (feePaidHtml - feePaid).toFixed(2)
+    var feeBalance = (feeTotalBalance - feePaidBalance).toFixed(2)
+    jq('input[name="feeTotal"]').val(feeTotalBalance)
+    jq('input[name="feePaid"]').val(feePaidBalance)
+    jq('input[name="notPaid"]').val(feeBalance)
+    if (len < 3) {
+      var paidTypeVal = jq('input[name="paidType"]:checked').val()
+      if ('FeeDetailContract' === paidTypeVal) {
+        jq('input[name="pay"]').val(feeBalance)
+      } else {
+        jq('input[name="pay"]').val(feeBalance).attr("readonly", false)
+      }
+      if (1 === len) {
+        var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+        parent.layer.close(index);  // 关闭layer
+      }
+    } else {
+      jq('input[name="pay"]').val(feeBalance)
+    }
+    jq('#feePaid').html(feePaidBalance)
+    jq('#notPaid').html(feeBalance)
+    jq('#feeTotal').html(feeTotalBalance)
+  }
+
+  // 判断本次缴费是否可编辑
+  function payEditable(jq) {
+    var rowlen = consignFeeDataArray.length;
+
+    // 未交费用为0，不用再缴费了
+    var fee = jq("input[name='notPaid']").val();
+    if (parseInt(fee) == 0) {
+      jq("input[name='pay']").attr("readonly", "readonly");
+      return;
+    }
+
+    if (rowlen > 1) { // 同时为多条委托缴费，不可编辑缴费金额，只能一次缴清
+      jq("input[name='pay']").attr("readonly", "readonly");
+    } else {
+      jq("input[name='pay']").removeAttr("readonly");
+    }
+  }
+  //统计时的金额变成千分位
+  /*function numberFormatter() { }
+  function numberFormatter(){
+    alert(1);
+    layer.use('jquery',function(){
+      var $ = layer.$;
+      var val = $("input[kind='transform']").val();
+      console.info(val);
+      $("input[kind='transform']").val((parseFloat(val).toFixed(2) + '').replace(/\d{1,3}(?=(\d{3})+(\.\d*)?$)/g, '$&,'));
+    }); 
+  } */
+
+  // 日期格式化
+  function dateformatter(date) {
+    var y = date.getFullYear();
+    var m = date.getMonth() + 1;
+    var d = date.getDate();
+    return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+  }
+
+  // 初始化一些监听事件
+  function initEvent(jq) {
+
+    jq(function () {
+
+      // 对本次缴费进行了编辑，则显示黑色
+      jq("input[name='pay']").change(function () {
+        jq(this).css("color", "black");
+      });
+
+      // 重新计费
+      jq("#recaculation").click(function () {
+        goRecaculation(jq);
+      });
+
+    });
+  }
+
+  // 打开重新计费页面
+  function goRecaculation($) {
+
+    var feeIds = getFeeIds();
+    var url = "feeModelController.do?goRecaculation&feeIds=" + feeIds;
+    /* var index2 =  */parent.layer.open({
+      type: 2,
+      title: '重新计费',
+      offset: 'auto',
+      skin: 'layui-layer-molv',
+      content: url,
+      closeBtn: 0,
+      btn: ['确定', '取消'],
+      area: ['940px', '530px'],
+      btn1: function (index, layero) {
+
+        var currentIndex = parent.layer.getFrameIndex(window.name);// 获取当前层索引
+        var body = parent.layer.getChildFrame('body', index);
+        body.find("#feeIds").val(feeIds);
+        body.find("#layerIndex").val(currentIndex);
+        body.find("#submitBtn").click();
+      },
+      btn2: function () {
+        layer.close();
+      },
+    });
+  }
+
+  // 获取委托的所有费用ID
+  function getFeeIds() {
+
+    // 获取所有的委托费用ID（t_fee_）
+    var feeIds = "";
+    // 这个理论上来说应该是不可能出现的，不可能进得去(consignFeeDataArray.length 不可能为0)，考虑程序的健壮性，留在这里
+    if (consignFeeDataArray.length == 0) {
+      layer.alert('未获取到当前委托的费用信息', { title: '提示' });
+      return;
+    }
+    for (var i = 0; i < consignFeeDataArray.length; i++) {
+      if (i == consignFeeDataArray.length - 1) {
+        feeIds += consignFeeDataArray[i].feeId;
+      } else {
+        feeIds += consignFeeDataArray[i].feeId + ",";
+      }
+    }
+    return feeIds;
+  }
+  // 本次收取费用
+  function payable() {
+    var payMoney = jq('input[name="pay"]').val();
+    var notPaid = jq('input[name="notPaid"]').val()
+    if (payMoney > notPaid) {
+      layer.alert('缴费金额超过了未缴费用金额,将更改为未缴费金额', { title: '提示' }, function (index) {
+        jq('input[name="pay"]').val(notPaid)
+        layer.close(index)
+      });
+      return false;
+    }
+    return true;
+  }
+
+</script>
+<style>
+  .layui-form-item {
+    /* margin-bottom: 1px; */
+  }
+</style>
+
+<body>
+  <div class="layui-container" style="width:870px;">
+    <!-- 委托收费 -->
+    <form class="layui-form" lay-filter="form" style="width: 100%;" method="post">
+      <input type="hidden" name="isSubmit" />
+      <input type="hidden" id="recaculation" name="recaculation" />
+      <button id="btn_sub" name="btn_sub" class="layui-btn layui-hide" lay-submit lay-filter="isSubmit">提交</button>
+      <div class="layui-form-item">
+        <div class="layui-inline" style="width:530px;">
+          <label class="layui-form-label">委托单位：</label>
+          <input type="hidden" name="consignUnitName" style="width:410px;" required lay-verify="required"
+            placeholder="请输入" autocomplete="off" class="layui-input">
+          <label id="consignUnitName" class="layui-form-label" style="width:390px;text-align: left;"></label>
+        </div>
+        <div class="layui-inline" style="width:280px;">
+          <label class="layui-form-label" style="width:120px;">应缴费用合计：</label>
+          <input type="hidden" name="feeTotal" onchange="numberFormatter()" kind="transform" style="width:90px;"
+            required lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+          <label id="feeTotal" class="layui-form-label" style="width:90px;text-align: left;"></label>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline" style="width:530px;">
+          <label class="layui-form-label">缴费单位：</label>
+          <div class="layui-input-inline" style="width:410px;">
+            <input type="text" name="paymentCompany" style="width:410px;padding-left:15px;" lay-verify="required"
+              placeholder="请输入" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-inline" style="width:280px;">
+          <label class="layui-form-label" style="width:120px;">已缴费用合计：</label>
+          <input type="hidden" name="feePaid" onchange="numberFormatter()" kind="transform" required style="width:90px;"
+            lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+          <label id="feePaid" class="layui-form-label" style="width:90px;text-align: left;"></label>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline" style="width:530px;">
+          <label class="layui-form-label">收费日期：</label>
+          <div class="layui-input-inline" style="width:410px;">
+            <input type="text" name="chargeDate" style="width:410px;padding-left:15px;" id="chargeDate"
+              lay-verify="date" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-inline" style="width:280px;">
+          <label class="layui-form-label" style="width:120px;">未缴费用合计：</label>
+          <input type="hidden" name="notPaid" onchange="numberFormatter()" kind="transform" required style="width:90px;"
+            lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+          <label id="notPaid" class="layui-form-label" style="width:90px;text-align: left;"></label>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">支付方式：</label>
+          <div class="layui-input-inline" style="width:410px;">
+            <input type="radio" name="paidType" lay-filter="paidType" value="FeeDetailCash" title="现金" checked="">
+            <input type="radio" name="paidType" lay-filter="paidType" value="FeeDetailContract" title="合同">
+            <input type="radio" name="paidType" lay-filter="paidType" value="FeeDetailTransfer" title="转账">
+            <input type="radio" name="paidType" lay-filter="paidType" value="FeeDetailCheck" title="支票">
+          </div>
+        </div>
+        <div class="layui-inline" style="width:280px;">
+          <label class="layui-form-label" style="width:120px;">本次收取：</label>
+          <div class="layui-input-inline" style="width:120px;">
+            <input type="text" name="pay" onchange="payable(event)" kind="transform" required
+              style="width:140px;color:red;padding-left:15px;" lay-verify="required|number" placeholder="请输入"
+              autocomplete="off" class="layui-input">
+          </div>
+        </div>
+      </div>
+      <!-- 支票 -->
+      <div feeType="2" class="layui-form-item layui-hide">
+        <div class="layui-inline" style="width:530px;">
+          <label class="layui-form-label">支票号：</label>
+          <div class="layui-input-inline" style="width:410px;">
+            <input type="text" name="checkNo" style="width:410px;" id="checkNo" lay-verify="" placeholder="请出入"
+              autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-inline" style="width:280px;">
+          <label class="layui-form-label" style="width:120px;">支票经办人：</label>
+          <div class="layui-input-inline" style="width:120px;">
+            <input type="text" name="checkAgent" style="width:140px;" id="checkAgent" placeholder="请出入"
+              autocomplete="off" class="layui-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- 转账 -->
+      <div feeType="1" class="layui-form-item layui-hide">
+        <div class="layui-inline" style="width:530px;">
+          <label class="layui-form-label">转入账户：</label>
+          <div class="layui-input-inline" style="width:410px;">
+            <input type="text" name="transferAccount" style="width:410px;" id="transferAccount" lay-verify=""
+              placeholder="请出入" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-inline" style="width:280px;">
+          <label class="layui-form-label" style="width:120px;">转账时间：</label>
+          <div class="layui-input-inline" style="width:120px;">
+            <input type="text" name="transferTime" style="width:140px;" id="transferTime" lay-verify="date"
+              placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+      </div>
+      <div feeType="1" class="layui-form-item layui-hide">
+        <div class="layui-block" style="width:530px;">
+          <label class="layui-form-label">转出账户：</label>
+          <div class="layui-input-block" style="width:410px;">
+            <input type="text" name="transferOutAccount" required style="width:410px;" lay-verify="" placeholder="请输入"
+              autocomplete="off" class="layui-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- 合同 -->
+      <div feeType="3" class="layui-form-item layui-collapse layui-hide" lay-filter="contractInfo">
+        <div class="layui-colla-item">
+          <h2 class="layui-colla-title">请选择合同</h2>
+          <div class="layui-colla-content layui-show">
+            <c:forEach var="contractMain" items="${feeContractMains}">
+              <div class="layui-block">
+                <p>
+                  <input type="radio" lay-filter="contractRadio" name="contract" value="${contractMain.id}">
+                  ${contractMain.name }
+                </p>
+                <p style="padding-left: 45px;">
+                  <c:if test="${contractMain.type == '1' }">
+                    全包合同;
+                  </c:if>
+                  <c:if test="${contractMain.type == '2' }">
+                    折扣合同;
+                  </c:if>
+                  <c:if test="${contractMain.type == '3' }">
+                    指定参数折扣合同;
+                  </c:if>
+                  <c:if test="${contractMain.type == '4' }">
+                    指定参数价格合同;
+                  </c:if>
+                  合同号：${contractMain.no }；
+                  合同金额：${contractMain.totalFee }；
+                </p>
+              </div>
+              <fieldset class="layui-elem-field layui-field-title" style="margin-top: 0px; margin-bottom: 0px;">
+              </fieldset>
+            </c:forEach>
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-block">
+          <label class="layui-form-label">备注：</label>
+          <div class="layui-input-block">
+            <input type="text" name="remarks" style="padding-left:15px;" placeholder="请输入" autocomplete="off"
+              class="layui-input">
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- 委托费用信息列表 -->
+    <table class="layui-table" id="consignTable" lay-filter="consignDatas">
+    </table>
+  </div>
+  <script type="text/html" id="operateBar">
+  <a class="layui-btn layui-btn-primary layui-btn-xs ace_button" lay-event="goDetail" lay-event="detail"><i title='查看' class='fa fa-list-alt'></i></a>
+  <a class="layui-btn layui-btn-primary layui-btn-xs ace_button" lay-event="doDelete" lay-event="del"><i title='删除' class='fa fa-trash-o'></i></a>
+  
+</script>
+</body>
+
+</html>

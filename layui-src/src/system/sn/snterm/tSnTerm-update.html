@@ -1,0 +1,384 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<html>
+
+<head>
+  <meta http-equiv="content-Type" content="text/html; charset=UTF-8">
+  <title>编号格式项</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript">
+    //获得根目录
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var path = prePath;
+    var basePath = prePath + postPath;
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/mutiLang/zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery-1.8.3.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery.cookie.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery-plugs/storage/jquery.storageapi.min.js'>'<\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/dataformat.js'><\/script>");
+    document.write("<link id='easyuiTheme' rel='stylesheet' href='" + basePath + "/plug-in/easyui/themes/metrole/easyui.css' type='text/css'>");
+    document.write("<link id='easyuiTheme' rel='stylesheet' href='" + basePath + "/plug-in/easyui/themes/metrole/main.css' type='text/css'>");
+    document.write("<link id='easyuiTheme' rel='stylesheet' href='" + basePath + "/plug-in/easyui/themes/metrole/icon.css' type='text/css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/accordion/css/accordion.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/accordion/css/icons.css'>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/jquery.easyui.min.1.3.2.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/locale/zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/syUtil.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/extends/datagrid-scrollview.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/My97DatePicker/WdatePicker.js'><\/script>");
+    document.write("<link href='" + basePath + "/plug-in/My97DatePicker/skin/WdatePicker.css' rel='stylesheet' type='text/css'>");
+    document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/tools/css/metrole/common.css' type='text/css'>");
+    document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/ace/css/font-awesome.css' type='text/css'>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/lhgDialog/lhgdialog.min.js?skin=metrole'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/ace/js/bootstrap-tab.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+    document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/layer/skin/layer.css' id='layui_layer_skinlayercss'>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/easyuiextend.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery-plugs/hftable/jquery-hftable.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/json2.js'><\/script>");
+
+    document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/Validform/css/style.css' type='text/css' />");
+    document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/Validform/css/tablefrom.css' type='text/css' />");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/plugin/passwordStrength/passwordStrength-min.js'><\/script>");
+    document.write("<script src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+    //timestamp 转 String
+    function DateFormat(date, format) {
+      var o = {
+        "M+": date.getMonth() + 1,
+        // month
+        "d+": date.getDate(),
+        // day
+        "h+": date.getHours(),
+        // hour
+        "m+": date.getMinutes(),
+        // minute
+        "s+": date.getSeconds(),
+        // second
+        "q+": Math.floor((date.getMonth() + 3) / 3),
+        // quarter
+        "S": date.getMilliseconds()
+        // millisecond
+      };
+      if (/(y+)/.test(format) || /(Y+)/.test(format)) {
+        format = format.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
+      }
+      for (var k in o) {
+        if (new RegExp("(" + k + ")").test(format)) {
+          format = format.replace(RegExp.$1, RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length));
+        }
+      }
+      return format;
+    };
+  </script>
+  <script type="text/javascript">
+  //编写自定义JS代码
+  </script>
+  <script type="text/javascript">
+    var dic = new Object();
+    $(document).ready(function () {
+      var _list = [];
+      _list.push("@bpm_status@");
+      _list.push("@SNTermType@");
+      _list.push("@sf_yn@");
+      if (_list.length > 0) {
+        var json = new Object();;
+        json["list"] = JSON.stringify(_list);
+        $.ajax({
+          url: basePath + '/systemController.do?getDictContent',
+          data: json,
+          dataType: "json",
+          type: "POST",
+          contentType: "application/x-www-form-urlencoded",
+          //traditional: true,  
+          success: function (responseJSON) {
+            // your logic  
+            dic = responseJSON.attributes;
+
+            getSearchFormInfo();
+            var id = GetQueryString('id');
+            if (id && id != '' && id != 'null') {
+              InitFormData(id);
+              $("#formobj").attr("action", basePath + "/tSnTermController.do?doUpdate");
+
+            } else {
+              $("#formobj").attr("action", basePath + "/tSnTermController.do?doAdd");
+            }
+          }
+        });
+      }
+    });
+    //  < !--初始化select，radio，list，checkbox-- >
+    var getSearchFormInfo = function () {
+      var sb = '';
+      sb += '<select id="type"  onchange="btnChange(this[selectedIndex].value);" name="type" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+      var item = dic['SNTermType'];
+      for (var h = 0; h < item.length; h++) {
+        if (item[h].typecode == '') {
+          sb += '<option value="' + item[h].typecode + '" selected="selected">' + item[h].typename + '</option> ';
+        } else {
+          sb += '<option value="' + item[h].typecode + '">' + item[h].typename + '</option> ';
+        }
+      }
+      sb += '</select>';
+      $('#complexInputtype').html(sb);
+      var sb = '';
+      sb += '<select id="isAssociateSequence" name="isAssociateSequence" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+      var item = dic['sf_yn'];
+      for (var h = 0; h < item.length; h++) {
+        if (item[h].typecode == '') {
+          sb += '<option value="' + item[h].typecode + '" selected="selected">' + item[h].typename + '</option> ';
+        } else {
+          sb += '<option value="' + item[h].typecode + '">' + item[h].typename + '</option> ';
+        }
+      }
+      sb += '</select>';
+      $('#complexInputisAssociateSequence').html(sb);
+
+    }
+    // < !--查询传入静态参数的方法-->
+    function GetQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) return unescape(r[2]); return null;
+    }
+    // < !--针对update，填充表单对象的数据-- >
+    function InitFormData(id) {
+      $.ajax({
+        url: basePath + '/rest/tSnTermController/' + id,
+        type: "GET",
+        //traditional: true,  
+        success: function (res) {
+          var data = JSON.parse(res);
+          //对属性赋值
+          var type = data.type; // 年份或自增才显示
+          if ('TermYear' === type || 'TermSerialNumber' === type) {
+            $('#serialNoBitBox').show()
+            $("#serialNoBit").val(data.serialNoBit);
+          }
+          $("#id").val(data.id);
+          $("#createName").val(data.createName);
+          $("#createBy").val(data.createBy);
+          if (data.createDate && data.createDate != '' && data.createDate != 'null') {
+            if (typeof data.createDate == 'number') {
+              var newDate = new Date();
+              newDate.setTime(data.createDate);
+              $("#createDate").val(DateFormat(newDate, 'yyyy-MM-dd'));
+            } else {
+              $("#createDate").val(data.createDate);
+            }
+          }
+          $("#updateName").val(data.updateName);
+          $("#updateBy").val(data.updateBy);
+          if (data.updateDate && data.updateDate != '' && data.updateDate != 'null') {
+            if (typeof data.updateDate == 'number') {
+              var newDate = new Date();
+              newDate.setTime(data.updateDate);
+              $("#updateDate").val(DateFormat(newDate, 'yyyy-MM-dd'));
+            } else {
+              $("#updateDate").val(data.updateDate);
+            }
+          }
+          $("#sysOrgCode").val(data.sysOrgCode);
+          $("#sysCompanyCode").val(data.sysCompanyCode);
+          $("#bpmStatus").val(data.bpmStatus);
+          $("#name").val(data.name);
+          $("#type").val(data.type);
+
+          $("#orderNo").val(data.orderNo);
+          $("#isAssociateSequence").val(data.isAssociateSequence);
+          $("#modelId").val(data.modelId);
+        }
+      });
+    }
+    // 切换类型控制数字类型的显示与隐藏
+    function btnChange(values) {
+      if ('TermYear' === values || 'TermSerialNumber' === values) {
+        $('#serialNoBitBox').show()
+      } else {
+        $('#serialNoBitBox').hide()
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <form id="formobj" name="formobj" method="post">
+    <input type="hidden" id="btn_sub" class="btn_sub">
+    <input id="id" name="id" type="hidden" />
+    <input id="createName" name="createName" type="hidden" />
+    <input id="createBy" name="createBy" type="hidden" />
+    <input id="createDate" name="createDate" type="hidden" />
+    <input id="updateName" name="updateName" type="hidden" />
+    <input id="updateBy" name="updateBy" type="hidden" />
+    <input id="updateDate" name="updateDate" type="hidden" />
+    <input id="sysOrgCode" name="sysOrgCode" type="hidden" />
+    <input id="sysCompanyCode" name="sysCompanyCode" type="hidden" />
+    <input id="bpmStatus" name="bpmStatus" type="hidden" />
+    <input id="modelId" name="modelId" type="hidden" />
+    <table style="width: 600px;" cellpadding="0" cellspacing="1" class="formtable">
+      <tr>
+        <td align="right">
+          <label class="Validform_label">
+            <span class="layui-color-red">*</span>名称:
+          </label>
+        </td>
+        <td class="value">
+          <input id="name" name="name" type="text" style="width: 150px" class="inputxt" ignore="ignore" />
+          <span class="Validform_checktip"></span>
+          <label class="Validform_label" style="display: none;">名称</label>
+        </td>
+      </tr>
+      <tr>
+        <td align="right">
+          <label class="Validform_label">
+            <span class="layui-color-red">*</span>类型:
+          </label>
+        </td>
+        <td class="value">
+          <span id="complexInputtype"></span>
+          <span class="Validform_checktip"></span>
+          <label class="Validform_label" style="display: none;">类型</label>
+        </td>
+      </tr>
+      <tr id="serialNoBitBox" style="display:none">
+        <td align="right">
+          <label class="Validform_label">
+            <span class="layui-color-red">*</span>数字位数:
+          </label>
+        </td>
+        <td class="value">
+          <input id="serialNoBit" name="serialNoBit" type="number" style="width: 150px" class="inputxt" ignore="ignore" />
+          <span class="Validform_checktip"></span>
+          <label class="Validform_label" style="display: none;">数字位数:</label>
+        </td>
+      </tr>
+      <tr>
+        <td align="right">
+          <label class="Validform_label">
+            <span class="layui-color-red">*</span>排序号:
+          </label>
+        </td>
+        <td class="value">
+          <input id="orderNo" name="orderNo" type="text" datatype="n" style="width: 150px" class="inputxt" ignore="ignore" />
+          <span class="Validform_checktip"></span>
+          <label class="Validform_label" style="display: none;">排序号</label>
+        </td>
+      </tr>
+      <tr>
+        <td align="right">
+          <label class="Validform_label">
+            <span class="layui-color-red">*</span>是否参与自增:
+          </label>
+        </td>
+        <td class="value">
+          <span id="complexInputisAssociateSequence"></span>
+          <span class="Validform_checktip"></span>
+          <label class="Validform_label" style="display: none;">是否参与自增</label>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+</body>
+<script type="text/javascript">
+  // 父打开时回调的子页面函数 勿删
+  // function submitSave() { }
+
+  $("#formobj").Validform({
+    tiptype: 4,
+    btnSubmit: "#btn_sub",
+    btnReset: "#btn_reset",
+    ajaxPost: true,
+    beforeCheck: function (curform) {
+      //在表单提交执行验证之前执行的函数，curform参数是当前表单对象。
+      //这里明确return false的话将不会继续执行验证操作;  
+      return dataRequired()
+    },
+    usePlugin: {
+      passwordstrength: {
+        minLen: 6,
+        maxLen: 18,
+        trigger: function (obj, error) {
+          if (error) {
+            obj.parent().next().find(".Validform_checktip").show();
+            obj.find(".passwordStrength").hide();
+          } else {
+            $(".passwordStrength").show();
+            obj.parent().next().find(".Validform_checktip").hide();
+          }
+        }
+      }
+    },
+    callback: function (data) {
+      var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+      if (data.success) {
+        parent.layer.close(index); //再执行关闭  
+        parent.layerAlertFun(data.msg, 6, [])
+        parent.reloadTable();
+      } else {
+        if (data.responseText == '' || data.responseText == undefined) {
+          layerAlertFun(data.msg, 5, [])
+          $.Hidemsg();
+        } else {
+          try {
+            var emsg = data.responseText.substring(data.responseText.indexOf('错误描述'), data.responseText.indexOf('错误信息'));
+            layerAlertFun(emsg, 5, [])
+            $.Hidemsg();
+          } catch (ex) {
+            layerAlertFun(data.responseText + "", 5, [])
+            $.Hidemsg();
+          }
+        }
+        return false;
+      }
+    }
+  });
+  function dataRequired() {
+    var formdata = $('#formobj').serializeJSON();
+    if (!formdata.name) {
+      formTipFun('名称不能为空', $('input[name="name"]'))
+      return false
+    }
+    if (!formdata.type) {
+      formTipFun('类型不能为空', $('select[name="type"]'))
+      return false;
+    }
+    var node = $('#serialNoBitBox');
+    if (!node.is(':hidden')) {
+      if (!formdata.serialNoBit) {
+        formTipFun('数字位数不能为空', $('input[name="serialNoBit"]'))
+        return false;
+      }
+      console.log(formdata.serialNoBit,typeof formdata.serialNoBit)
+      if(formdata.serialNoBit<1){
+        formTipFun('数字位数不能小于1', $('input[name="serialNoBit"]'))
+        return false;
+      }
+      
+    }
+    if (!formdata.orderNo) {
+      formTipFun('排序号不能为空', $('input[name="orderNo"]'))
+      return false;
+    }
+    if (!formdata.isAssociateSequence) {
+      formTipFun('请选择是否参与自增', $('select[name="isAssociateSequence"]'))
+      return false;
+    }
+    return true
+  }
+
+</script>
+<script src="webpage/com/hitek/system/sn/snterm/tSnTerm.js"></script>
+
+</html>

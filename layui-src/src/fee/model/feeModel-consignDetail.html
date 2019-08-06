@@ -1,0 +1,132 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+ <head>
+    <style type="text/css">
+   
+    </style>
+	<title>合同收费</title> 
+	
+ </head>
+
+
+<script type="text/javascript">
+
+	layui.use(['element','laydate','form','table'], function(){
+	  var jq = layui.$
+	  ,element = layui.element
+	  ,laydate = layui.laydate
+	  ,form = layui.form
+	  ,table = layui.table;
+	  
+	  //监听折叠
+	  element.on('collapse(paymentRecord)', function(data){
+	    //layer.msg('展开状态：'+ data.show);
+	  });
+	  
+	  // 用jquery初始化事件
+	  initEvent(jq);
+	  
+	});// layui初始化结束
+	
+	// 初始化一些监听事件
+	function initEvent(jq){
+	
+		jq(function(){
+			
+			
+			
+		});
+	}
+	
+</script>   
+<body>
+<div class="layui-container" style="width:95%;height: 95%;padding-left: 10px;">  
+	<div class="layui-row" style="margin-top: 10px;">
+		<div class="layui-inline" >
+			<p class="layui-word-aux">子项费用计算合计示例：100.00（单价/元）*3（计价数量）*0.9（折扣率）=270.00（费用小计/元）</p>
+		</div>
+	</div>
+	
+	<!-- 历史明细 -->
+	<div class="layui-collapse" lay-filter="paymentRecord" style="margin-top: 10px;">
+	  	<div class="layui-colla-item">
+	  		<h2 class="layui-colla-title">费用明细</h2>
+  			<div class="layui-colla-content layui-show">
+  				<!-- 测试参数 -->
+				<div class="layui-row" >
+					<div class="layui-block" >
+						<p class="layui-text" style="font-weight: bold;" >${feeDetail.feeDate }</p>
+					</div>
+				</div>
+ 				<c:forEach var="testParam" items="${feeDetail.testParamList}">
+	  				<div class="layui-row" >
+						<div class="layui-inline" >
+							<p class="layui-word-aux">${testParam } 元</p>
+						</div>
+					</div>
+			    	<fieldset class="layui-elem-field layui-field-title" style="margin-top: 0px; margin-bottom: 0px;">
+					</fieldset> 
+	  			</c:forEach>
+	  			<!-- 附加费用 -->
+	  			<c:forEach var="addtionalFee" items="${feeDetail.addionalFeeList}">
+	  				<div class="layui-row" >
+						<div class="layui-inline" >
+							<p class="layui-word-aux">${addtionalFee } 元</p>
+						</div>
+					</div>
+			    	<fieldset class="layui-elem-field layui-field-title" style="margin-top: 0px; margin-bottom: 0px;">
+					</fieldset> 
+	  			</c:forEach>
+	  			<div class="layui-row">
+					<div class="layui-inline" >
+						<p class="layui-word-aux">
+							合计金额：<span class="layui-text" style="font-weight: bold;">${feeDetail.feeTotal } 元</span>&nbsp;&nbsp;&nbsp;&nbsp;
+							优惠金额：<span class="layui-text" style="font-weight: bold;">${feeDetail.feeDiscount } 元</span>&nbsp;&nbsp;&nbsp;&nbsp;
+							应缴金额：<span class="layui-text" style="font-weight: bold;">${feeDetail.needPay } 元</span>&nbsp;&nbsp;&nbsp;&nbsp;
+						</p>
+					</div>
+				</div>
+	    	</div>
+	  	</div>
+  	</div>
+
+	<!-- 缴费记录 -->
+	<div class="layui-collapse layui-show" lay-filter="paymentRecord" style="margin-top: 10px;">
+	  	<div class="layui-colla-item">
+	  		<h2 class="layui-colla-title">缴费记录</h2>
+	  			<div class="layui-colla-content layui-show">
+  				<c:forEach var="record" items="${feeRecord}">
+  				<div class="layui-block">
+				    	<p class="layui-text" style="font-weight: bold;"><fmt:formatDate value="${record.chargeDate}" pattern="yyyy-MM-dd" /></p>
+				    	<p class="layui-word-aux">
+				    		<c:if test="${record.paidType == 'FeeDetailCash' }">
+				    			${record.value} 元
+				    		</c:if>
+				    		<c:if test="${record.paidType == 'FeeDetailCheck' }">
+				    			${record.value}，支票号：${record.checkNo}，支票经办人：${record.checkAgent}
+				    		</c:if>
+				    		<%-- <c:if test="${record.paidType == 'FeeDetailCredit' }">
+				    			信用支付，
+				    		</c:if> --%>
+				    		<c:if test="${record.paidType == 'FeeDetailContract' }">
+				    			${record.value}，合同名称：${record.contractName}，合同编号：${record.contractNo}
+				    		</c:if> 
+				    		<c:if test="${record.paidType == 'FeeDetailTransfer' }">
+				    			${record.value}，转出账户：${record.transferOutAccount}，转入账户：${record.transferAccount}，转账时间：${record.transferTime}
+				    		</c:if>
+				    	</p>
+				    	<p class="layui-word-aux">收费人员：${record.createName }，备注：${record.remarks }</p>
+			    	</div>
+			    	<fieldset class="layui-elem-field layui-field-title" style="margin-top: 0px; margin-bottom: 0px;">
+					</fieldset> 
+	  			</c:forEach>
+		    	</div>
+	  	</div>
+  	</div>
+	
+	
+</div>
+</body>
+</html>

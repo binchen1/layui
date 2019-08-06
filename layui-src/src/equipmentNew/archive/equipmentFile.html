@@ -1,0 +1,335 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>附件档案</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+
+  <!-- <script type="text/javascript" src="plug-in/serializejson/jquery.serializejson.min.js"></script> -->
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab-brief easyui-layout" fit="true">
+    <div data-options="region: 'west',split: true" class="self-noscroll" style="width: 300px;">
+      <div class="toolbar tb-box">
+        <div class="tb-box-btn">
+          <span>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-add" onclick="" plain="true"
+              icon="iconfont icon-add">新增</a>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-edit" plain="true"
+              icon="iconfont icon-edit">编辑</a>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-delete" plain="true"
+              icon="iconfont icon-remove">删除</a>
+          </span>
+        </div>
+      </div>
+      <table id="dataGridFolder"></table>
+    </div>
+
+    <div class="dataGrid height-full" data-options="region: 'center'">
+      <div class="toolbar tb-box">
+        <div class="tb-box-btn">
+          <span>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-file-detail" onclick=""
+              plain="true" icon="iconfont icon-add">查看</a>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-file-update" plain="true"
+              icon="iconfont icon-edit">上传文件</a>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-file-download" plain="true"
+              icon="iconfont icon-edit">下载文件</a>
+            <a style="display:inline-block" data-funCode="" class="easyui-linkbutton btn-file-delete" plain="true"
+              icon="iconfont icon-remove">删除</a>
+          </span>
+        </div>
+      </div>
+      <table id="dataGrid" class="easyui-datagrid"></table>
+    </div>
+
+
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        InitObj.init();
+      })
+
+    });
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': [],
+      'numbers': 1
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+      // InitObj.reloadDataGrid()
+    }
+
+    function downloadAccessory(accessoryId) {
+      console.log('filesObj', filesObj.files)
+      // var filesArr = filesObj.files;
+      // for (var i = 0; i < filesArr.length; i++) {
+      //   if (accessoryId === filesArr[i].id) {
+      //     window.open("uploadController.do?download&accessoryId=" + filesArr[i].attachmentId);
+      //     break;
+      //   }
+      // }
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      console.log('deleteAccessory', accessoryId)
+      var filesArr = filesObj.files;
+      console.log('deleteAccessory', filesArr)
+      for (var i = 0; i < filesArr.length; i++) {
+        if (accessoryId === filesArr[i].id) {
+          ajaxRequest('eqFileController.do?delFile', { "id": filesArr[i].fileId }, InitObj.addToFormCall, false, true);
+          break;
+        }
+      }
+      // InitObj.addToForm(filesObj.files)
+    }
+    var InitObj = {
+      dataGrid: null,
+      dataGridFolder: null,
+      editId: parent.InitObj.editId, // 获取父页面传递过来的编辑id
+      folderId: parent.InitObj.editId, // 获取父页面传递过来的编辑id
+      folderUrl: 'eqFolderController.do?folderListByMainEntity', // 查询设备文件目录集合
+      fileUrl: 'eqFileController.do?datagridByFolder', // 查询文件列表
+      init: function () {
+        // this.initDataGrid();
+        this.initDataGridFolder();
+        this.btnFun($('.btn-add'), 'eqFolderController.do?saveFolder', '新增目录')
+        this.btnFun($('.btn-delete'), 'eqFolderController.do?delFolder', '删除目录')
+        this.btnFun($('.btn-edit'), 'eqFolderController.do?saveFolder', '编辑目录')
+        this.btnFun($('.btn-file-detail'), '', '查看文件')
+        this.btnFun($('.btn-file-update'), '', '上传文件')
+        this.btnFun($('.btn-file-download'), '', '下载文件')
+        this.btnFun($('.btn-file-delete'), '', '删除文件')
+
+        // this.btnFun(this.jieHuan, '', '设备外出/归还')
+        // this.btnFun(this.repair, '', '设备维修')
+        // this.btnFun(this.allocation, '', '设备调拨')
+        // this.btnFun(this.tingQiYong, '', '设备停用/启用')
+        // this.btnFun(this.calibration, '', '设备检校')
+        // this.btnFun(this.maintain, '', '设备保养')
+        // this.btnFun(this.parameter, 'checkItemController.do?goCheckItemList', '设备参数')
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var tipIndex;
+        btnName.on('click', function () {
+          var that = InitObj, self = this, ids = "", rowsTree = $('#dataGridFolder').treegrid('getSelections');
+          console.log('rowsTree', rowsTree)
+          var rows = $('#dataGrid').datagrid('getSelections')
+          if (!rowsTree || rowsTree.length === 0) {
+            tipIndex = layer.tips('<span class="layui-color-white">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            for (var i = 0; i < rowsTree.length; i++) {
+              if (i == 0) {
+                ids += rowsTree[i].id;
+              } else {
+                ids += "," + rowsTree[i].id;
+              }
+            }
+            if ('新增目录' === openName) {
+              that.addEditFolder(rowsTree[0].mainEntityId, rowsTree[0].parentId, '', '新增目录')
+            } else if ('删除目录' === openName) {
+              ajaxRequest(openUrl, { "id": rowsTree[0].id }, that.layerIndexClose, false, true)
+            } else if ('编辑目录' === openName) {
+              that.addEditFolder(rowsTree[0].mainEntityId, rowsTree[0].parentId, rowsTree[0].name, '编辑目录', rowsTree[0].id)
+            } else if ('查看文件' === openName) {
+              goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+            } else if ('上传文件' === openName) {
+              goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+            } else if ('下载文件' === openName) {
+              goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+            } else if ('删除文件' === openName) {
+              goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+            }
+          }
+          return;
+        })
+        btnName.mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 新增修改文件目录
+      addEditFolder: function (mainEntityId, parentId, code, title, did) {
+        var that = this;
+        layer.prompt({
+          formType: 2,
+          value: code,
+          title: title,
+          area: ['300px', '50px'] //自定义文本域宽高
+        }, function (value, index, elem) {
+          var data = { "mainEntityId": mainEntityId, "name": value, "parent.id": parentId }
+          if (did) {
+            data.id = did;
+          }
+          ajaxRequest('eqFolderController.do?saveFolder', data, that.layerIndexClose, false, true, index)
+        });
+      },
+      // 刷新页面关闭弹出层
+      layerIndexClose: function (res, index) {
+        var that = InitObj;
+        index ? layer.close(index) : '';
+        if (res.success) {
+          layerAlertFun(res.msg, 6, [])
+          that.reloadDataGridFolder()
+        } else {
+          layerAlertFun(res.msg, 5, [])
+        }
+      },
+      addToForm: function (filesArrs) {
+        var that = InitObj;
+        console.log('filesArrs', filesArrs)
+        var filesArr = filesArrs.slice(-filesObj.numbers);
+        console.log('filesArr', filesArr)
+        var rowsTree = $('#dataGridFolder').treegrid('getSelections')
+        var data = { "mainEntityId": rowsTree[0].mainEntityId, "folderId": rowsTree[0].id, "attachmentId": filesArr[0].id }
+        ajaxRequest('eqFileController.do?saveFile', data, that.addToFormCall, false, true)
+      },
+      // 刷新页面关闭弹出层
+      addToFormCall: function (res) {
+        console.log('addToFormCall', res)
+        var that = InitObj;
+        if (res.success) {
+          layerAlertFun(res.msg, 6, [])
+          that.reloadDataGrid()
+        } else {
+          layerAlertFun(res.msg, 5, [])
+        }
+      },
+      initDataGrid: function () {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.fileUrl + '&folderId=' + this.folderId,
+          toolbar: '.dataGrid .toolbar',
+          singleSelect: false,
+          pagination: false,
+          fit: true,
+          fitColumns: true,
+          scrollbarSize: 0,
+          columns: [[
+            { title: "ID", field: "id", hidden: true },
+            { title: "名称", field: "name", width: 25 },
+            { title: "上传人", field: "createName", width: 30 },
+            {
+              title: "上传时间", field: "createDate", align: 'center', width: 20, formatter: function (value, row, index) {
+                return value ? new Date(value).Format("yyyy-MM-dd") : ''
+              }
+            }
+          ]],
+          onLoadSuccess: function (data) {
+            console.log('initDataGrid122', data)
+            //禁用表头的全选框(需求如此)
+            getPagerFun('#dataGrid')
+            if (data.rows.length > 0) {
+              var dataRows = data.rows;
+              filesObj.files = [];
+              for (var i = 0; i < dataRows.length; i++) {
+                filesObj.files.push({
+                  'id': dataRows[i].attachmentId,
+                  'realpath': dataRows[i].url || '',
+                  'attachmenttitle': dataRows[i].name || '',
+                  'fileId': dataRows[i].id
+                })
+              }
+            }
+            // filesObj.files = data.rows;
+          }
+        });
+      },
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      initDataGridFolder: function () {
+        var that = this;
+        this.dataGridFolder = $('#dataGridFolder').treegrid({
+          url: this.folderUrl + '&mainEntityId=' + this.editId,
+          idField: 'id',
+          treeField: 'name',
+          singleSelect: true,
+          method: 'get',
+          fit: true,
+          fitColumns: true,
+          columns: [[
+            { title: "ID", field: "id", hidden: true },
+            { title: "文件名", field: "name", width: 130, formatter: this.applyTitleAttribute },
+          ]],
+          onLoadSuccess: function (row, data) {
+            console.log('initDataGridFolder152', row, data)
+            //禁用表头的全选框(需求如此)
+            getPagerFun('#dataGrid');
+            // that.dataGridFolder.treegrid('select', that.editId)
+            // $('#dataGridFolder').treegrid('select', that.editId)
+            // $('#dataGridFolder').treegrid("select", '402882206b97c342016b97cfd76b000a');
+            var rows = that.dataGridFolder.treegrid('getData');
+            console.log('rows', rows)
+            that.dataGridFolder.treegrid("select", rows[0].id);
+          },
+          onSelect: function (row, a, b) {
+            console.log('onSelect', row, a, b)
+            that.folderId = row.id;
+            that.initDataGrid();
+          }
+
+        });
+      },
+      reloadDataGridFolder: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGridFolder.treegrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGridFolder.treegrid('reload', queryParams);
+        }
+
+      },
+      applyTitleAttribute: function (value) {
+        return value ? '<span title="' + value + '">' + value + '</span>' : ''
+      }
+    }
+
+  </script>
+</body>
+
+</html>

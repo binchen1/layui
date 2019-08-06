@@ -1,0 +1,235 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单位信息</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" type="text/css" href="../../assets/css/list.css" />
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单位信息</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <style>
+    .layui-table-body {
+      /* overflow: hidden; */
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <!-- <div id="tableBox" class="height-full">
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" class="easyui-linkbutton funBtn_info" iconCls="icon-add" plain="true">新增</a>
+          <a href="#" class="easyui-linkbutton funBtn_log" iconCls="icon-edit" plain="true">修改</a>
+          <a href="#" style="display: none" data-funCode="assignedRollback" class="easyui-linkbutton funBtn_revoke"
+            iconCls="icon-undo" plain="true">任务撤回</a>
+        </span>
+      </div>
+    </div> -->
+
+    <div id="cc" class="easyui-layout" style="width:100%;height: 100%" data-options="fit: true">
+      <div data-options="region:'north',split:true" style="height:40px;">
+        <span style="width: 100%">
+          <a class="easyui-linkbutton btn-4-add" onclick="InitObj.addFun()" plain="true" icon="icon-add">添加</a>
+          <a class="easyui-linkbutton btn-4-edit" plain="true" icon="icon-edit">编辑</a>
+        </span>
+      </div>
+      <!-- <div data-options="region:'east',title:'East',split:true" style="width:100px;"></div>
+      <div data-options="region:'west',title:'West',split:true" style="width:100px;"></div> -->
+      <div data-options="region:'center'" style="background:#eee;overflow:hidden;">
+        <!-- <table class="easyui-datagrid" id="dataGrid"></table> -->
+        <table class="layui-hide" id="test" lay-filter="test"></table>
+
+        <script type="text/html" id="switchTpl">
+          <!-- 这里的 checked 的状态只是演示 -->
+          <!-- <input type="checkbox" name="sex" value="{{d.id}}" lay-skin="switch" lay-text="女|男" lay-filter="sexDemo" {{ d.id == 10003 ? 'checked' : '' }}> -->
+          <input type="text" class="layui-input" id="" value="{{d.consign_date}}">
+        </script>
+
+        <script type="text/html" id="checkboxTpl">
+          <!-- 这里的 checked 的状态只是演示 -->
+          <input type="checkbox" name="lock"  value="{{d.id}}" title="启用" lay-filter="lockDemo" {{ d.id == 10006 ? 'checked' : '' }}>
+        </script>
+
+      </div>
+      <div data-options="region:'south',title:'South Title',split:true" style="height:400px;background: coral">
+        <div id="detailInfo"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    layui.use(['table', 'form', 'laydate'], function () {
+      var table = layui.table
+        , form = layui.form
+        , laydate = layui.laydate
+      // tableRender(table, tableData)
+      // //执行一个laydate实例
+      // laydate.render({
+      //   elem: '#test1' //指定元素
+      // });
+      InitObj.init(table, form, laydate)
+      //监听性别操作
+      form.on('switch(sexDemo)', function (obj) {
+        layer.tips(this.value + ' ' + this.name + '：' + obj.elem.checked, obj.othis);
+      });
+      // var checkId = '';
+
+
+
+    });
+    var InitObj = {
+      tableLayerM: null,
+      formLayerM: null,
+      laydateLayerM: null,
+      tableIns: null,
+      tableData: null,
+      currentData: null,
+      checkId: '',
+      init: function (table, form, laydate) {
+        this.tableLayerM = table;
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        var that = this;
+        // $.getJSON('../../data/table/demo1.json', function (data) {
+        //   console.log('19', data)
+        //   that.tableData = data;
+        //   that.tableRender(that.tableData)
+        // })
+        //监听锁定操作
+        this.formLayerM.on('checkbox(lockDemo)', function (obj) {
+          var that = InitObj;
+          console.log('obj.elem.checked', obj.elem.checked)
+          console.log('this.value', this.value)
+          console.log('that.checkId', that.checkId)
+          if (obj.elem.checked) {
+            if (that.checkId !== this.value) {
+              $('input[value="' + that.checkId + '"]+div').click();
+              that.checkId = this.value;
+              for (var i = 0; i < that.tableData.length; i++) {
+                if (that.checkId === that.tableData[i].id) {
+                  that.currentData = that.tableData[i];
+                  that.detailHtml(that.currentData, true)
+                  break;
+                }
+              }
+            } else {
+              // $('input[value="' + this.value + '"]+div').click();
+            }
+          } else {
+            if (that.checkId === this.value) {
+              console.log('此昂等')
+              that.checkId = ''
+              that.detailHtml({}, false)
+              // $('input[value="' + this.value + '"]+div').click();
+            } else {
+              console.log('budeng')
+            }
+          }
+        });
+
+        ajaxRequest('unAssignedTaskController.do?datagrid', {}, this.successCallback, true, true)
+      },
+      detailHtml: function (data, isCanle) {
+        if (isCanle) {
+          console.log('data149', data)
+          var html = '';
+          for (var key in data) {
+            html += '<span>' + key + ':' + data[key] + '</span>'
+          }
+          $('#detailInfo').html(html)
+        } else {
+
+        }
+        console.log('isCanle', isCanle)
+      },
+      addFun: function () {
+        this.tableData.push({ username: '', city: '', sign: '', consign_date: '', priority: '', id: '', });
+        this.tableRender(this.tableData, true)
+      },
+      successCallback: function (res) {
+        console.log('res', res)
+        var that = InitObj;
+        that.tableData = res.rows.slice(0, 3);
+        that.tableRender(that.tableData)
+      },
+      tableRender: function (tableData, isEdit) {
+        console.log('isEdit', isEdit, typeof isEdit)
+        this.tableIns = this.tableLayerM.render({
+          elem: '#test'
+          , height: 'full-450'
+          // , height: '210'
+          // , cellMinWidth: 80
+          , data: tableData
+          , cols: [[
+            { type: 'checkbox' }
+            , { field: 'id', title: 'ID', unresize: true, sort: true, hide: true }
+            , { field: 'username', title: '用户名', edit: 'text' }
+            , { field: 'city', title: '城市', edit: 'text' }
+            , { field: 'sign', title: '财富', edit: 'text' }
+            , { field: 'consign_date', title: '创建日期', templet: '#switchTpl', unresize: true }
+            , { field: 'priority', title: '是否锁定', templet: '#checkboxTpl', unresize: true }
+          ]]
+          , page: false
+          , done: function (data) {
+            console.log('data105', data)
+          }
+        });
+        $('input[value="' + this.tableData[0].id + '"]+div').click()
+        // 初始化完成了，现在干掉前面 的可编辑属性
+        $("td").removeAttr("data-edit");
+        console.log('tableData.length', tableData.length)
+        // $("td[data-field='id'][data-content='']").parent()
+        //   .find("td[data-field='name'],td[data-field='price'],td[data-field='amount']")
+        //   .attr("data-edit", "text");
+        if (isEdit) {
+          $('tr[data-index="' + (tableData.length - 1) + '"]')
+            .find("td[data-field='username'],td[data-field='city'],td[data-field='sign']")
+            .attr("data-edit", "text");
+          $('tr[data-index="' + (tableData.length - 1) + '"]').find("td[data-field='consign_date']")
+            .find('input').attr('id', "test1");
+          //执行一个laydate实例
+          this.laydateLayerM.render({
+            elem: '#test1' //指定元素
+          });
+        }
+      }
+    }
+
+  </script>
+</body>
+
+
+
+</html>

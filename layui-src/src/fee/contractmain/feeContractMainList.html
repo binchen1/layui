@@ -1,0 +1,1177 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>合同管理主列表</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/system/log/logProcess.js'></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>合同管理主列表</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+  <style>
+    .middle-box {
+      position: absolute;
+      bottom: 230px;
+      top: 0;
+      width: 100%;
+    }
+
+    .bottom-box {
+      height: 230px;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .bottom-box .layui-tab-card {
+      height: auto;
+    }
+
+    .waySelect {
+      width: 100%;
+      height: 24px;
+      border: none;
+      background: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">收款合同</li>
+      <li>付款合同</li>
+    </ul>
+    <div id="tableBox" class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="quickQryParam" class="layui-input" placeholder="输入合同名称/合同编号/合同方后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs8 senior seniorText" style="display:none;">
+                高级查询
+                <span id="retractIcon" onclick="InitObj.retractFun()">
+                  <i class="layui-icon layui-icon-up"></i>
+                </span>
+              </div>
+              <div class="layui-col-xs4">
+                <span id="searchSwitch">
+                  <a href="###" class="easyui-linkbutton" iconCls="iconfont icon-reload" plain="true">切换到高级查询</a>
+                </span>
+              </div>
+            </div>
+            <div class="senior retract" style="display:none">
+              <div class="layui-form-item">
+                <label class="layui-form-label">合同编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="code" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">登记日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="recordDate" id="recordDate" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">合同状态</label>
+                <div class="layui-input-block">
+                  <input type="checkbox" lay-skin="primary" name="contractStatus[2]" title="录入中">
+                  <input type="checkbox" lay-skin="primary" name="contractStatus[3]" title="审核中">
+                  <input type="checkbox" lay-skin="primary" name="contractStatus[1]" title="执行中">
+                  <input type="checkbox" lay-skin="primary" name="contractStatus[0]" title="已完成">
+                  <input type="checkbox" lay-skin="primary" name="contractStatus[4]" title="审核不通过">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">合同方</label>
+                <div class="layui-input-block">
+                  <input type="text" name="firstPartyName" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">合同名称</label>
+                <div class="layui-input-block">
+                  <input type="text" name="name" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+
+              <div class="layui-form-item">
+                <label class="layui-form-label">费用执行方式</label>
+                <div class="layui-input-block">
+                  <input type="checkbox" lay-skin="primary" name="contractType[1]" title="全包合同">
+                  <input type="checkbox" lay-skin="primary" name="contractType[2]" title="折扣合同">
+                  <input type="checkbox" lay-skin="primary" name="contractType[3]" title="部分包干合同">
+                  <input type="checkbox" lay-skin="primary" name="contractType[4]" title="参数指定合同">
+                </div>
+              </div>
+              <div>
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.seniorQuickSearch()">查询</a>
+                <button class="easyui-linkbutton" type="reset" iconCls="iconfont icon-reload" plain="true">重置</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" class="easyui-linkbutton funBtn_add" iconCls="iconfont icon-add" plain="true">新增</a>
+            <a href="#" class="easyui-linkbutton funBtn_edit" iconCls="iconfont icon-edit" plain="true">编辑</a>
+            <a href="#" class="easyui-linkbutton funBtn_detail" iconCls="iconfont icon-edit" plain="true">查看</a>
+            <a href="#" class="easyui-linkbutton funBtn_detail_implement" iconCls="iconfont icon-redo" plain="true">合同执行明细</a>
+            <a href="#" class="easyui-linkbutton funBtn_stop" iconCls="iconfont icon-filter" plain="true">终止合同</a>
+            <span id="isHideSpan" style="display:none">
+              <a href="#" class="easyui-linkbutton funBtn_delete" iconCls="iconfont icon-cancel" plain="true">删除</a>
+              <a href="#" class="easyui-linkbutton funBtn_view_log" iconCls="iconfont icon-edit" plain="true">查看日志</a>
+            </span>
+            <button class="layui-btn layui-btn-sm funBtn_8 show" data-funCode="delAndRecoverConsign"><i
+                class="layui-icon">&#xe633;</i></button>
+          </span>
+        </div>
+      </div>
+      <div class="middle-box">
+        <table class="easyui-datagrid" id="dataGrid"></table>
+      </div>
+      <div class="bottom-box">
+        <div class="layui-tab layui-tab-card" lay-filter="docDemoTabBriefBottom">
+          <ul class="layui-tab-title">
+            <li class="layui-this" id="docDemoTabBriefBottom">回款记录</li>
+            <li>违约扣款</li>
+            <li id="quantities">工程量</li>
+          </ul>
+          <div class="layui-tab-content">
+            <form class="layui-form" id="commonQueryForm2">
+              <div class="layui-tab-item layui-show">
+                <div id="tb2" class="tb-box-btn" id="functionButton">
+                  <span>
+                    <a href="#" class="easyui-linkbutton plan-bottom-btn" style="display:none" iconCls="iconfont icon-reload"
+                      plain="true">回款计划调整</a>
+                    <a href="#" class="easyui-linkbutton moneyBack-bottom-btn" style="display:none"
+                      iconCls="iconfont icon-reload" plain="true">回款登记</a>
+                    <a href="#" class="easyui-linkbutton edit-bottom-btn" style="display:none" iconCls="iconfont icon-edit"
+                      plain="true">编辑</a>
+                  </span>
+                </div>
+                <table class="easyui-datagrid" id="dataGridBottom" style="height:150px"></table>
+                <div id="edit-bottom-box" style="display:none">
+                  <a class="layui-btn layui-btn-sm border-none" id="addOneHtmlA">
+                    <i class="layui-icon">&#xe61f;</i>
+                  </a>
+                  <div class="rf">
+                    <a class="layui-btn submit-cancel" onclick="InitObj.submitFun()">保存</a>
+                    <a class="layui-btn submit-cancel cancel" onclick="InitObj.cancelFun()">取消</a>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <input type="hidden" id="userName" value="${LOCAL_CLINET_USER.realName}">
+
+
+  <script>
+    $(function () {
+      // tabTableHeight('.layui-tab', '.layui-tab-content')
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          var that = InitObj;
+          that.isPlan = false;
+          that.isMoneyBack = false;
+          that.dataTypeBottom = 0;
+          if (0 === data.index) {
+            $('#quantities').show(); // 工程量
+            that.moneyBackBottomBtn.hide();
+          } else {
+            $('#quantities').hide(); // 工程量
+            that.moneyBackBottomBtn.show();
+          }
+          that.initDataGrid(that.columnsFun(data.index + 1));
+          $('#docDemoTabBriefBottom').click();
+        });
+        element.on('tab(docDemoTabBriefBottom)', function (data) {
+          that.tableDataAjax(data.index);
+        });
+        laydate.render({
+          elem: '#recordDate'
+          , trigger: 'click'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , done: function (value, date, endDate) {
+            // console.log(value); //得到日期生成的值，如：2017-08-18
+            // console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+            // console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+          }
+          , change: function (value, date, endDate) {
+            // console.log(value); //得到日期生成的值，如：2017-08-18
+            // console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+            // console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+          }
+        })
+        InitObj.init(form, laydate, table);
+      })
+
+    })
+    var InitObj = {
+      defaultUrl: 'contractController.do?datagrid', //默认获取数据url
+      contractPageUrl: 'contractController.do?goContractEdit', // 新增编辑合同界面
+      auditPageUrl: 'contractController.do?goSubmitAudit', // 提交审核界面
+      repaymentRecordUrl: 'contractController.do?getContractRepaymentRecord', // 回款计划与回款记录
+      repaymentPlanUrl: 'contractController.do?getContractRepaymentPlan', // 回款计划
+      repaymentUrl: 'contractController.do?getContractRepayment', // 回款登记（回款记录）
+      deductionsUrl: 'contractController.do?getContractDeductions', // 违约扣款
+      quantitiesUrl: 'contractController.do?getContractQuantities', // 工程量
+      repaymentPlanSaveUrl: 'contractController.do?savePepaymentPlan', // 新增回款计划
+      repaymentSaveUrl: 'contractController.do?saveContractRepayment', // 新增回款记录
+      deductionsSaveUrl: 'contractController.do?saveDeductRecord', // 新增违约扣款
+      quantitiesSaveUrl: 'contractController.do?saveQuantities', // 新增工程量
+      repaymentPlanDelUrl: 'contractController.do?delRepaymentPlan', // 删除回款计划
+      repaymentDelUrl: 'contractController.do?delFeeRepayment', // 删除回款登记（回款记录）
+      deductionsDelUrl: 'contractController.do?delDeductions', // 删除违约扣款
+      quantitiesDelUrl: 'contractController.do?delQuantities', // 删除工程量
+      formLayerM: null, // form对象 
+      laydateLayerM: null,
+      tableLayerM: null,
+      tableIns: null,
+      dataType: 1, // 查询类型:  1:收款合同, 2:付款合同
+      dataTypeBottom: 0, // 查询类型:  0:回款计划, 1:违约扣款,2:工程量
+      searchType: 1, // 查看合同详情数据时区分查询条件：1.普通查询   2.高级查询
+      addContract: $('#functionButton .funBtn_add'), // 新增
+      editContract: $('#functionButton .funBtn_edit'), // 编辑
+      detailContract: $('#functionButton .funBtn_detail'), // 查看
+      detailImplementContract: $('#functionButton .funBtn_detail_implement'), // 合同执行明细
+      stopContract: $('#functionButton .funBtn_stop'), // 终止合同
+      deleteContract: $('#functionButton .funBtn_delete'), // 删除合同
+      viewLog: $('#functionButton .funBtn_view_log'), // 查看日志
+      isHideSpan: $('#isHideSpan'),
+      isHide: true,
+      isShow: $('#functionButton .funBtn_8'), // 是否显示其他按钮 
+      searchShow: true, // 普通搜索
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      seniorRow: $('.seniorRow'), // 高级查询显示
+      planBottomBtn: $('.plan-bottom-btn'), // 回款计划调整按钮
+      moneyBackBottomBtn: $('.moneyBack-bottom-btn'), // 回款登记
+      editBottomBtn: $('.edit-bottom-btn'), // 编辑按钮
+      tableBoxEle: $('#tableBox'),
+      bottomHeight: 210,
+      queryParams: {}, // 查询条件
+      contractId: '', // 合同id
+      dataGridBottom: null, // 底部table
+      dataGridData: null, // 底部table
+      isAdd: false, // 是否点击了添加
+      isPlan: false, // 是否点击了回款计划调整
+      isMoneyBack: false, // 是否点击了回款登记
+      bottomInput: null, // 脚部table
+      userName: $('#userName').val(),
+      fristConfirm: true, //是否第一次点击提交
+      business: true, // 业务控制参数 是否显示报告重打修改需要审批
+      totalQuantities: 0, // 累计完成工程量
+      statusImplement: false, // 状态为执行中
+      dataJson: null, //提交数据
+      init: function (form, laydate, table) {
+        /** common.js中引入函数, 勿删 getPagerFun()  getTableHeight()*/
+        ajaxRequest('tSBusinessParamController.do?getBusinessParam', { "key": 'CONTRACT_MANAGE_4' }, this.businessCallback, false, false);
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.tableLayerM = table;
+        this.initDataGrid(this.columnsFun(this.dataType))
+        // 搜素按钮回车键盘
+        this.commonQryKeyDown()
+        // 高级查询与普通查询切换
+        this.styleLayout();
+        this.btnFun(this.addContract, this.contractPageUrl, '新增合同');
+        this.btnFun(this.editContract, this.contractPageUrl, '编辑合同');
+        this.btnFun(this.detailContract, this.contractPageUrl, '查看合同详情');
+        this.btnFun(this.detailImplementContract, 'contractController.do?goExecutionDetails', '合同执行明细');
+        this.btnFun(this.stopContract, this.auditPageUrl, '终止合同');
+        this.btnFun(this.deleteContract, 'contractController.do?delContract', '删除合同');
+        this.btnFun(this.viewLog, '', '查看日志');
+        form.render();
+      },
+      //  查询业务参数：报告重打修改是否需要审批
+      businessCallback: function (res) {
+        var that = InitObj;
+        if ('Y' === res.obj) {
+          that.business = true;
+        } else {
+          that.business = false;
+        }
+      },
+      tableDataAjax: function (tableNum) {
+        var url = '';
+        this.isAdd = false;
+        this.isPlan = false;
+        this.isMoneyBack = false;
+        $('#edit-bottom-box').hide();
+        $('.layui-btn-edit').hide();
+        if (0 === tableNum) {
+          url = this.repaymentRecordUrl;
+        } else if (1 === tableNum) {
+          url = this.deductionsUrl;
+        } else {
+          url = this.quantitiesUrl;
+        }
+        var row = $('#dataGrid').datagrid('getSelections');
+        if (row.length > 0) {
+          this.statusImplement = ('1' === row[0].status ? true : false);
+          this.contractId = row[0].id;
+          ajaxRequest(url, { id: row[0].id }, this.tableRenderFun, true, true, tableNum)
+        } else {
+          this.statusImplement = false;
+          this.tableRenderFun('', tableNum);
+        }
+      },
+      tableRenderFun: function (res, tableNum) {
+        // console.log('res349', res)
+        var that = InitObj;
+        that.dataGridData = res.obj || [];
+        that.initDataGrid2(that.columnsFun2(tableNum));
+      },
+      // 点击功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, ids = "", row = $('#dataGrid').datagrid('getSelections');
+          if ('新增合同' === openName) {
+            that.layerOpenFunAdd(openUrl, openName, ['70%', '90%'], ['完成登记', '确定', '取消']);
+            return;
+          }
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            for (var i = 0; i < row.length; i++) {
+              if (i == 0) {
+                ids += row[i].id;
+              } else {
+                ids += "," + row[i].id;
+              }
+            }
+            if ('编辑合同' === openName) {
+              // 0.合同终止 1.正常/执行中 2.录入中 3.待审核 4.审核不通过
+              if ('2' === row[0].status || '4' === row[0].status) { // 录入中或审核不通过
+                that.layerOpenFunAdd(openUrl + "&contractId=" + ids, openName, ['70%', '90%'], ['完成登记', '确定', '取消']);
+              } else if ('1' === row[0].status) {
+                layerOpenFun(openUrl + "&contractId=" + ids, openName, ['70%', '90%'], ['确定', '取消']);
+              } else {
+                layerAlertFun('请选择不在“审核中“或”终止“的合同', btnName)
+              }
+            } else if ('查看合同详情' === openName) {
+
+              layerOpenFun(openUrl + "&contractId=" + ids + '&detail=detailPage', openName, ['70%', '90%'], ['确定', '取消']);
+              return;
+            } else if ('删除合同' === openName) {
+              if ('2' === row[0].status) {  // 录入中
+                layerConfirmFun('删除后将不可恢复，是否继续？', '', ['确认', '取消'], that.deleteContractFun, ids);
+              } else {
+                layer.msg('请选择录入中的合同！', { icon: 2 })
+              }
+              return;
+            } else if ('终止合同' === openName) {
+              if ('1' === row[0].status) { // 执行中
+                var urlParam = "&type=7" + "&relationObjId=" + that.contractId + "&business=" + that.business;
+                layerOpenFun(openUrl + urlParam, openName, ['60%', '80%'], ['确定', '取消'])
+              } else {
+                layer.msg('请选择执行中的合同！', { icon: 2 })
+              }
+              return;
+            } else if ('合同执行明细' === openName) {
+              layerOpenFun(openUrl + "&contractId=" + ids, openName, ['75%', '90%'], ['确定', '取消']);
+              return;
+            } else if ('查看日志' === openName) {
+              showLogs('7', ids, true);
+            }
+            return;
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+      layerOpenFunAdd: function (openUrl, title, areaArr, btnArr, parentCallName, childFuncName, type, childBtnName) {
+        layer.open({
+          type: type ? type : 2,
+          title: title,
+          skin: 'mylayui-layer-molv',
+          area: areaArr,
+          btn: btnArr,
+          content: openUrl, //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+          yes: function (index, layero) {
+            //按钮【按钮一】的回调
+            var iframeWin = window["layui-layer-iframe" + index], iframeWinRes = '';
+            iframeWinRes = iframeWin.InitObj.openCallback('1');
+          },
+          btn2: function (index, layero) {
+            //按钮【按钮二】的回调
+            var iframeWin = window["layui-layer-iframe" + index], iframeWinRes = '';
+            iframeWinRes = iframeWin.InitObj.openCallback();
+            return false  //开启该代码可禁止点击该按钮关闭
+          },
+          btn3: function (index, layero) {
+            //按钮【按钮三】的回调
+            //return false 开启该代码可禁止点击该按钮关闭
+          }
+        });
+
+      },
+      // 删除合同
+      deleteContractFun: function (yesParam, index) {
+        layer.close(index);
+        var that = InitObj;
+        ajaxRequest('contractController.do?delContract', { id: yesParam }, that.deleteContractAjaxCall, true, true);
+      },
+      deleteContractAjaxCall: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, [])
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          that.reloadDataGrid();
+        }
+      },
+      // table按钮点击进入详情
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addContractPageUrl + '&editId=' + did + '&detail=detailPage', openName = '查看详情';
+        layerOpenFun(openUrl, openName, ['90%', '90%'], [])
+      },
+      // table按钮点击进入编辑
+      goEdit: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addContractPageUrl + '&editId=' + did, openName = '重新编辑';
+        layerOpenFun(openUrl, openName, ['90%', '90%'], ['确定', '取消'])
+      },
+
+      // 查询时间分开始结束存放
+      dateStartEnd: function (queryParams, dataString) {
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams[dataString + 'Start'] = DateArr[0];
+          queryParams[dataString + 'End'] = DateArr[1];
+        } else {
+          queryParams[dataString + 'Start'] = '';
+          queryParams[dataString + 'End'] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        delete queryParams['quickQryParam'];
+        var status = '', type = '';
+        for (var key in queryParams.contractStatus) {
+          status += key + ',';
+        }
+        queryParams.status = status.slice(0, -1);
+        delete queryParams['contractStatus'];
+        for (var key in queryParams.contractType) {
+          type += key + ',';
+        }
+        queryParams.type = type.slice(0, -1);
+        delete queryParams['contractType'];
+
+        if (!isDateStartEnd(queryParams['recordDate'])) {
+          $('#recordDate').val('');
+          queryParams['recordDate'] = '';
+        }
+        queryParams = this.dateStartEnd(queryParams, 'recordDate')
+        delete queryParams['recordDate'];
+        this.queryParams = queryParams;
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var condition = $("input[name='quickQryParam']").val();
+        var queryParams = { 'quickQryParam': condition };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      applyMoneyAttribute: function (value) {
+        return formatMoney(getFloatStr(value), 2, '￥ ');
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {  // 查询类型: 1:收款合同, 2:付款合同
+        this.dataType = num;
+        if (1 === num) {
+          this.detailImplementContract.show();
+        } else {
+          this.detailImplementContract.hide();
+        }
+        var columns = [];
+        if (2 === num) {
+          columns.push({ title: "id", field: "id", hidden: true })
+        } else {
+          columns.push({ title: "id", field: "id", checkbox: true, width: 30 })
+        }
+        columns.push({ title: "合同编号", field: "code", width: 50 });
+        columns.push({ title: "合同方", field: "unitName", width: 70 });
+        columns.push({
+          title: "合同状态", field: "status", width: 70, formatter: function (value, row, index) {
+            // 0.合同终止 1.正常/执行中 2.录入中 3.待审核 4.审核不通过
+            var obj = { "0": "已完成", "1": "执行中", "2": "录入中", "3": "审核中", "4": "审核不通过" }
+            return obj[value] || ''
+          }
+        });
+        columns.push({ title: "合同金额", field: "totalFee", width: 70, formatter: this.applyMoneyAttribute });
+        if (1 === num) {
+          columns.push({ title: "已完成产值", field: "outPutValue", width: 70, formatter: this.applyMoneyAttribute });
+          columns.push({ title: "累计应收款", field: "appointTotal", width: 70, formatter: this.applyMoneyAttribute });
+          columns.push({ title: "累计已收款", field: "paidTotal", width: 70, formatter: this.applyMoneyAttribute });
+          columns.push({ title: "累计未收款", field: "waitPayTotal", width: 70, formatter: this.applyMoneyAttribute });
+        } else {
+          columns.push({ title: "累计应付款", field: "appointTotal", width: 70, formatter: this.applyMoneyAttribute });
+          columns.push({ title: "累计已付款", field: "paidTotal", width: 70, formatter: this.applyMoneyAttribute });
+          columns.push({ title: "累计未付款", field: "waitPayTotal", width: 70, formatter: this.applyMoneyAttribute });
+        }
+        columns.push({
+          title: "生效日期", field: "availabilityDate", width: 70, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "失效日期", field: "expiryDate", width: 70, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "登记日期", field: "createDate", width: 70, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "更多", field: "more", width: 150, formatter: function (value, row) {
+            // 其中【更多】内容为：甲方，合同名称，合同类型
+            var html = '';
+            if (row.contractName) {
+              html += '合同名称：' + row.contractName + '； '
+            }
+            if (row.type) {
+              var types = { '1': '全包合同', '2': '折扣合同', '3': '部分包干合同', '4': '参数指定合同' }
+              html += '合同类型：' + types[row.type] + '； '
+            }
+            return html;
+          }
+        });
+        return [columns];
+      },
+      // 高级查询收起按钮
+      retractFun: function () {
+        if ($('.retract').is(':hidden')) {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i> ')
+          this.tableBoxEle.css('height', (this.tableBoxEle.height() + this.bottomHeight) + 'px');
+        } else {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-down"></i> ')
+          this.tableBoxEle.css('height', (this.tableBoxEle.height() - this.bottomHeight) + 'px');
+        }
+        $('.retract').toggle();
+        // getTableHeight()
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&feeType=' + this.dataType,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid');
+            //禁用表头的全选框(需求如此)
+            $(".datagrid-header-check").html("");
+            if (data.rows.length > 0) {
+              that.dataGrid.datagrid('selectRow', 0);
+            } else {
+              that.statusImplement = false;
+              that.tableRenderFun('', that.dataTypeBottom)
+            }
+          },
+          onSelect: function (rowIndex, rowData) {
+            that.tableDataAjax(that.dataTypeBottom);
+          }
+        });
+
+
+
+      },
+      applyTitleAttribute: function (value, row, index, field) {
+        var values = value || '';
+        return '<input type="text" disabled="" autocomplete="off" name="' + field + index + '" class="layui-input" id="" value="' + values + '">';
+      },
+      // 各tabs展示数据
+      columnsFun2: function (num) {
+        var columns = []; that = this;
+        this.dataTypeBottom = num;
+        this.totalQuantities = 0;
+        columns.push({ title: "ID", field: "id", hidden: true })
+        if (0 === num) {
+          if (this.isPlan) {
+            columns.push({
+              title: "期号", field: "name1", width: 30,
+              formatter: function (value, row, index) {
+                return index + 1;
+
+              }
+            })
+          }
+          if (!this.isMoneyBack || this.isPlan) {
+
+            columns.push({
+              title: "约定回款日期", field: "appointBackDate", align: 'center', width: 20,
+              formatter: function (value, row, index) {
+                var values = (value ? new Date(value).Format("yyyy-MM-dd") : '');
+                return '<input type="text" class="layui-input" autocomplete="off" name="appointBackDate' + index + '" disabled id="appointBackDate' + index + '" value="' + values + '">';
+              }
+            })
+            columns.push({
+              title: "约定回款金额", field: "appointFee", width: 35, formatter: function (value, row, index) {
+                var values = formatMoney(getFloatStr(value), 2, '￥ ');
+                return that.applyTitleAttribute(values, row, index, 'appointFee');
+              }
+            })
+          }
+
+          if (this.isPlan) {
+            columns.push({
+              title: "备注", field: "remark", width: 30,
+              formatter: function (value, row, index) {
+                return that.applyTitleAttribute(value, row, index, 'remark')
+              }
+            })
+          }
+          if (!this.isPlan || this.isMoneyBack) {
+            columns.push({
+              title: "回款日期", field: "date", width: 30,
+              formatter: function (value, row, index) {
+                var values = (value ? new Date(value).Format("yyyy-MM-dd") : '');
+                return '<input type="text" class="layui-input" autocomplete="off" name="date' + index + '" disabled id="date' + index + '" value="' + values + '">';
+              }
+            })
+            columns.push({
+              title: "回款金额", field: "fee", align: 'center', width: 35,
+              formatter: function (value, row, index) {
+                var values = formatMoney(getFloatStr(value), 2, '￥ ');
+                return that.applyTitleAttribute(values, row, index, 'fee');
+              }
+            })
+            columns.push({
+              title: "支付方式", field: "way", align: 'center', width: 20,
+              formatter: function (value, row, index) {
+                var wayType = { '1': '现金', '2': '转账', '3': '支票' };
+                var html = '';
+                if (undefined !== value) {
+                  html += '<select name="way' + index + '" lay-ignore class="waySelect" disabled>'
+                  for (var key in wayType) {
+                    if (key === value) {
+                      html += '<option value="' + value + '" selected="">' + wayType[value] + '</option>'
+                    } else {
+                      html += '<option value="' + key + '">' + wayType[key] + '</option>'
+                    }
+                  }
+                  html += '</select>'
+                }
+                return html;
+              }
+            })
+            columns.push({
+              title: "累计已汇款金额", field: "totalFee", align: 'center', width: 40, formatter: this.applyMoneyAttribute
+            })
+          }
+        } else if (1 === num) {
+          columns.push({
+            title: "登记人", field: "createName", width: 25, formatter: function (value, row, index) {
+
+              return value || that.userName;
+            }
+          })
+          columns.push({
+            title: "登记日期", field: "recordDate", width: 20, formatter: function (value, row, index) {
+              var values = value || '';
+              return '<input type="text" autocomplete="off" name="recordDate' + index + '" class="layui-input" disabled id="recordDate' + index + '" value="' + values + '">';
+            }
+          })
+          columns.push({
+            title: "扣款金额", field: "fee", width: 30, formatter: function (value, row, index) {
+              var values = formatMoney(getFloatStr(value), 2, '￥ ');
+              return that.applyTitleAttribute(values, row, index, 'fee');
+            }
+          })
+          columns.push({
+            title: "备注", field: "remark", align: 'center', width: 20,
+            formatter: function (value, row, index) {
+              return that.applyTitleAttribute(value, row, index, 'remark');
+            }
+          })
+          columns.push({
+            title: "累计扣款", field: "totalFee", align: 'center', width: 20, formatter: this.applyMoneyAttribute
+          })
+        } else {
+          columns.push({
+            title: "登记人", field: "createName", width: 25, formatter: function (value, row, index) {
+              return value || that.userName;
+            }
+          })
+          columns.push({
+            title: "登记日期", field: "recordDate", align: 'center', width: 20,
+            formatter: function (value, row, index) {
+              var values = value || '';
+              return '<input type="text" autocomplete="off" name="recordDate' + index + '" class="layui-input" disabled id="recordDate' + index + '" value="' + values + '">';
+            }
+          })
+          columns.push({
+            title: "本期完成工程量(%)", field: "quantities", width: 35, formatter: function (value, row, index) {
+              that.totalQuantities += value;
+              return that.applyTitleAttribute(value, row, index, 'quantities');
+            }
+          })
+          columns.push({
+            title: "备注", field: "remark", align: 'center', width: 20,
+            formatter: function (value, row, index) {
+              return that.applyTitleAttribute(value, row, index, 'remark');
+            }
+          })
+          columns.push({
+            title: "累计完成工程量(%)", field: "totalQuantities", align: 'center', width: 35
+          })
+        }
+        columns.push({
+          title: "", field: "opt", width: 10,
+          formatter: function (value, row, index) {
+            var btns = '';
+            btns += '<button title="删除" type="button" style="display:none" class="layui-btn layui-btn-sm layui-btn-edit"'
+            btns += ' onclick="InitObj.goDelete(&quot;' + row.id + '&quot;,&quot;' + index + '&quot;,event)"><i class="layui-icon">&#xe640;</i></button>';
+            return btns;
+          }
+        })
+        if (1 === this.dataType) { //  1:收款合同,
+          this.moneyBackBottomBtn.hide(); // 回款登记
+        } else {  //  2:付款合同
+          if (0 === num) {
+            this.moneyBackBottomBtn.show(); // 回款登记
+          } else {
+            this.moneyBackBottomBtn.hide(); // 回款登记
+          }
+        }
+        if (0 === num) {
+          if (this.statusImplement) {
+            this.planBottomBtn.show(); // 回款计划调整按钮
+          } else {
+            this.planBottomBtn.hide(); // 回款计划调整按钮
+          }
+          this.editBottomBtn.hide(); // 编辑按钮
+        } else {
+          this.planBottomBtn.hide(); // 回款计划调整按钮
+          this.editBottomBtn.show(); // 编辑按钮
+        }
+        return [columns];
+      },
+      initDataGrid2: function (columns) {
+        var that = this;
+        this.dataGridBottom = $('#dataGridBottom').datagrid({
+          data: this.dataGridData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          toolbar: '#tb2',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            that.bottomInput = $('#dataGridBottom').siblings('.datagrid-view2').find('.datagrid-body');
+            if (that.isAdd) {
+              that.bottomInput.find('input').attr('disabled', false).css('border-color', '#ccc');
+              $('.layui-btn-edit').show();
+            } else {
+              that.bottomInput.find('input').css('border-color', 'transparent');
+            }
+            // $('#dataGridBottom').datagrid('selectRow', 0);
+
+            if (that.isPlan || that.isMoneyBack) {
+              that.bottomTableRender();
+            }
+            for (var i = 0; i < data.rows.length; i++) {
+              that.laydateLayerM.render({
+                elem: '#recordDate' + i, //指定元素
+                trigger: 'click'
+              });
+              that.laydateLayerM.render({
+                elem: '#appointBackDate' + i, //指定元素
+                trigger: 'click'
+              });
+              that.laydateLayerM.render({
+                elem: '#date' + i, //指定元素
+                trigger: 'click'
+              });
+            }
+            that.formLayerM.render()
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+          }
+        });
+
+      },
+      addOneHtml: function () {
+        // if (!this.isAdd) {
+        this.isAdd = true;
+        var formdata = $('#commonQueryForm2').serializeJSON(), existSubObjs = {};
+        var formdataObjs = this.saveDataObj(formdata);
+        existSubObjs.total = formdataObjs.length + 1;
+        existSubObjs.rows = formdataObjs;
+
+        var addObj = null;
+        if (0 === this.dataTypeBottom) {
+          if (this.isPlan) {
+            addObj = {
+              contractId: this.contractId,
+              id: "",
+              appointBackDate: "",
+              appointFee: "",
+              remark: ""
+            }
+          } else {
+            addObj = {
+              relationId: this.contractId,
+              id: "",
+              date: "",
+              fee: "",
+              way: ""
+            }
+          }
+        } else if (1 === this.dataTypeBottom) {
+          addObj = {
+            contractId: this.contractId,
+            id: "",
+            recordDate: new Date(new Date()).Format("yyyy-MM-dd"),
+            fee: "",
+            remark: ""
+          }
+        } else {
+          addObj = {
+            contractId: this.contractId,
+            id: "",
+            recordDate: new Date(new Date()).Format("yyyy-MM-dd"),
+            quantities: "",
+            remark: ""
+          }
+        }
+        existSubObjs.rows.push(addObj);
+        this.dataGridBottom.datagrid('loadData', existSubObjs);
+        // }
+      },
+      goDelete: function (did, index, event) {
+        layui.stope(event);
+        if (did) { // 服务器删除
+          var delUrl = '';
+          if (0 === this.dataTypeBottom) {
+            delUrl = (this.isPlan ? this.repaymentPlanDelUrl : this.repaymentDelUrl);
+          } else if (1 === this.dataTypeBottom) {
+            delUrl = this.deductionsDelUrl;
+          } else {
+            delUrl = this.quantitiesDelUrl;
+          }
+          ajaxRequest(delUrl, { "ids": did }, that.delAjaxCallback, true, true)
+        } else {
+          that.tableDataAjax(this.dataTypeBottom);
+        }
+      },
+      delAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+        } else {
+          that.tableDataAjax(that.dataTypeBottom);
+          layerAlertFun(res.msg, 6, []);
+        }
+      },
+
+      // 保存
+      submitFun: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          console.log('saveParam', saveParam)
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            var saveUrl = '', dataJson = null;
+            if (0 === this.dataTypeBottom) {
+              saveUrl = (this.isPlan ? this.repaymentPlanSaveUrl : this.repaymentSaveUrl)
+              dataJson = { "repayment": JSON.stringify(saveParam) }
+            } else if (1 === this.dataTypeBottom) {
+              var row = $('#dataGrid').datagrid('getSelections');
+              console.log('row991', row[0].status, typeof row[0].status)
+              if (this.business && '1' === row[0].status) { // 审核通过/执行中
+                console.log('994if')
+                this.dataJson = { "deduct": JSON.stringify(saveParam) };
+                var urlParam = "&type=8" + "&relationObjId=" + that.contractId;
+                this.fristConfirm = !this.fristConfirm;
+                layerOpenFun(that.auditPageUrl + urlParam, '提交审核', ['60%', '80%'], ['确定', '取消'])
+                return;
+              } else {
+                console.log('999else')
+                saveUrl = this.deductionsSaveUrl;
+                dataJson = { "deduct": JSON.stringify(saveParam) }
+              }
+            } else {
+              saveUrl = this.quantitiesSaveUrl;
+              dataJson = { "quantities": JSON.stringify(saveParam) }
+            }
+            ajaxRequest(saveUrl, dataJson, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          that.isAdd = false;
+          that.tableDataAjax(that.dataTypeBottom);
+          layerAlertFun(res.msg, 6, []);
+          // if (that.business) {
+          //   if (1 === that.dataTypeBottom) {
+          //     var urlParam = "&type=8" + "&relationObjId=" + that.contractId;
+          //     layerOpenFun(that.auditPageUrl + urlParam, '提交审核', ['60%', '80%'], ['确定', '取消'])
+          //   }
+          // }
+          return;
+        }
+      },
+      submitData: function (data, key, value, strKey) {
+        var num = key.split(strKey);
+        data[num[1]][strKey] = value;
+      },
+      saveDataObj: function (queryParams) {
+        var dataObjs = this.dataGridBottom.datagrid('getData');
+        for (var key in queryParams) {
+          if (key.indexOf('appointBackDate') > -1) {
+            this.submitData(dataObjs.rows, key, queryParams[key], 'appointBackDate')
+          }
+          if (key.indexOf('appointFee') > -1) {
+            queryParams[key] = getFloatStr(queryParams[key])
+            this.submitData(dataObjs.rows, key, queryParams[key], 'appointFee')
+          }
+          if (key.indexOf('remark') > -1) {
+            this.submitData(dataObjs.rows, key, queryParams[key], 'remark')
+          }
+          if (key.indexOf('fee') > -1) {
+            queryParams[key] = getFloatStr(queryParams[key])
+            this.submitData(dataObjs.rows, key, queryParams[key], 'fee')
+          }
+          if (key.indexOf('recordDate') > -1) {
+            this.submitData(dataObjs.rows, key, queryParams[key], 'recordDate')
+          }
+          if (key.indexOf('quantities') > -1) {
+            this.submitData(dataObjs.rows, key, queryParams[key], 'quantities')
+          }
+          if (key.indexOf('date') > -1) {
+            this.submitData(dataObjs.rows, key, queryParams[key], 'date')
+          }
+          if (key.indexOf('way') > -1) {
+            this.submitData(dataObjs.rows, key, queryParams[key], 'way')
+          }
+        }
+        return dataObjs.rows;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm2').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var saveParam = this.saveDataObj(formdata);
+          return saveParam;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+        return false;
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        return true;
+      },
+      // 取消保存 并刷新当前数据
+      cancelFun: function () {
+        this.tableDataAjax(this.dataTypeBottom)
+      },
+      bottomTableRender: function () {
+        $('#edit-bottom-box').show();
+        $('.layui-btn-edit').show();
+        that.bottomInput.find('input').attr('disabled', false).css('border-color', '#ccc');
+        that.bottomInput.find('select').attr('disabled', false);
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        var that = InitObj;
+        this.isShow.click(function (e) {
+          var that = InitObj;
+          if (that.isHide) {
+            that.isHideSpan.show();
+            that.isHide = !that.isHide;
+            $(this).removeClass("show"); //移除
+
+          } else {
+            that.isHideSpan.hide();
+            that.isHide = !that.isHide;
+            $(this).addClass("show"); // 追加样式
+
+          }
+        })
+        this.searchSwitch.click(function () {
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+            that.tableBoxEle.css('height', (that.tableBoxEle.height() + that.bottomHeight) + 'px');
+            $('.middle-box .datagrid .panel-body').css('height', '100%');
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+            var iClassName = $('#retractIcon i')[0].className;
+            if (iClassName.indexOf('layui-icon-up') > -1) {
+              that.tableBoxEle.css('height', (that.tableBoxEle.height() - that.bottomHeight) + 'px');
+            }
+            $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i>')
+          }
+          // getTableHeight()
+          that.formLayerM.render();
+        })
+        $('#addOneHtmlA').click(function () {
+          that.addOneHtml();
+        })
+        that.planBottomBtn.click(function () {
+          if (that.isMoneyBack) {
+            layerAlertFun('您现在还处于回款登记中', 5, [])
+          } else {
+            if (!that.isPlan) {
+              that.isPlan = true;
+              that.isMoneyBack = false;
+              var row = $('#dataGrid').datagrid('getSelections');
+              if (row.length > 0) {
+                ajaxRequest(that.repaymentPlanUrl, { id: row[0].id }, that.tableRenderFun, true, true, 0)
+              }
+            }
+          }
+        })
+        that.moneyBackBottomBtn.click(function () {
+          if (that.isPlan) {
+            layerAlertFun('您现在还处于回款计划调整中', 5, [])
+          } else {
+            if (!that.isMoneyBack) {
+
+              that.isPlan = false;
+              that.isMoneyBack = true;
+              var row = $('#dataGrid').datagrid('getSelections');
+              if (row.length > 0) {
+                ajaxRequest(that.repaymentUrl, { id: row[0].id }, that.tableRenderFun, true, true, 0)
+              }
+            }
+          }
+        })
+        that.editBottomBtn.click(function () {
+          that.isPlan = false;
+          that.isMoneyBack = false;
+          that.bottomTableRender();
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

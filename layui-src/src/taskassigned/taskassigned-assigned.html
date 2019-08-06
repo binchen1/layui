@@ -1,0 +1,621 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>已分配任务</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/system/log/logProcess.js'></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <style>
+    .addPersonSpan {
+      margin-right: 5px;
+      height: 24px;
+      line-height: 24px;
+      position: relative;
+      padding-right: 22px;
+    }
+
+    .addPersonSpan i {
+      position: absolute;
+      top: 4px;
+      right: -5px;
+      line-height: 0;
+    }
+
+    div.layui-layer-tips .layui-layer-content {
+      color: #000;
+      border: 1px solid #ccc;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <div id="tableBox" class="height-full">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="quickQryParam" class="layui-input" placeholder="输入编号/样品名称/委托单位后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs8 senior seniorText" style="display:none;">
+                高级查询
+                <span id="retractIcon" onclick="InitObj.retractFun()">
+                  <i class="layui-icon layui-icon-up"></i>
+                </span>
+              </div>
+              <div class="layui-col-xs4">
+                <span id="searchSwitch">
+                  <a href="###" class="easyui-linkbutton" iconCls="iconfont icon-reload" plain="true">切换到高级查询</a>
+                </span>
+              </div>
+            </div>
+            <div class="senior retract" style="display:none">
+              <div class="layui-form-item">
+                <label class="layui-form-label">任务编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="testTaskCode" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">记录编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="recordCode" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item ">
+                <label class="layui-form-label">委托编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignCode" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">样品编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="testObjectCode" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">样品名称</label>
+                <div class="layui-input-block">
+                  <input type="text" name="testObjectName" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托单位</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignUnitName" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="ConsignDate" id="consignDate" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">任务状态</label>
+                <div class="layui-input-block">
+                  <input class="layui-bg-blue" type="radio" name="status" value="" title="全部" checked>
+                  <input class="layui-bg-blue" type="radio" name="status" value="20" title="试验检测中">
+                  <input class="layui-bg-blue" type="radio" name="status" value="30" title="复核确认中">
+                  <input class="layui-bg-blue" type="radio" name="status" value="40" title="已提交正式报告">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">检测人员</label>
+                <div class="layui-input-block">
+                  <span id="qryPerson"> </span>
+                  <span id="personIdHidden"> </span>
+                  <u id="addPersonButton" class="layui-color-blue">>>></u>
+                </div>
+              </div>
+              <div>
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.seniorQuickSearch()">查询</a>
+                <button class="easyui-linkbutton" id="reset" type="reset" iconCls="iconfont icon-reload"
+                  plain="true">重置</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" style="display: none" data-funCode="assignedGoTestTaskInfo"
+              class="easyui-linkbutton funBtn_info" iconCls="iconfont icon-edit" plain="true">查看详情</a>
+            <a href="#" style="display: none" data-funCode="assignedGoProcessLog" class="easyui-linkbutton funBtn_log"
+              iconCls="iconfont icon-remove" plain="true">查看日志</a>
+            <a href="#" style="display: none" data-funCode="assignedRollback" class="easyui-linkbutton funBtn_revoke"
+              iconCls="iconfont icon-undo" plain="true">任务撤回</a>
+            <a href="#" style="display: none" data-funCode="assignedReAssignTask"
+              class="easyui-linkbutton funBtn_reAllot" iconCls="iconfont icon-reload" plain="true">重新分配</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+      <iframe id='udrIframe' name='udrIframe' width='0' height='0' frameborder='none' src=''></iframe>
+    </div>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init(form, laydate);
+      })
+
+    })
+    //回退后的回调函数,刷新列表数据
+    function rollbackCallBack() {
+      InitObj.reloadDataGrid(false, {});
+    }
+    //关闭分配任务弹窗的方法,这个方法是在分配任务子页面上调用的,勿删
+    function closeAssignWindow() {
+      InitObj.reloadDataGrid(false);
+    }
+    var InitObj = {
+      defaultUrl: 'assignedTaskController.do?datagrid', //默认获取数据url
+      //    infoButtonPageUrl: 'testTaskController.do?goTestMain', // 查看详情url页面
+      infoButtonPageUrl: 'testTaskController.do?goTestTaskDetail&readType=5', // 查看详情url页面  
+      userPageUrl: 'assignedTaskController.do?goUserChoosePage', // 检测人员url页面 
+      formLayerM: null, // form对象 
+      laydateLayerM: null, // form对象 
+      searchType: 1, // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      infoButton: $('#functionButton .funBtn_info'), // 查看详情
+      logButton: $('#functionButton .funBtn_log'), // 查看日志
+      revokeButton: $('#functionButton .funBtn_revoke'), // 任务撤回
+      reAllotButton: $('#functionButton .funBtn_reAllot'), // 重新分配
+      addPersonButton: $('#addPersonButton'), //检测人员
+      reset: $('#reset'), // 高级查询 重置
+      searchShow: true, // 普通搜索
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      queryParams: {}, // 查询条件
+      tipIndex: '',
+      init: function (form, laydate) {
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.initDataGrid(this.columnsFun())
+        // 搜素按钮回车键盘
+        this.commonQryKeyDown()
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        funCode()
+        // 高级查询与普通查询切换
+        this.styleLayout();
+        this.dateRender(laydate)
+        this.btnFun(this.infoButton, '', '试验任务详情')
+        this.btnFun(this.logButton, '', '查看日志')
+        this.btnFun(this.revokeButton, '', '任务撤回')
+        this.btnFun(this.reAllotButton, '', '重新分配')
+        this.btnFun(this.addPersonButton, '', '选择人员')
+        this.btnFun(this.reset, '', '重置')
+        form.render()
+      },
+      dateRender: function (laydate) {
+        var preMonth = new Date(new Date().setMonth(new Date().getMonth() - 1));
+        var minDate = new Date(preMonth).Format("yyyy-MM-dd")
+        var maxDate = new Date(new Date()).Format("yyyy-MM-dd")
+        var newDate = minDate + ' ~ ' + maxDate
+        laydate.render({
+          elem: '#consignDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , value: newDate
+          , trigger: 'click'
+        })
+      },
+      // 点击功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, ids = "", rows = that.dataGrid.datagrid('getSelections');
+          if ('选择人员' === openName) {
+            layerOpenFun(that.userPageUrl, openName, ['60%', '80%'], ['确定', '取消'], that.addPerson, 'getUserIds');
+            return
+          } else if ('重置' === openName) {
+            $("#qryPerson").html("");
+            $("#personIdHidden").html("");
+            return
+          }
+          if (!rows || rows.length === 0) {
+            tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            for (var i = 0; i < rows.length; i++) {
+              if (i == 0) {
+                ids += rows[i].testTaskId;
+              } else {
+                ids += "," + rows[i].testTaskId;
+              }
+            }
+            if ('试验任务详情' === openName) {
+              layerOpenFun(that.infoButtonPageUrl + "&id=" + ids, openName, ['100%', '100%'], []);
+              return;
+            } else if ('查看日志' === openName) {
+              var taskId = ids;
+              showLogs('2', taskId, true);
+              return;
+            } else if ('任务撤回' === openName) {
+              if (rows[0].testTaskStatus != '20') {
+                layer.msg('只能撤回试验检测中的任务', { icon: 5 });
+                return;
+              }
+              var taskId = ids;
+              showRollbackPage('testTask', taskId);
+              return;
+            } else if ('重新分配' === openName) {
+              that.reAssignTask(rows)
+              return;
+            }
+
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+      // 点击按钮以及双击也是调此函数
+      reAssignTask: function (rows) {
+        if (rows[0].testTaskStatus != '20') {
+          layer.msg('只能重新分配试验检测中的任务', { icon: 5 });
+          return;
+        }
+        var testTaskId = rows[0].testTaskId
+        var openUrl = 'assignedTaskController.do?goReAssignPage&testTaskId=' + testTaskId;
+        layerOpenFun(openUrl, '任务分配', ['80%', '100%'], ['确定', '取消'], '', 'submitAssign');
+
+
+      },
+      // 高级查询时删除已选中的人员
+      removeThisPerson: function (th) {
+        var personId = th.title;
+        $(th).remove();
+        $("#" + personId).remove();
+      },
+      // 高级查询时新增人员
+      addPerson: function (users, index) {
+        //	users = "魏衡|4028820e62dbb2e40162dbcfca29000b,李鑫|4028829061fa52840161fa54415f0001";
+        //需要新增的用户
+        var userArray = users.split(',');
+        //已选择的用户
+        var readyUsers = $("#personIdHidden .personId");
+        for (var i = 0; i < userArray.length; i++) {
+          var user = userArray[i];
+          var userName = user.split('|')[0];
+          var userId = user.split('|')[1];
+          var type = user.split('|')[2];
+          if (type != 'USER') {
+            continue;
+          }
+          //检测是否重复选择同一用户
+          var isChecked = false;
+          for (var j = 0; j < readyUsers.length; j++) {
+            if (readyUsers[j].value == userId) {
+              isChecked = true;
+              break;
+            }
+          }
+          if (!isChecked) {
+            //写入页面用户名字徽章
+            $("#qryPerson").append('<span class="layui-badge-rim addPersonSpan" title="' + userId + '" onclick="InitObj.removeThisPerson(this);">' + userName + '<i class="layui-icon layui-color-blue">&#x1007;</i></span>');
+            //传给后台的用户id值
+            $("#personIdHidden").append('<input type="hidden" id="' + userId + '" class="personId" value="' + userId + '"/>');
+          }
+        }
+        layer.close(index);
+      },
+      // 查询时间分开始结束存放
+      dateStartEnd: function (queryParams, dataString) {
+        if ('consignDate' === dataString) {
+          dataString = 'ConsignDate'
+        }
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams['min' + dataString] = DateArr[0];
+          queryParams['max' + dataString] = DateArr[1];
+        } else {
+          queryParams['min' + dataString] = '';
+          queryParams['max' + dataString] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();//表单参数
+        delete queryParams['quickQryParam'];
+        //如果选了一个及以上的人员,拼接多人员参数
+        if ($("#personIdHidden .personId").length > 0) {
+          var personIdStr = "";
+          $("#personIdHidden .personId").each(function () {
+            personIdStr += ($(this).val() + ",")
+          });
+          personIdStr = personIdStr.substring(0, personIdStr.length - 1);
+          queryParams['personId'] = personIdStr;
+        }
+        if (!isDateStartEnd(queryParams['ConsignDate'])) {
+          $('#ConsignDate').val('');
+          queryParams['ConsignDate'] = '';
+        }
+        queryParams = this.dateStartEnd(queryParams, 'ConsignDate')
+        delete queryParams['ConsignDate'];
+        this.queryParams = queryParams;
+        this.reloadDataGrid(true, queryParams);
+      },
+      /***
+       * 打印任务分配清单
+       * weiheng 20190227
+       */
+      printTaskDistribution: function (testTaskId) {
+        // 打印UDR通用模板
+        var udrCommonPrint = new UdrCommonPrint([testTaskId], 'taskDistribution');
+        udrCommonPrint.printStart();
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var condition = $("input[name='quickQryParam']").val();
+        var queryParams = { 'quickQryParam': condition };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [];
+        columns.push({ title: "ID", field: "testTaskId", checkbox: true, width: 120 })
+        columns.push({
+          title: "检测人员", field: "testTaskPersons.realName",
+          formatter: function (value, row) {
+            var userName = '';
+            $.each(row.testTaskPersons, function (index, value) {
+              if (value.type == '0') {//这里指显示检测人员,不显示审核批准等人
+                userName += (value.realName + ',')
+              }
+            });
+            if (userName.length > 1) {
+              userName = userName.substring(0, userName.length - 1);
+            }
+            return userName;
+          }, width: 130
+        })
+        columns.push({ title: "任务编号", field: "testTaskCode", width: 130 })
+        columns.push({
+          title: "样品编号", field: "testObjectCode", width: 130
+        })
+        columns.push({
+          title: "样品名称", field: "testSampleDisplayName", width: 130
+        })
+        columns.push({
+          title: "工程部位/用途", field: "partAndUse", width: 120
+        })
+        columns.push({ title: "要求报告时间", field: "requireReportDate", width: 120 })
+        columns.push({ title: "报告提交时间", field: "reportDate", width: 120 })
+        columns.push({
+          title: "任务状态", field: "testTaskStatus",
+          formatter: function (value, row) {
+            var valueCN = '';
+            if (value == '10') {
+              valueCN = '待分配';
+            } else if (value == '20') {
+              valueCN = '试验检测进行中';
+            } else if (value == '30') {
+              valueCN = '已完成试验检测';
+            } else if (value == '40') {
+              valueCN = '已提交报告';
+            }
+            return valueCN;
+          }, width: 130
+        })
+        return [columns];
+      },
+      showTaskDetailTips: function (index) {
+        var taskList = this.dataGrid.datagrid("getData");
+        var row = taskList.rows[index];
+        //人员信息
+        var userNameStr = '';
+        var reportPerson = '报告编写:';
+        var recheckPerson = '复核:';
+        var auditPerson = '审核:';
+        var approvePerson = '批准:';
+        $.each(row.testTaskPersons, function (index, value) {
+          switch (value.type) {
+            case '2': reportPerson += (value.realName + ',');
+              break;
+            case '1': recheckPerson += (value.realName + ',');
+              break;
+            case '3': auditPerson += (value.realName + ',');
+              break;
+            case '4': approvePerson += (value.realName + ',');
+              break;
+          }
+        });
+        if (reportPerson.length > 5) { reportPerson = reportPerson.substring(0, reportPerson.length - 1) + '; '; }
+        if (recheckPerson.length > 3) { recheckPerson = recheckPerson.substring(0, recheckPerson.length - 1) + '; '; }
+        if (auditPerson.length > 3) { auditPerson = auditPerson.substring(0, auditPerson.length - 1) + '; '; }
+        if (approvePerson.length > 3) { approvePerson = approvePerson.substring(0, approvePerson.length - 1) + '; '; }
+        userNameStr = reportPerson + recheckPerson + auditPerson + approvePerson;
+        //委托编号
+        var consignCode = row.consignCode;
+        //委托单位
+        var consignUnit = row.consignUnitName;
+        //委托日期
+        var consignDate = row.consignDate;
+        //规格型号
+        var standard = row.standard;
+        //检测参数
+        var testParams = row.testParamDisplayName;
+        // $.each(row.testObjects, function (index, value) {
+        //   standard += (value.standard + ';');
+        //   $.each(value.testObjectParams, function (index, value1) {
+        //     testParams += (value1.testParamDisplayName + '、')
+        //   });
+        // });
+        // if (standard.length > 0) {
+        //   standard = standard.substring(0, standard.length - 1);
+        // }
+        // if (testParams.length > 0) {
+        //   testParams = testParams.substring(0, testParams.length - 1);
+        // }
+
+        var msg = "<p>" + userNameStr + "</p>"
+          + "<p>规格型号：" + standard + "</p>"
+          + "<p>委托编号：" + consignCode + "</p>"
+          + "<p>委托单位：" + consignUnit + "</p>"
+          + "<p>委托日期：" + consignDate + "</p>"
+          + "<p>检测参数：" + testParams + "</p>";
+
+        this.tipIndex = layer.tips(msg, '#mouseOverDom', { tips: 1, time: 20000, skin: 'tips-msg' });
+      },
+
+      // table数据渲染
+      initDataGrid: function (columns) {
+        var tipMsgSetTimeOut;//鼠标停留的计时器,停留一段时间弹出详情功能使用
+        var currentMouseOverDom = null;	// 当前鼠标停留的页面dom对象
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true,
+          scrollbarSize: 0,
+          sortName: 'createDate', //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          sortOrder: 'desc',
+          columns: columns,
+          loadMsg: loadMsgDatagrid,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            getPagerFun('#dataGrid')
+            //鼠标停留和离开事件
+            $(".datagrid-row").on("mouseover mouseout", function () {
+              if (event.type == "mouseover") {
+                clearTimeout(tipMsgSetTimeOut);	// 清空，重新计时
+                // 当前鼠标移动到的页面DOM对象
+                if (currentMouseOverDom != null) {
+                  $(currentMouseOverDom).removeAttr("id");
+                }
+                currentMouseOverDom = document.elementFromPoint(event.pageX, event.pageY);
+                $(currentMouseOverDom).attr("id", "mouseOverDom");
+
+                var attrValue = $(this).attr("datagrid-row-index");
+                tipMsgSetTimeOut = setTimeout("InitObj.showTaskDetailTips(" + attrValue + ")", 1500);	// 1.5秒倒计时
+
+              } else if (event.type == "mouseout") {
+                if (currentMouseOverDom != null) {
+                  $(currentMouseOverDom).removeAttr("id");
+                  currentMouseOverDom = null;
+                }
+                clearTimeout(tipMsgSetTimeOut);	// 清空
+                layer.close(that.tipIndex);
+              }
+
+            });
+          },
+          onDblClickRow: function (index, row) {
+            //双击事件,进入任务分配
+            $('#dataGrid').datagrid('checkRow', index);
+            console.log(row)
+            if ($('.funBtn_reAllot').is(':hidden')) {
+              layerAlertFun('您没有任务分配权限，请添加', '5')
+            } else {
+              that.reAssignTask([row]);
+            }
+          }
+        })
+      },
+      // 高级查询收起按钮
+      retractFun: function () {
+        if ($('.retract').is(':hidden')) {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i> ')
+        } else {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-down"></i> ')
+
+        }
+        $('.retract').toggle();
+        getTableHeight()
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        this.searchSwitch.click(function () {
+          var that = InitObj;
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+            // that.reloadDataGrid(true, {});
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+            $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i>')
+            // that.reloadDataGrid(true, {});
+          }
+          getTableHeight()
+          that.formLayerM.render();
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+@charset "utf-8";
+body {
+  background: #fff;
+}
+/* 列表自动换行 */
+.datagrid-cell, 
+.datagrid-cell-group, 
+.datagrid-header-rownumber,
+.datagrid-cell-rownumber {
+  white-space: normal;
+}
+/* 高级搜索按钮样式 */
+.l-btn-text {
+  line-height: 26px;
+}
+.seniorText {
+  height: 30px;
+  line-height: 30px;
+  padding-left: 36px;
+  font-weight: bold;
+}
+.senior .layui-input, .layui-form-select {
+  display: inline-block;
+  width: 86%;
+}
+.senior  .layui-form-select .layui-input {
+  width: 100%;
+}
+.tb-box { 
+  padding: 0;
+}
+.tb-box-form {
+  width: 780px;
+  padding: 7px 5px;
+}
+.tb-box-btn {
+  margin: 0;
+  padding: 3px 5px;
+  background: #eee;
+}
+/* input */
+.layui-input-block {
+  min-height: 30px;
+}
+
+/** layui tabs选中色以及下划线 */
+.layui-tab {
+  margin: 0;
+  position: relative;
+  height: 100%;
+}
+.layui-tab-brief > .layui-tab-title .layui-this {
+  color: #84BFF0;
+}
+.layui-tab-brief > .layui-tab-title .layui-this:after, 
+.layui-tab-brief > .layui-tab-more li.layui-this:after {
+  border-bottom: 2px solid #1e9fff;
+}
+.layui-tab-title {
+  border: none;
+}
+.layui-tab-content {
+  padding: 0;
+  padding-top: 1px;
+  position:absolute;
+  width: 100%;
+  top:40px;
+  bottom:0px;
+  left:0px;
+}
+
+
+/** 状态外圆圈 */
+.span-round {
+  border: 1px solid;
+  border-radius: 50%;
+  display: inline-block;
+  padding: 2px 6px;
+}
+
+.tips-msg.layui-layer-tips .layui-layer-content {
+  background-color: #fff;
+  top: 10px;
+  left: 16px;
+}
+
+.tips-msg.layui-layer-tips .layui-layer-content span {
+  color: #000 !important;
+}
+
+.tips-msg.layui-layer-tips i.layui-layer-TipsT,
+.tips-msg.layui-layer-tips i.layui-layer-TipsR,
+.tips-msg.layui-layer-tips i.layui-layer-TipsL,
+.tips-msg.layui-layer-tips i.layui-layer-TipsB {
+  display: none;
+}
+
+/** 展开收起按钮*/
+.show.layui-btn {
+  display: inline-block;
+  transform: rotate(180deg);
+  -ms-transform: rotate(180deg); /* IE 9 */
+  -moz-transform: rotate(180deg); /* Firefox */
+  -webkit-transform: rotate(180deg); /* Safari 和 Chrome */
+  -o-transform: rotate(180deg); /* Opera */
+}
+

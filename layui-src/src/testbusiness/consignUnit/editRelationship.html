@@ -1,0 +1,230 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>委托单位人员</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+
+  <script type="text/javascript" src="plug-in/serializejson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    .datagrid-btable .datagrid-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="easyui-layout" fit="true">
+    <div class="height-full" data-options="region: 'center', split: true">
+      <div class="toolbar">
+        <div class="tb-box">
+          <div class="tb-box-form search-box">
+            <form class="layui-form" id="commonQueryForm">
+              <div class="layui-row">
+                <div class="layui-col-xs8">
+                  <div class="layui-input-inline" style="width:80%">
+                    <input type="text" name="quickQryParam" class="layui-input" placeholder="输入送样人姓名或电话" autocomplete="off">
+                  </div>
+                  <div class="layui-input-inline">
+                    <a href="#" class="easyui-linkbutton btn-4-search" iconCls="icon-search" plain="true">查询</a>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <table id="dataGrid" class="easyui-datagrid"></table>
+    </div>
+    <input type="hidden" id="btn_sub" class="btn-4-submit">
+  </div>
+
+  <%--suppress JSUnresolvedVariable, JSUnresolvedFunction --%>
+  <script>
+
+    $(function () {
+      layui.use([ 'element',  'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+      })
+      // 回车事件
+      commonQryKeyDown()
+      initDataGrid();
+
+      // $('.btn-4-submit').click(function () {
+      // var rows = dataGrid.datagrid('getSelections');
+      // if (rows && rows.length > 0) {
+
+      //   var sampleSenderIds = [];
+      //   for (var i in rows) {
+      //     sampleSenderIds.push(rows[i].id);
+      //   }
+
+      //   var consignUnitRow = parent.dataGrid.datagrid('getSelected');
+
+      //   ajaxSubmitResponseJSON({
+      //     url: 'consignUnitController.do?doAddRelationship',
+      //     data: {
+      //       consignUnitId: consignUnitRow.id,
+      //       sampleSenderIds: sampleSenderIds.join(',')
+      //     },
+      //     success: function (data) {
+      //       if (data.success) {
+      //         parent.reloadDataGrid0(false, consignUnitRow);
+      //       }
+      //       /*关闭弹窗*/
+      //       var index = parent.layer.getFrameIndex(window.name);
+      //       parent.layer.close(index);
+      //       parent.layerAlertFun(data.msg, 1, [])
+      //     }
+      //   });
+
+      // } else {
+      //   parent.btnTipMsg(event, '请选择委托单位')
+      // }
+      // });
+
+      $('.btn-4-search').click(function () {
+        reloadDataGrid(true);
+      });
+
+      // $('.btn-4-reset').click(function () {
+      //   $('.search-box form')[0].reset();
+      //   $('.btn-4-search').trigger('click');
+      // });
+    });
+
+    var dataGrid;
+
+    function initDataGrid() {
+      dataGrid = $('#dataGrid').datagrid({
+        url: 'sampleSenderController.do?datagridNew',
+        toolbar: '.toolbar',
+        singleSelect: false,
+        pagination: true,
+        fit: true,
+        fitColumns: true,
+        scrollbarSize: 0,
+        columns: [[
+          { title: "ID", field: "id", checkbox: true },
+          { title: "送样人", field: "name", width: 25 },
+          { title: "送样人电话", field: "contactPhone", width: 30 },
+          {
+            title: "是否锁定", field: "status", align: 'center', width: 20,
+            formatter: function (value) {
+              var valueCN = '是';
+              if (value == 0) {
+                valueCN = '否';
+              }
+              return valueCN;
+            }
+          },
+          {
+            title: "审核状态", field: "verifyStatus", align: 'center',width: 25,
+            formatter: function (value) {
+              var valueCN = '待审核';
+              if (value == 10) {
+                valueCN = '审核不通过';
+              } else if (value == 20) {
+                valueCN = '审核通过';
+              }
+              return valueCN;
+            }
+          }
+        ]],
+        onLoadSuccess: function (data) {
+          getPagerFun('#dataGrid')
+          //最后的data全都是未绑定的送样人员
+          var hiddenRowIds = [];
+          var deleteRows = [];
+          var hiddenRows = parent.dataGrid0.datagrid('getRows');
+
+          //记录父容器中送样人员列表加载的已绑定的送样人员
+          if (hiddenRows && hiddenRows.length > 0) {
+            $.each(hiddenRows, function (i, v) {
+              hiddenRowIds.push(hiddenRows[i].id);
+            })
+          }
+
+          //记录加载的数据中，已绑定的送样人员
+          for (var i in data.rows) {
+            if ($.inArray(data.rows[i].id, hiddenRowIds) >= 0) {
+              deleteRows.push(data.rows[i]);
+            }
+          }
+
+          //此处dataGrid是送样人员弹窗页面的表格，这里只加载未绑定的送样人员
+          $.each(deleteRows, function (i, v) {
+            dataGrid.datagrid('deleteRow', dataGrid.datagrid('getRowIndex', v));
+          })
+        }
+      });
+    }
+    // 快速查询input框绑定的回车事件
+    function commonQryKeyDown() {
+      $('#commonQueryForm input').bind('keypress', function (event) {
+        var theEvent = event || window.event;
+        var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+        if (code === 13) {
+          reloadDataGrid();
+          return false;//问题解决关键
+        }
+      });
+    }
+
+    function reloadDataGrid(goFirstPage) {
+      var queryParams = $('.search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid.datagrid('reload', queryParams);
+      }
+    }
+    function submitFun() {
+      var rows = dataGrid.datagrid('getSelections');
+      if (rows && rows.length > 0) {
+        var sampleSenderIds = [];
+        for (var i in rows) {
+          sampleSenderIds.push(rows[i].id);
+        }
+
+        var consignUnitRow = parent.dataGrid.datagrid('getSelected');
+
+        $.ajax({
+          url: 'consignUnitController.do?doAddRelationship',
+          data: {
+            consignUnitId: consignUnitRow.id,
+            sampleSenderIds: sampleSenderIds.join(',')
+          },
+          dataType: 'json',
+          success: function (data) {
+            if (data.success) {
+              parent.reloadDataGrid0(false, consignUnitRow);
+            }
+            /*关闭弹窗*/
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+            parent.layerAlertFun(data.msg, 1, [])
+          }
+        });
+
+      } else {
+        layer.msg('请选择项目单位', { icon: 5 })
+      }
+    }
+  </script>

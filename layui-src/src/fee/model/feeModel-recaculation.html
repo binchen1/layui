@@ -1,0 +1,413 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<%-- <t:base type="jquery,easyui,tools"/> --%>
+
+<head>
+  <style type="text/css">
+    .ace_button {
+      background-color: #21b9bb;
+      border-color: #21b9bb;
+      color: #FFFFFF;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 12px;
+      line-height: 1.5;
+      display: inline-block;
+    }
+  </style>
+  <title>重新计费</title>
+
+</head>
+
+
+<script type="text/javascript">
+  /* document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>"); */
+  document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/fee/model/feeModel.js'><\/script>");
+  /* document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/tools/css/metrole/common.css' type='text/css'>"); */
+  document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/ace/css/font-awesome.css' type='text/css'>");
+
+  var infoArr = eval('${listJson}');
+  console.log('infoArr', infoArr)
+  var originConsignDetails = new Object();	// 保存原始数据，做对比判断用
+  var consignContractId = new Object();
+  var consignDetails = new Object();	// 缓存所有的委托费用明细 ： consignCode - feeDetails
+  var currentConsign = "";	// 当前展开的委托（正在操作的）
+  var currentLen = 0;
+
+  layui.use(['element', 'laydate', 'form', 'table'], function () {
+    var $ = layui.$
+      , element = layui.element
+      , laydate = layui.laydate
+      , form = layui.form
+      , table = layui.table;
+
+    /*************** 添加费用明细  - start ***************/
+    $(":button[name='addFeeDetail']").on('click', function () {
+      var tableId = $(this).attr("tableId");
+      var originfeeDetail = originConsignDetails[tableId];
+      var feeDetail = consignDetails[tableId];
+      feeDetail.push({ name: '', price: '', value: '', amount: '', id: '', });
+      currentConsign = tableId;
+
+      // 重新渲染 table
+      tableRender($, table, tableId, feeDetail);
+      window.scrollTo(0,document.body.scrollHeight)
+
+      /* var url = "feeModelController.do?goAddDetail"
+      layer.open({
+            type: 2,
+            skin:'layui-layer-molv',
+            title: '新增费用项',
+            offset: '100px',
+            content: url,
+            btn: ['确定', '取消'],
+            area: ['300px', '300px'],
+            yes: function (index, layero) {
+              var dom = layer.getChildFrame('body', index);
+            	
+              layer.close(index);
+            }
+      }); */
+    });
+    /*************** 添加费用明细  - end ***************/
+
+    /*************** 手风琴 - start ***************/
+    element.on('collapse(collapse)', function (data) {
+      var code = data.title.context.innerText;
+      code = code.substring(0, code.length - 1);
+      currentConsign = code;
+      for (var key in consignDetails) {
+        if (currentConsign === key) {
+          currentLen = consignDetails[key].length
+        }
+      }
+      // 设置默认项
+      setDefault($, form);
+    });
+    /*************** 手风琴 - end ***************/
+
+    /****************** 根据委托生成页面数据 - start ******************/
+    for (var i = 0; i < infoArr.length; i++) {
+      var feeDetails = infoArr[i].feeDetails;
+      var consignCode = infoArr[i].consignCode;
+      var contractId = infoArr[i].contractId;	// 合同ID
+      if (i == 0) {
+        currentConsign = consignCode;	// 当前正在编辑的委托
+        currentLen = feeDetails.length;	// 原始数据量
+      }
+
+      table.render({
+        elem: '#' + consignCode
+        , cols: [[
+          { field: 'name', title: '费用项', width: '50%', align: 'center' }
+          , { field: 'price', title: '单价(元)', width: '10%', align: 'center'/* , event: 'setSign', */ }
+          , { field: 'discount', title: '折扣率', width: '10%', align: 'center' }
+          , { field: 'amount', title: '数量', width: '10%', align: 'center' }
+          , { field: 'value', title: '小计(元)', width: '10%', align: 'center' }
+          , { field: 'id', title: '操作', width: '10%', align: 'center', templet: '#deleteTpl' }
+        ]]
+        , data: feeDetails
+        , page: false
+        , limit: 1000
+      });
+
+      //监听工具条
+      table.on('tool(' + consignCode + ')', function (obj) {
+        var data = obj.data;
+        var feeId = data.feeId;
+        var id = data.id;
+        if (obj.event === 'doDelete') {
+          layer.confirm('确认删除？', { offset: '100px' }, function (index) {
+            var feeDetail = consignDetails[currentConsign];
+            if (id == '' || id == null) {	// 多余的判断...
+
+              var temp;
+              for (var i = 0; i < feeDetail.length; i++) {
+                if (feeDetail[i].name == data.name && feeDetail[i].id == data.id) {
+                  temp = feeDetail[i];
+                  break;
+                }
+              }
+              feeDetail.removeByValue(temp);
+            }
+            // 从页面的table中删除该数据
+            obj.del();
+            // 重新计费
+            var radioC = $(":checked[name='" + currentConsign + "']");
+            var currentContractId = "";
+            if (radioC.length != 0) {
+              currentContractId = radioC.val();
+            }
+            doRecaculate($, currentContractId, table);
+            layer.close(index);
+          });
+        }
+      });
+
+      /*************** 监听单元格编辑 start ***************/
+      table.on('edit(' + consignCode + ')', function (obj) {
+        var name = obj.data.name;
+        var price = obj.data.price;
+        var amount = obj.data.amount;
+        if (name != '' && price != '' && amount != '') {
+          // 触发重新计费
+          var radioC = $(":checked[name='" + currentConsign + "']");
+          var currentContractId = "";
+          if (radioC.length != 0) {
+            currentContractId = radioC.val();
+          }
+          doRecaculate($, currentContractId, table);
+        }
+        //layer.msg('[ID: '+ data.id +'] ' + field + ' 字段更改为：'+ value);
+      });
+      /*************** 监听单元格编辑 end ***************/
+
+      /*************** radio选中当前计费合同，根据合同重新计算当前委托的费用 start ***************/
+      var recaculateIndex;
+      form.on('radio(' + consignCode + ')', function (data) {
+        var contractId = data.value; // 合同ID
+        doRecaculate($, contractId, table); // 重新计费
+      });
+      /*************** radio选中当前计费合同，根据合同重新计算当前委托的费用 end ***************/
+
+      consignDetails[consignCode] = feeDetails;
+      consignContractId[consignCode] = contractId;
+      originConsignDetails[consignCode] = JSON.parse(JSON.stringify(feeDetails));	// 复制一个
+    }
+    /****************** 根据委托生成页面数据 - end ******************/
+
+    /****************** 提交保存 - start ************************/
+    var fristConfirm = true;
+    form.on('submit(submitBtn)', function (data) {
+      $("#submitBtn").attr("disabled", true);
+      var index;
+      // 组装参数
+      var feeInfos = new Object();
+      console.info("consignDetails", consignDetails);
+      for (code in consignDetails) {
+        var feeInfo = new Object();
+        var detalArr = consignDetails[code];    // 委托费用明细
+        var feeTotal = $("div[name='" + code + "']").find("input[name='feeTotal']").val();// 委托应收费用（可被修改）
+        feeInfo.feeTotal = feeTotal;
+        feeInfo.feeDetails = detalArr;
+        feeInfos[code] = feeInfo;
+      }
+
+      // ajax 提交收费操作
+      $.ajax({
+        url: basePath + '/feeModelController.do?doResaveConsignFeeByContract',
+        data: {
+          feeInfos: JSON.stringify(feeInfos)
+          //feeInfos: JSON.stringify(consignDetails)
+        },
+        dataType: "json",
+        type: "POST",
+        beforeSend: function () {
+          index = SHOW_LOAD_LAYER('正在处理...');
+        },
+        success: function (res) {
+          CLOSE_LOAD_LAYER(index);
+          if (res.success) {
+            var currentIndex = parent.layer.getFrameIndex(window.name); // 当前层
+            var parentIndex = $("#layerIndex").val();
+            var feeIds = $("#feeIds").val();
+            // 刷新收费页
+            var changeUrl = "feeModelController.do?goUpdate&id=" + feeIds;
+            parent.layer.iframeSrc(parentIndex, changeUrl);
+            // 刷新主列表
+            parent.InitObj.reloadDataGrid();
+            // 关闭当前页
+            parent.layer.close(currentIndex);
+          } else {
+            layer.alert(res.msg, {
+              title: '提示'
+            })
+            $("#submitBtn").attr("disabled", false);
+          }
+        }
+      });
+      return false;
+    });
+    /****************** 提交保存 - end ******************/
+
+    $(function () {
+      setDefault($, form);
+    });
+
+  });
+
+  function setDefault($, form) {
+
+    // 初始化合同选中（如果该委托已包含计费合同）
+    var contractId = consignContractId[currentConsign];
+    var selectedRadio = $(":radio[name='" + currentConsign + "'][value='" + contractId + "']");
+    selectedRadio.attr('checked', true);
+    if (selectedRadio.length != 0) {// 
+      $("div[name='" + currentConsign + "']").find("input[name='feeTotal']").attr("readOnly", "readOnly");
+    }
+    form.render();
+  }
+
+  /*********************** 重新计费 - start ********************************/
+  function doRecaculate($, contractId, table) {
+
+    var feeDetail = consignDetails[currentConsign];	// 费用明细
+    // 回传到后台重新计算费用，然后返回
+    $.ajax({
+      url: basePath + '/feeModelController.do?doRecaculateConsignFeeByContract',
+      data: {
+        consignCode: currentConsign
+        , contractId: contractId
+        , feeDetailsJson: JSON.stringify(feeDetail)
+      },
+      dataType: "json",
+      type: "POST",
+      beforeSend: function () {
+        recaculateIndex = SHOW_LOAD_LAYER('正在重新计算费用...');
+      },
+      success: function (res) {
+        CLOSE_LOAD_LAYER(recaculateIndex);
+        if (res.success) {
+          var detail = res.obj.feeDetails;
+          // 重新渲染table
+          //  tableRender($, table, currentConsign, detail);
+          //  window.scrollTo(0,document.body.scrollHeight)
+          // 金额重新赋值
+          $("div[name='" + currentConsign + "']").find("span[name='feeOrigin']").text(res.obj.feeModel.feeOrigin);
+          $("div[name='" + currentConsign + "']").find("input[name='feeTotal']").val(res.obj.feeModel.feeTotal);
+          // 更新费用明细缓存
+          consignDetails[currentConsign] = detail;
+          //consignDetails[currentConsign + "@feeModel"] = res.obj.feeModel;// 缓存总费用详情
+          // 刷新费用明细和费用总额
+          layer.msg('系统已根据当前所选合同重新计算费用，请核实！', { icon: 6, offset: '100px' });
+        } else {
+          layer.msg(res.msg, { icon: 5 });
+        }
+      }
+    });
+  }
+  /*********************** 重新计费 - end ********************************/
+
+  /****************** 重新渲染 table列表 ******************/
+  function tableRender($, table, tableId, feeDetail, originfeeDetail) {
+    table.render({
+      elem: '#' + tableId
+      , cols: [[
+        { field: 'name', title: '费用项', align: 'center', width: '50%', edit: 'text' }
+        , { field: 'price', title: '单价(元)', align: 'center', width: '10%', edit: 'number'/* , event: 'setSign', */ }
+        , { field: 'discount', title: '折扣率', align: 'center', width: '10%' }
+        , { field: 'amount', title: '数量', align: 'center', width: '10%', edit: 'number' }
+        , { field: 'value', title: '小计(元)', align: 'center', width: '10%' }
+        , { field: 'id', title: '操作', align: 'center', width: '10%', templet: '#deleteTpl' }
+      ]]
+      , data: feeDetail
+      , page: false
+      , limit: 1000
+    });
+
+    // 初始化完成了，现在干掉前面 的可编辑属性
+    $("td").removeAttr("data-edit");
+    $("td[data-field='id'][data-content='']").parent()
+      .find("td[data-field='name'],td[data-field='price'],td[data-field='amount']")
+      .attr("data-edit", "text");
+  }
+
+</script>
+
+<body>
+  <!-- <div class="layui-container" > -->
+  <form class="layui-form" lay-filter="form" style="width: 100%;" method="post">
+    <input id="feeIds" name="feeIds" lay-filter="feeIds" class="layui-btn layui-hide" />
+    <input id="layerIndex" name="layerIndex" lay-filter="layerIndex" class="layui-btn layui-hide" />
+    <button id="submitBtn" name="submitBtn" lay-filter="submitBtn" lay-submit=""
+      class="layui-btn layui-hide">提交</button>
+    <div class="layui-collapse" lay-filter="collapse" lay-accordion="">
+      <c:forEach var="list" items="${list}" varStatus="status">
+
+        <div class="layui-colla-item">
+          <!-- 委托编码 -->
+          <h2 id="consignCode" class="layui-colla-title">${list.consignCode}</h2>
+          <c:choose>
+            <c:when test="${status.count == 1 }">
+              <div class="layui-colla-content layui-show">
+            </c:when>
+            <c:otherwise>
+              <div class="layui-colla-content">
+            </c:otherwise>
+          </c:choose>
+
+          <!-- 费用统计  start -->
+          <div class="layui-row" name="${list.consignCode}">
+            <div class="layui-col-xs4 layui-col-sm4 layui-col-md4" style="padding-top: 8px;">
+              费用合计：<span name="feeOrigin">${list.feeOrigin}</span> 元
+            </div>
+            <div class="layui-inline layui-col-xs4 layui-col-sm4 layui-col-md4">
+              <div class="layui-form-item">
+                <div class="layui-inline">
+                  <label class="layui-form-label">应缴费用：</label>
+                  <div class="layui-input-inline" style="width: 100px;">
+                    <input type="text" name="feeTotal" style="padding-left:15px;" placeholder="请输入"
+                      value="${list.feeTotal}" autocomplete="off" class="layui-input">
+                  </div>
+                  <div class="layui-form-mid">元</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 费用统计 end -->
+
+          <!-- 选择计费合同 -->
+          <c:forEach var="contract" items="${contracts}">
+            <div class="layui-block" style="padding-top:5px;">
+              <p>
+                <input type="radio" lay-filter="${list.consignCode}" name="${list.consignCode}" value="${contract.id}">
+                ${contract.name }
+              </p>
+              <p style="padding-left: 45px;">
+                <c:if test="${contract.type == '1' }">
+                  全包合同;
+                </c:if>
+                <c:if test="${contract.type == '2' }">
+                  折扣合同;
+                </c:if>
+                <c:if test="${contract.type == '3' }">
+                  指定参数折扣合同;
+                </c:if>
+                <c:if test="${contract.type == '4' }">
+                  指定参数价格合同;
+                </c:if>
+                合同号：${contract.no }；
+                合同金额：${contract.totalFee }；
+                <!-- 这里后续要加个查看详情按钮 -->
+              </p>
+            </div>
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 0px; margin-bottom: 0px;">
+            </fieldset>
+          </c:forEach>
+
+          <!-- 费用明细 -->
+          <table style="" class="layui-table" id="${list.consignCode}" lay-filter="${list.consignCode}">
+          </table>
+          <div class="layui-btn-group demoTable" style="margin-bottom: 10px;">
+            <button class="layui-btn" type="button" data-type="addFeeDetail" name="addFeeDetail"
+              tableId="${list.consignCode}">新增费用项</button>
+          </div>
+
+        </div>
+    </div>
+    </c:forEach>
+    </div>
+  </form>
+  <!--  </div> -->
+  <script type="text/html" id="deleteTpl">
+	{{#  if(d.id == '' || d.id == null){ }}
+  		<a class="layui-btn layui-btn-primary layui-btn-xs ace_button" title="删除" lay-event="doDelete" lay-event="del"><i title='删除' class='fa fa-trash-o'></i></a>
+	{{#  } else { }}
+		
+	{{#  } }}
+</script>
+</body>
+
+</html>

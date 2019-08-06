@@ -1,0 +1,261 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-form-item ">
+      <label class="layui-form-label">组名称：</label>
+      <div class="layui-input-block width-input">
+        <input type="text" name="name" placeholder="请输入组名称" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item saveType-zero" id="processTypeDiv">
+      <label class="layui-form-label">流程类型：</label>
+      <div class="layui-input-block">
+        <span class="choiceShow"></span>
+        <input type="hidden" name="processTypeId" />
+        <a class="layui-btn layui-bg-blue layui-btn-xs " href="javascript:void(0);" id="processTypeSel">选择</a>
+      </div>
+    </div>
+    <div class="layui-form-item ">
+      <label class="layui-form-label">审核人员：</label>
+      <div class="layui-input-block auditPersons">
+        <div>
+          <div id="auditPersonsBox"></div>
+          <a class="layui-btn layui-btn-sm" id="auditPersonsAdd">
+            <i class="layui-icon">&#xe61f;</i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form', 'upload'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var upload = layui.upload;
+        InitObj.init(form)
+        //选完文件后不自动上传
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      detailUrl: ' processPersonController.do?getGroupPerson', // 查看详情url
+      saveUrl: 'processPersonController.do?savePersonGroup', // 新增申请url
+      addAddressPageUrl: 'processTypeController.do?goProcessTypePage',
+      processTypeSel: $('#processTypeSel'),
+      processTypeDiv: $('#processTypeDiv'),
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      auditPersonsAdd: $('#auditPersonsAdd'), // 审核人员 点击按钮
+      auditPersonsBox: $('#auditPersonsBox'), // 审核人员盒子
+      auditPersons: [], // 审核人员 保存数据
+      auditPersonsData: [], // 审核人员  临时保存数据
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.btnFun(this.processTypeSel, this.addAddressPageUrl, '流程类型配置')
+        this.btnFun(this.auditPersonsAdd, 'reportRedoAuditController.do?goAuditUserChoosePage&auditPersonsData=',
+          '审核人员')
+
+        if (this.editId) {
+          this.detailEdit();
+        }
+        form.render();
+      },
+      addressLayerCallback: function (res) {
+        if (res) {
+          var that = InitObj;
+          that.processTypeDiv.find('.choiceShow').html(res[0].name)
+          that.processTypeDiv.find('input').val(res[0].id)
+        }
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+        }
+      },
+      // 详情页面数据处理
+      detailEditData: function (data) {
+        $('input[name="name"]').val(data.name)
+        this.processTypeDiv.find('.choiceShow').html(data.processTypeName)
+        this.processTypeDiv.find('input').val(data.processTypeId)
+        this.addPersonsCallback(data.processPersons)
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, {
+          "groupId": this.editId
+        }, this.detailEditCallback, false, true)
+      },
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequestByJsonStr(this.saveUrl, JSON.stringify(saveParam), this.saveAjaxCallback, true, true);
+          } else {
+            SHOW_LOAD_LAYER('数据提交中...');
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (formdata) {
+        if (!formdata.name) {
+          formdata.msg = '组名称不能为空';
+          formdata.element = $('input[name="name"]');
+          return false;
+        }
+        if (!formdata.processTypeId) {
+          formdata.msg = '流程类型不能为空';
+          formdata.element = this.processTypeDiv.find('.choiceShow');
+          return false;
+        }
+        if (this.auditPersons.length === 0) {
+          formdata.msg = '审核人员不能为空';
+          formdata.element = this.auditPersonsAdd;
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var requiredParam = {
+            "name": formdata.name,
+            "processTypeId": formdata.processTypeId,
+            "processPersons": this.formdata,
+          }
+          if (this.editId) {
+            requiredParam.id = this.editId;
+          }
+          return requiredParam;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj,
+          that = InitObj;
+          that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          return;
+        }
+      },
+      // 审核人员删除
+      addPersonsRem: function (res) {
+        for (var i = 0; i < this.auditPersonsData.length; i++) {
+          if (res === this.auditPersonsData[i].userId) {
+            this.auditPersonsData.splice(i, 1)
+            break;
+          }
+        }
+        this.addPersonsCallback(this.auditPersonsData)
+      },
+      // 审核人员回调 
+      addPersonsCallback: function (res) {
+        var that = InitObj;
+        that.auditPersonsData = [];
+        that.auditPersons = [];
+        var html = ''
+        for (var i = 0; i < res.length; i++) {
+          that.auditPersonsData.push({
+            "userId": res[i].userId,
+            "realName": res[i].userName || res[i].realName
+          })
+          that.auditPersons.push({
+            "userId": res[i].userId,
+            "userSequence": i + 1
+          })
+          if (i === 0) {
+            html += '<div class="btnClose"><span>' + that.auditPersonsData[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          } else {
+            html += '<b class="layui-btn layui-btn-sm unReturn"><i class="layui-icon">&#xe65c;</i></b>'
+            html += '<div class="btnClose"><span>' + that.auditPersonsData[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          }
+        }
+        that.auditPersonsBox.html(html);
+      },
+      // 审核人员  及 报告编号
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('流程类型配置' === openName) {
+            layerOpenFun(openUrl, openName, ['95%', '95%'], ['确定', '取消'], that.addressLayerCallback)
+          } else if ('审核人员' === openName) {
+            layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.auditPersonsData))), openName,
+              ['95%', '95%'], ['确定', '取消'], that.addPersonsCallback)
+          }
+        })
+      },
+
+
+
+    }
+  </script>
+</body>
+
+</html>

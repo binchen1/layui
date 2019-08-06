@@ -1,0 +1,269 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title></title>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/pdf.css" />
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+</head>
+
+<body>
+  <iframe id='udrIframe' name='udrIframe' width='0' height='0' frameborder='none' src='' ></iframe>
+  <div class="layui-row  pdf-box">
+    <div class="layui-col-xs3 pdf-box-left">
+      <div>
+        <div class="layui-row">
+          
+          <div class="layui-col-xs6">
+            <a id="updateNotice" href="#" class="easyui-linkbutton" iconCls="iconfont icon-tip"
+              onclick="InitObj.noticeEntrust()">通知修改委托</a>
+          </div>
+          <div class="layui-col-xs6">
+              <a id="print" href="#" class="easyui-linkbutton" iconCls="iconfont icon-print"
+                onclick="InitObj.print()">打印</a>
+            </div>
+        </div>
+      </div>
+      <div class="pdf-box-left-ul">
+        <ul id="pdftabs"></ul>
+      </div>
+      <div id="relativeReports">
+         <!--  当前报告的临时报告：
+          <div class="layui-color-blue">BG-2018-SNJ-00001(3d)</div>
+          <div class="layui-color-blue">BG-2018-SNJ-00001(3d)</div> -->
+      </div>
+      <div id="reportInfo">
+        <!--  <div class="pdf-box-left-middle">
+          <h3>委托单位：</h3>
+          <div>中铁十九局集团第二工程有限公司/中铁十九局集团第二工程有限公司莆炎高速YA10项目部</div>
+        </div>
+        <div class="pdf-box-left-middle">
+          <h3>工程项目：</h3>
+          <div>莆炎高速公路三明段YA10合同段</div>
+        </div>
+        <div class="pdf-box-left-staff">
+          <p>检测：<span>张三,李四</span></p>
+          <p>报告编写：<span>刘xxx</span></p>
+          <p>复核：<span>王五</span></p>
+          <p>审核：<span>赵六</span></p>
+          <p>批准：<span>陈七</span></p>
+        </div>  --> 
+      </div>
+    </div>
+    <div class="layui-col-xs9 pdf-box-right">
+      <iframe id="reportIframe" style="width: 100%;height:100%"
+        src="${basePath}/pdfjs/web/viewer.html" frameborder="0"></iframe>
+    </div>
+  </div>
+  <script>
+    $(function() {
+      layui.use([ 'element', 'layer' ], function() {
+        var element = layui.element;
+        var layer = layui.layer;
+      })
+      $('#pdftabs').on('click', 'li', function(e) {
+        $(this).addClass("selected").siblings().removeClass("selected");
+        var index = $("ul li").index(this);
+        var dataType = $(this).attr("dataType");
+        var id = $(this).attr("data-value");
+        // window.localStorage.pdf = 'http://localhost:8080/pdf/20140620/000000091534588.pdf';
+        // window.location.href = basePath + "jsTool/openPDF/web/viewer.html";
+        
+        if (dataType == 1) {  // 1、报告 3、记录
+          setIframeUrl(id);
+        } else if (dataType == 4){  // 4、委托
+          var src = "consignController.do?goEdit&id="+id;
+          console.info(src);
+          $('#reportIframe').attr('src', src);
+        }
+      })
+      InitObj.init()
+    })
+    // 初始化页面
+    var InitObj = {
+      codeUrl : 'reportAuditController.do?getReportDetailGeneral', // 查询报告，记录，委托编号列表
+      infoUrl : 'reportController.do?getReportDetailInfo', // 查询概要信息
+      relativeReportUrl : 'reportController.do?getRelativeReports', // 获取关联报告
+      reportId : GetQueryString("reportId"), // 获取父页面传递过来的id
+      consignIds : GetQueryString("consignIds"),
+      testTaskIds : GetQueryString("testTaskIds"),
+      displayType : GetQueryString("displayType"),  // 展示类型：1.不显示关联报告和操作按钮
+      business : GetQueryString("business"),
+      init : function() {
+        if(this.displayType == 1){
+            $("#updateNotice").hide();
+            $("#print").hide();
+        }
+        this.getReportCode()
+        this.getReportInfo()
+        this.getRelativeReport();
+      },
+      // 查询报告附件信息回调函数
+      getReportCodeCallback : function(res) {
+        if(!res.success){   // 请求失败
+            layer.msg("获取报告附件失败", {icon: 6});
+            return;
+        }
+        var codeUrlHtml = '', initAttachId = '',
+          arr = res.obj;
+        for (var i = 0; i < arr.length; i++) {
+          if(initAttachId == '' && arr[i].type == 1){
+            initAttachId = arr[i].id; // 初始化iframe页面
+          }
+          if (i === 0) {
+            codeUrlHtml += '<li class="selected" data-value="'+arr[i].id+'" dataType="'+arr[i].type+'"><h5>' + arr[i].name + '</h5><h4>' + arr[i].code + '</h4></li>'
+          } else {
+            codeUrlHtml += '<li data-value="'+arr[i].id+'" dataType="'+arr[i].type+'"><h5>' + arr[i].name + '</h5><h4>' + arr[i].code + '</h4></li>'
+          }
+        }
+        $('#pdftabs').append(codeUrlHtml)
+        
+        // 初始化reportIframe
+        setIframeUrl(initAttachId);
+      },
+      // 查询报告附件信息
+      getReportCode : function() {
+        var dataJson = {
+          'reportId' : this.reportId
+        }
+        ajaxRequest(this.codeUrl, dataJson, this.getReportCodeCallback, false, true)
+      },
+      getRelativeReport : function(){   // 查询关联报告
+        var dataJson = {'reportId' : this.reportId};
+        ajaxRequest(this.relativeReportUrl, dataJson, this.getRelativeReportCallBack);
+      },
+      getRelativeReportCallBack : function(res){    // 查询关联报告回调函数
+        if(!res.success){   // 请求失败
+            layer.msg("获取关联报告失败", {icon: 6});
+            return;
+        }
+        var obj = res.obj;
+        var content = "";
+        if(obj.tempReports){    // 如果有返回临时报告
+            content += "当前的临时报告：";
+            var tempReports = obj.tempReports;
+            for(var i = 0; i < tempReports.length; i++){
+                content += "<div style='cursor:hand' class='layui-color-blue' onclick=\"javascript:goDetail('" + tempReports[i].reportId+"');\">" + tempReports[i].reportCode;
+                if(tempReports[i].agePeriod){   // 综合报告的临时报告，没有龄期
+                    content += "(" + tempReports[i].agePeriod+")";
+                }
+                content += "</div>";
+            }
+        } 
+        if (obj.formalReports){  // 如果有返回正式报告
+            content += "当前的正式报告：";
+            var formalReports = obj.formalReports;
+            console.info('formalReports', formalReports);
+            for(var i = 0; i < formalReports.length; i++){
+                content += "<div style='cursor:hand' class='layui-color-blue' value='" + formalReports[i].reportId+"' >" + formalReports[i].reportCode + "</div>";
+            }
+        }
+        $("#relativeReports").append(content);
+      },
+      // 查询报告概要信息回调函数
+      getReportInfoFun : function(res) { 
+        if(!res.success){   // 请求失败
+            layer.msg("获取报告概要信息失败", {icon: 6});
+            return;
+        }
+        var infohtml = '',
+          obj = res.obj;
+        infohtml += '<div class="pdf-box-left-middle">'
+        infohtml += '<h3>委托单位：</h3>'
+        infohtml += '<div>' + obj.unitName + '</div>'
+        infohtml += '</div>'
+        infohtml += '<div class="pdf-box-left-middle">'
+        infohtml += '<h3>工程项目：</h3>'
+        infohtml += '<div>' + obj.projectName + '</div>'
+        infohtml += '</div>'
+        infohtml += '<div class="pdf-box-left-staff">'
+        infohtml += '<p>检测：<span>' + obj.testers + '</span></p>'
+        infohtml += '<p>报告编写：<span>' + obj.editors + '</span></p>'
+        infohtml += '<p>复核：<span>' + obj.reviewers + '</span></p>'
+        infohtml += '<p>审核：<span>' + obj.auditors + '</span></p>'
+        infohtml += '<p>批准：<span>' + obj.approvers + '</span></p>'
+        infohtml += '</div>'
+        $('#reportInfo').append(infohtml)
+  
+      },
+      // 查询报告概要信息
+      getReportInfo : function() {
+        var dataJson = {
+          'reportId' : this.reportId
+        }
+        ajaxRequest(this.infoUrl, dataJson, this.getReportInfoFun, false, true)
+      },
+      // 获取任务id回调
+      getTaskIdFun : function(res) {
+        var arr = res.obj
+        if (arr.length>1) {
+          window.open('reportCreateController.do?goEditPage', '检测详情')
+        }else {
+          var url = 'testTaskController.do?goTestTaskDetail'
+          var openUrl = url + '&id=' + arr[0] + '&reportId=' + this.reportId + '&readType=2'
+          window.open(openUrl, '检测详情')
+        }
+      },
+      // 获取任务id再获取详情
+      getTaskId : function() {
+        var url = 'reportAuditController.do?getTaskIds';
+        var dataJson = {
+          'reportId' : this.reportId
+        }
+        ajaxRequest(url, dataJson, this.getTaskIdFun, false, true)
+      },
+      print : function() { 
+        var url = "reportPrintController.do?goReportPrintConfig&reportIds=" + this.reportId 
+                    + "&consignIds=" +  this.consignIds + "&testTaskIds=" +  this.testTaskIds
+                    + "&business=" + this.business;
+        layerOpenFun(url, '打印设置', ['400px', '300px'], ['确定', '取消'])
+      },
+      noticeEntrust : function() { 
+      },
+      printUdrCommonTemplate: function(data){
+        var udrPrintBatch = new UdrPrintBatch(data);
+        udrPrintBatch.printStart();
+      },
+    }
+    
+    function goDetail(reportId){
+        window.open("reportPrintController.do?goReportPrintDetail&displayType=1&reportId=" + reportId, '_blank')
+    };
+    
+    function setIframeUrl(id){
+        var basePath = "<c:out value='${webRoot}'/>";
+        var src = basePath + '/pdfjs/web/viewer.html?file=' + encodeURIComponent(basePath + '/reportController.do?displayPDF&attachmentId='+id);
+        $('#reportIframe').attr('src', src);
+    };
+    
+  </script>
+</body>
+
+</html>

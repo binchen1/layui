@@ -1,0 +1,427 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>报告审核</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/system/log/logProcess.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+
+  <style>
+    /* #functionButton {
+    height:35px;
+    width: 100%;
+  } */
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">待审核报告</li>
+      <li>报告批准中</li>
+      <li>报告已批准</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form id="commonQueryForm">
+            <div class="layui-input-inline" style="width:80%">
+              <input type="text" class="layui-input" name="queryCondition" placeholder="输入编号/样品名称/检测参数后回车即可查询"
+                autocomplete="off">
+            </div>
+            <div class="layui-input-inline">
+              <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                onclick="InitObj.quickSearch()">查询</a>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <a href="#" style="display:none" data-funCode="doReportAuditPass" class="easyui-linkbutton funBtn_pass"
+            iconCls="iconfont icon-ok" plain="true">审核通过</a>
+          <a href="#" style="display:none" data-funCode="reportAuditRollback" class="easyui-linkbutton funBtn_undo"
+            iconCls="iconfont icon-undo" plain="true">退回</a>
+          <a href="#" style="display:none" data-funCode="reportAuditTransfer" class="easyui-linkbutton funBtn_redo"
+            iconCls="iconfont icon-redo" plain="true">转交</a>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+  <!-- <script type="text/javascript" src="plug-in/assets/js/asidenav.js"></script> -->
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          InitObj.isBtnFun(data.index + 1)
+        });
+      })
+      InitObj.init();
+    })
+
+    //回退后的回调函数,刷新列表数据
+    function rollbackCallBack() {
+      InitObj.reloadDataGrid();
+    }
+
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      defaultUrl: 'reportAuditController.do?datagridAudit', //默认获取数据url
+      dataType: 1, // 1.待审核 2.待批准 3.已批准
+      stateMsg: '', // 状态提示信息
+      pass: $('#functionButton .funBtn_pass'), // 功能按钮 审核通过
+      undo: $('#functionButton .funBtn_undo'), // 功能按钮 退回
+      redo: $('#functionButton .funBtn_redo'), // 功能按钮 转交
+      functionButton: $('#functionButton'),
+      init: function () {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.isBtnFun(1)
+        this.commonQryKeyDown()
+        this.btnFun(this.pass, 'reportAuditController.do?goReportAuditPass', '审核通过')
+        this.btnFun(this.undo, '', '退回')
+        this.btnFun(this.redo, '', '转交')
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var tipIndex;
+        btnName.on('click', function () {
+          var that = InitObj, reportId = '', self = this, row = $('#dataGrid').datagrid('getSelections');
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span class="layui-color-white">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            $.each(row, function (i, v) {
+              reportId += v.id + ',';
+            })
+            var reportIds = reportId.slice(0, -1)
+            if ('审核通过' === openName) {
+              var isAudited = false;
+              $(row).each(function (index, value) {
+                if (value.reportStatus == '3') {
+                  isAudited = true;
+                }
+              })
+              if (!isAudited) {
+                layerOpenFun(openUrl + "&reportIds=" + reportIds, openName, ['80%', '80%'], ['确定', '取消']);
+              } else {
+                layer.msg('操作失败:选中的报告中存在你已审核过的内容');
+              }
+            } else if ('退回' === openName) {
+              if (row.length === 1) {
+                showRollbackPage('reportAudit', reportIds);
+              } else {
+                layer.msg('一次只能回退一条记录');
+              }
+            } else if ('转交' === openName) {
+              goTaskTransfer();
+            } else {
+            }
+            return;
+          }
+        })
+        btnName.mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      //点击状态弹出框
+      delHsCode: function (index, value, event) {
+        layui.stope(event)
+        var stateObj = { "2": "报告打印回退", "1": "本报告需修改", "3": "我已审核,待同流程人员审核" }
+        this.stateMsg = '<span class="layui-color-white">' + stateObj[value] + '</span>';
+        var tipIndex = layer.tips(this.stateMsg, '.delHsCode' + index, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+        $('.delHsCode' + index).mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 点击进入详情页
+      goDetail: function (rId) {
+        window.open("reportAuditController.do?goReportAuditDetail&reportId=" + rId, '报告审核详情')
+      },
+      //快速查询
+      quickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [];
+        columns.push({ title: "id", field: "id", checkbox: true });
+        columns.push({
+          title: "标记",
+          field: "reportStatus",
+          width: 30,
+          formatter: function (value, row, index) {
+            var display = "";
+            var stateObj = {
+              "1": { "name": "退", "colors": " layui-color-green " },
+              "2": { "name": "改", "colors": " layui-color-green " },
+            }
+            if (1 === this.dataType) {
+              stateObj["3"] = { "name": "审", "colors": " layui-color-green " }
+            }
+            if (value) {
+              if (1 === this.dataType) {
+                if ('1' === value || '2' === value || '3' === value) {
+                  display += '<div class="text-center">'
+                  display += ' <span class="delHsCode' + index + ' span-round ' + stateObj[value].colors + '"'
+                  display += 'onmouseenter="InitObj.delHsCode(' + index + ',&quot;' + value + '&quot;,event)"'
+                  display += '>' + stateObj[value].name + '</span></div>';
+                }
+              } else {
+                if ('1' === value || '2' === value) {
+                  display += '<div class="text-center">'
+                  display += ' <span class="delHsCode' + index + ' span-round ' + stateObj[value].colors + '"'
+                  display += 'onmouseenter="InitObj.delHsCode(' + index + ',&quot;' + value + '&quot;,event)"'
+                  display += '>' + stateObj[value].name + '</span></div>';
+                }
+              }
+            }
+            return display;
+          }
+        });
+        columns.push({ title: "报告编号", field: "reportCode", width: 120 });
+        columns.push({ title: "委托编号", field: "consignCode", width: 90 });
+        columns.push({ title: "记录编号", field: "recordCode", width: 80 });
+        columns.push({ title: "样品名称", field: "sampleName", width: 80 });
+        columns.push({
+          title: "要求报告时间", field: "requireReportDate", width: 80, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({ title: "检测时间", field: "testDate", width: 80 });
+        if (3 === this.dataType) { // 报告已批准
+          columns.push({
+            title: "签发日期", field: "signDate", width: 80, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+        }
+        columns.push({
+          title: "人员",
+          field: "persons",
+          width: 150,
+          formatter: function (value, row, index) {
+            var persons = "";
+            if (row.testers) {
+              persons += "检测：" + row.testers + ";";
+            }
+            if (row.editors) {
+              persons += "编写：" + row.editors + ";";
+            }
+            if (row.auditors) {
+              persons += "审核：" + row.auditors + ";";
+            }
+            if (row.approvers) {
+              persons += "批准：" + row.approvers + ";";
+            }
+            return persons;
+          }
+        });
+        columns.push({
+          title: "操作",
+          field: "opt",
+          width: 80,
+          formatter: function (value, row, index) {
+            var btns = '<button style="display:none" data-funCode="goReportAuditDetail" class="layui-btn layui-btn-sm" title="查看详情" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;)"><i class="layui-icon">&#xe705;</i></button>';
+            btns += '<button style="display:none" data-funCode="reportAuditViewLog" onclick="showLogs(\'3\',\'' + row.id + '\',true);" class="layui-btn layui-btn-sm" title="查看日志"><i class="layui-icon">&#xe6b2;</i></button>';
+            if (2 === this.dataType) { // 批准中
+              // btns += '<button class="layui-btn layui-btn-sm" title="撤回"><i class="layui-icon">&#x1007;</i></button>';
+            }
+            return btns;
+          }
+        });
+
+        return [columns];
+
+      },
+      isBtnFun: function (num) {
+        var codes = 'doReportAuditPass,reportAuditRollback,reportAuditTransfer';
+        this.dataType = num;
+        if (1 === this.dataType) {
+          this.functionButton.show();
+        } else {
+          codes = 'goReportAuditDetail,reportAuditViewLog';
+          this.functionButton.hide();
+        }
+        funCode(codes, this.funCodeComplete);
+      },
+      funCodeComplete: function (isShow) {
+        var that = InitObj;
+        if (isShow) {
+          that.initDataGrid(that.columnsFun());
+        }
+      },
+      // table渲染
+      initDataGrid: function (columns) {
+        var that = InitObj;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&dataType=' + this.dataType,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          view: detailview,
+          detailFormatter: function (rowIndex, rowData) {
+            return InitObj.createDetailView(rowData);
+          },
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            // 重新渲染列表中 图标
+            $("a[name='reload']").linkbutton({
+              plain: true,
+              iconCls: 'icon-reload'
+            });
+            if (data.rows.length > 0) {
+              funCode('goReportAuditDetail,reportAuditViewLog')
+            }
+
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+      // 页面样品详情
+      createDetailView: function (rowData) {
+        var htm = '<div style="padding: 3px 3px 3px 0;">';
+        htm += '<table class="detail-table">';
+
+        htm += '<tr>';
+        htm += '<th style="width: 150px;">样品名称</th>';
+        htm += '<th style="width: 150px;">样品编号</th>';
+        htm += '<th style="width: 150px;">规格型号</th>';
+        htm += '<th style="width: 150px;">工程部位用途</th>';
+        htm += '<th style="width: 300px;">试验参数</th>';
+        htm += '<th>备注</th>';
+        htm += '</tr>';
+
+        // noinspection JSUnresolvedVariable
+        var rows = rowData.testObjects;
+        for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          htm += '<tr>';
+          htm += '<td>' + row.testSampleDisplayName + '（' + row.testSampleName + '）</td>';
+          htm += '<td>' + row.testObjectCode + '</td>'; // 样品编号
+          htm += '<td>' + row.standard + '</td>';
+          htm += '<td>' + row.projectPartAndUse + '</td>'; // 工程部位用途
+          htm += '<td>';
+          // noinspection JSUnresolvedVariable
+          var params = row.testObjectParams;
+          var paramsHtm = '';
+          for (var j = 0; j < params.length; j++) {
+            var param = params[j];
+            // noinspection JSUnresolvedVariable
+            if (param.isDeleted == 0) {
+              paramsHtm += param.testParamDisplayName + '，';
+            }
+          }
+          if (paramsHtm) {
+            paramsHtm = paramsHtm.substring(0, paramsHtm.length - 1);
+          }
+          htm += paramsHtm;
+          htm += '</td>';
+
+          htm += '<td>' + row.remark + '</td>';
+          htm += '</tr>';
+        }
+        htm += '</table>';
+        htm += '</div>';
+        return htm;
+      }
+    }
+
+    // 任务转交
+    function goTaskTransfer() {
+      var rows = $('#dataGrid').datagrid('getSelections');
+      var objectIds = ''; // testTaskIds
+      for (var i = 0; i < rows.length; i++) {
+        if (i == 0) {
+          objectIds += rows[i].id;
+        } else {
+          objectIds += "," + rows[i].id;
+        }
+      }
+      var index = layer.open({
+        type: 2,
+        title: '任务转交',
+        skin: 'mylayui-layer-molv',
+        area: ['30%', '70%'],
+        btn: ['确定', '取消'],
+        content: 'commonController.do?goAssigneeSelect&type=reportAudit&objectIds=' + objectIds, //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+        yes: function (index) {
+          //当点击‘确定’按钮的时候，获取弹出层返回的值
+          var iframeWin = window["layui-layer-iframe" + index], iframeWinRes = '';
+          var res = iframeWin.resetAssignee();  // 重置任务责任人
+          if (res.success) {
+            layer.msg('操作成功', { icon: 6 });
+          } else {
+            layer.msg('操作异常：' + res.msg, { icon: 5 });
+          }
+          InitObj.reloadDataGrid();
+          layer.close(index);
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

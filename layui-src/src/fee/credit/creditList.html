@@ -1,0 +1,385 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>信用管理主列表</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>信用管理主列表</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+  <style>
+    .bottom-box {
+      height: 230px;
+    }
+
+    .bottom-box .layui-tab-card {
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="tableBox" class="height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-form">
+        <form class="layui-form" id="commonQueryForm">
+          <div class="layui-row">
+            <div class="layui-col-xs8 ordinary">
+              <div class="layui-input-inline" style="width:80%">
+                <input type="text" name="quickQryParam" class="layui-input" placeholder="输入单位名称后回车即可查询"
+                  autocomplete="off">
+              </div>
+              <div class="layui-input-inline">
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.quickSearch()">查询</a>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" class="easyui-linkbutton funBtn_edit" iconCls="iconfont icon-edit" plain="true">批量设置额度</a>
+        </span>
+      </div>
+    </div>
+    <div id="cc" class="easyui-layout" style="width:100%;height:100%;">
+      <div data-options="region:'center'" style="padding:5px;background:#eee;">
+        <table class="easyui-datagrid" id="dataGrid"></table>
+      </div>
+      <div data-options="region:'south',split:true" class="bottom-box">
+        <div class="layui-tab layui-tab-card" lay-filter="docDemoTabBriefBottom">
+          <ul class="layui-tab-title">
+            <li class="layui-this">使用明细</li>
+            <li>回款记录</li>
+            <li>变更历史</li>
+          </ul>
+          <div class="layui-tab-content">
+            <form class="layui-form" id="commonQueryForm2">
+              <div class="layui-tab-item layui-show">
+                <table class="easyui-datagrid" id="dataGrid2" style="height:180px"></table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        element.on('tab(docDemoTabBriefBottom)', function (data) {
+          var that = InitObj;
+          var row = $('#dataGrid').datagrid('getSelections');
+          if (1 === row.length) {
+            if (0 === data.index) {
+              that.tableDataAjax(that.usageDetailsUrl, data.index);
+            } else if (1 === data.index) {
+              that.tableDataAjax(that.moneyBackUrl, data.index);
+            } else {
+              that.tableDataAjax(that.creditRecordUrl, data.index);
+            }
+          } else {
+            that.dataGridData = [];
+            that.initDataGrid2(that.columnsFun2(data.index));
+            layerAlertFun('请选择1条信用数据进行查看', 'auto');
+          }
+        });
+        laydate.render({
+          elem: '#signDate'
+          , trigger: 'click'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        InitObj.init(form, laydate, table);
+      })
+
+    })
+    var InitObj = {
+      defaultUrl: 'creditController.do?datagrid', //默认获取数据url
+      creditlineSetPageUrl: 'creditController.do?goCreditlineSet', // 挂账额度设置url页面
+      usageDetailsUrl: 'creditUseDetailController.do?datagridByCredit', // 使用明细url
+      moneyBackUrl: 'creditRepaymentController.do?datagridByCredit', // 回款登记url
+      creditRecordUrl: 'creditController.do?datagridCreditRecord', // 变更url
+      formLayerM: null, // form对象 
+      laydateLayerM: null,
+      tableLayerM: null,
+      tableIns: null,
+      creditlineSet: $('#functionButton .funBtn_edit'), // 批量设置额度  
+      queryParams: {}, // 查询条件
+      dataGrid2: null, // 底部table
+      dataGridData: null, // 底部table 
+      isQuickQryParam: false,
+      init: function (form, laydate, table) {
+        /** common.js中引入函数, 勿删 getPagerFun() getTableHeight()*/
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.tableLayerM = table;
+        this.initDataGrid(this.columnsFun())
+        // 搜素按钮回车键盘
+        this.commonQryKeyDown()
+        // 高级查询与普通查询切换
+        this.styleLayout();
+        this.btnFun(this.creditlineSet, this.creditlineSetPageUrl, '挂账额度设置');
+        form.render()
+        // this.tableDataAjax(this.usageDetailsUrl, {}, 0);
+      },
+      tableDataAjax: function (url, tableNum) {
+        var row = $('#dataGrid').datagrid('getSelections'), dataJson = { creditId: row[0].id };
+        ajaxRequest(url, dataJson, this.tableRenderFun, true, true, tableNum)
+      },
+      tableRenderFun: function (res, tableNum) {
+        var that = InitObj;
+        that.dataGridData = res.rows || [];
+        that.initDataGrid2(that.columnsFun2(tableNum));
+      },
+      // 点击功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, unitIds = "", currentQuota = '', row = $('#dataGrid').datagrid('getSelections');
+          console.log('row', row)
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            for (var i = 0; i < row.length; i++) {
+              unitIds += row[i].unitId + ',';
+            }
+            var url = '';
+            if ('挂账额度设置' === openName) {
+              url += '&unitIds=' + unitIds.slice(0, -1);
+              if (1 === row.length) {
+                url += '&currentQuota=' + row[0].creditLine;
+              }
+              layerOpenFun(openUrl + url, openName, ['500px', '280px'], ['确定', '取消']);
+              return;
+            }
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+
+      // table按钮点击 挂账额度设置
+      goDetailSet: function (unitIds, creditLine, event) {
+        // layui.stope(event)
+        var url = '&unitIds=' + unitIds + '&currentQuota=' + creditLine, openName = '挂账额度设置';
+        console.log('url', url)
+        layerOpenFun(this.creditlineSetPageUrl + url, openName, ['500px', '280px'], ['确定', '取消']);
+      },
+      // table按钮点击 回款登记
+      addRepayment: function (unitId, unitName) {
+        layui.stope(event)
+        unitName = encodeURI(encodeURI(unitName));
+        var openUrl = '&unitId=' + unitId + '&unitName=' + unitName, openName = '新增回款登记';
+        layerOpenFun('creditRepaymentController.do?goCreditRepayment' + openUrl, openName, ['75%', '90%'], ['确定', '取消']);
+      },
+      applyMoneyAttribute: function (value) {
+        return formatMoney(getFloatStr(value), 2, '￥ ');
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        this.isQuickQryParam = true;
+        var condition = $("input[name='quickQryParam']").val();
+        var queryParams = { 'quickQryParam': condition };
+        console.log('queryParams', queryParams)
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            that.quickSearch()
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {  // 查询类型: 0:收款合同, 1:付款合同
+        var columns = [];
+        columns.push({ title: "id", field: "id", checkbox: true, width: 30 })
+        columns.push({ title: "委托单位", field: "unitName", width: 100 });
+        columns.push({ title: "挂账额度", field: "creditLine", width: 90, formatter: this.applyMoneyAttribute });
+        columns.push({ title: "已用额度", field: "usedFee", width: 80, formatter: this.applyMoneyAttribute });
+        columns.push({ title: "可用额度", field: "banlance", width: 80, formatter: this.applyMoneyAttribute });
+        columns.push({
+          title: "操作", field: "opt", width: 80, formatter: function (value, row, index) {
+            var btns =
+              '<button title="挂账额度设置"  class="layui-btn layui-btn-sm" onclick="InitObj.goDetailSet(&quot;' +
+              row.unitId + '&quot;,&quot;' + row.creditLine +
+              '&quot;,event)" ><i class="layui-icon">&#xe642;</i></button>';
+            btns +=
+              '<button title="回款登记"  class="layui-btn layui-btn-sm" onclick="InitObj.addRepayment(&quot;' +
+              row.unitId + '&quot;,&quot;' + row.unitName +
+              '&quot;)" ><i class="layui-icon">&#xe65e;</i></button>';
+
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid');
+            if (data.rows.length > 0) {
+              that.dataGrid.datagrid('selectRow', 0);
+              that.tableDataAjax(that.usageDetailsUrl, 0);
+            }
+          }
+        });
+      },
+      // 各tabs展示数据
+      columnsFun2: function (num) {
+        var columns = []; that = this;
+        columns.push({ title: "ID", field: "id", hidden: true })
+        if (0 === num) {
+          columns.push({ title: "编号", field: "feeObjectSn", width: 30 })
+          columns.push({
+            title: "费用生成日期", field: "createDate", width: 20,
+            formatter: function (value, row, index) {
+              if (value) {
+                var dateStr = value.replace(/-/g, "/");
+              }
+              return value ? new Date(dateStr).Format("yyyy-MM-dd") : '';
+            }
+          })
+          columns.push({ title: "已挂账费用", field: "waitPayment", width: 30,formatter: that.applyMoneyAttribute })
+
+        } else if (1 === num) {
+
+          columns.push({
+            title: "回款日期", field: "date", width: 30, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : '';
+            }
+          })
+
+          columns.push({ title: "回款金额", field: "fee", width: 35,formatter: that.applyMoneyAttribute })
+          columns.push({
+            title: "支付方式", field: "way", width: 20,
+            formatter: function (value, row, index) {
+              if (value == 1) {
+                return '现金';
+              } else if (value == 2) {
+                return '转账';
+              } else if (value == 3) {
+                return '支票';
+              } else { }
+            }
+          })
+        } else {
+          columns.push({ title: "变更后额度", field: "creditLine", width: 35,formatter: that.applyMoneyAttribute })
+          columns.push({
+            title: "变更日期", field: "createDate", width: 20,
+            formatter: function (value, row, index) {
+              if (value) {
+                var dateStr = value.replace(/-/g, "/");
+              }
+              return value ? new Date(dateStr).Format("yyyy-MM-dd") : '';
+            }
+          })
+          columns.push({ title: "登记人", field: "createName", width: 25 })
+        }
+        return [columns];
+      },
+      initDataGrid2: function (columns) {
+        var that = this;
+        this.dataGrid2 = $('#dataGrid2').datagrid({
+          data: this.dataGridData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('onLoadSuccess', data)
+          }
+        });
+
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        var that = InitObj;
+      },
+
+    }
+  </script>
+</body>
+
+</html>

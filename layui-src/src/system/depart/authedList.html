@@ -1,0 +1,116 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>授权管理</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" type="text/css" href="../../assets/css/list.css" />
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>授权管理</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/system/log/logProcess.js'></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <style>
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief" class="height-full">
+    <div id="tableBox">
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" class="easyui-linkbutton funBtn_info" iconCls="icon-add" plain="true">导入授权文件</a>
+          <a href="#" style="display: none" data-funCode="assignedRollback" class="easyui-linkbutton funBtn_revoke"
+            iconCls="icon-undo" plain="true">任务撤回</a>
+        </span>
+      </div>
+    </div>
+    <table class="layui-hide" id="test" lay-filter="test"></table>
+  </div>
+  <script>
+    layui.use(['table', 'form', 'laydate'], function () {
+      var table = layui.table;
+      InitObj.init(table);
+      //监听行单击事件（单击事件为： rowDouble ）
+    });
+    var InitObj = {
+      tableLayerM: null,
+      tableIns: null,
+      init: function (table) {
+        this.tableLayerM = table;
+        this.loadData = {
+          total: 1,
+          rows: [{
+            "id": "1", "name": "毕节市融达公路桥梁建设工程试验检测有限公司", "version": "基础版", "count": "30",
+            "onlineCount": "20",
+            "authedModel": "试验检测;短信通知;报告电子签章;报告电子签名;报告副本;移动客户端;管理体系管理;挂靠及驻外分室管理;报告防伪;批注审阅;自助委托查询;大厅信息屏;客户持卡管理;公众平台(5,1,1,1,10)"
+          }]
+        }
+        this.tableRender(this.loadData.rows)
+      },
+      tableRender: function (tableData) {
+        console.log('tableData', tableData)
+        var that = InitObj;
+        this.tableIns = this.tableLayerM.render({
+          elem: '#test'
+          , height: 'full'
+          , limit: Number.MAX_VALUE
+          , data: tableData
+          , cols: [[
+            { field: 'name', title: '单位名称' }
+            , { field: 'version', title: '软件版本', width: 80 }
+            , { field: 'count', title: '账号数量', width: 80 }
+            , { field: 'onlineCount', title: '在线数量', width: 80 }
+            , { field: 'authedModel', title: '授权模块' }
+          ]]
+          , page: false
+          , done: function (data) {
+            console.log('data105', data)
+          }
+        });
+        //监听行单击事件
+        this.tableLayerM.on('row(test)', function (obj) {
+          var res = { success: true };
+          obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+
+        });
+      }
+    }
+  </script>
+</body>
+
+
+
+</html>

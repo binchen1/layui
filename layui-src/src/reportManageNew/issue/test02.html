@@ -1,0 +1,632 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <link rel="stylesheet" type="text/css" href="plug-in/webuploader/webuploader.css" />
+  <script type="text/javascript" src="plug-in/webuploader/webuploader.min.js"></script> -->
+  <script type="text/javascript" src="plug-in/signature-canvas/jq-signature.min.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    .layui-form-box {
+      padding: 10px;
+      margin-bottom: 50px;
+    }
+    .btnPrevNext {
+      text-align: right;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #fff;
+      padding:10px 15px;
+      box-sizing:border-box;
+      z-index: 20;
+    }
+    .btnPrevNext a.layui-btn {
+      background:#009f95;
+      color: #fff;
+      height: 30px;
+      line-height: 30px;
+      padding: 0 10px;
+    }
+    .btnPrevNext a.layui-btn.cancel {
+      background:#92B8B1;
+      color: #000;
+    }
+    .layui-form-label {
+      /* width: 100px; */
+    }
+    .modal {
+      height: 100%;
+      width: 100%;
+      background: pink;
+      opacity: .2;
+      position: fixed;
+      z-index: 10;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="modal" style="display:none"></div>
+  <input id="signatureImageSrc" name="signatureImageSrc" type="hidden"
+           value="${sampleSenderEntity.signatureImageSrc}">
+  <div style="height:100%;">
+  <form class="layui-form" id="commonQueryForm">
+    <div class="layui-form-box">
+      <div class="layui-form-item">
+        <label class="layui-form-label">发放方式：</label>
+        <div class="layui-input-block" id="issueWayDiv">
+          <!-- 1:自取,2:代领,3:邮寄,4:传真 -->
+          <input class="layui-bg-blue" type="radio" lay-filter="issueWay" name="issueWay" value="1" title="自取" checked>
+          <input class="layui-bg-blue" type="radio" lay-filter="issueWay" name="issueWay" value="3" title="邮寄">
+          <input class="layui-bg-blue" type="radio" lay-filter="issueWay" name="issueWay" value="4" title="传真">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">经办人：</label>
+        <div class="layui-input-block">
+          <input type="text" name="operatorName" class="layui-input" lay-verify="required" value="${LOCAL_CLINET_USER.realName }"
+            autocomplete="off">
+          <i style="display:none" id="userId">${LOCAL_CLINET_USER.id}</i>
+          <i style="display:none" id="userName">${LOCAL_CLINET_USER.realName}</i>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">发放日期：</label>
+        <div class="layui-input-block">
+          <input type="text" class="layui-input" name="issueDate" id="testTime" placeholder="请选择发放日期" lay-verify="required"
+            autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item issueWay-one">
+        <label class="layui-form-label">领取人：</label>
+        <div class="layui-input-block">
+          <input type="text" name="receiverone" placeholder="请输入领取人" class="layui-input" lay-verify="required"
+            autocomplete="off">
+        </div>
+      </div>
+      <div style="display:none" class="issueWay-four">
+        <div class="layui-form-item ">
+          <label class="layui-form-label">传真号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="faxNumber" placeholder="请输入传真号" class="layui-input" lay-verify="required"
+              autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div style="display:none" class="issueWay-three">
+        <div class="layui-form-item ">
+          <label class="layui-form-label">收件人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="receiverthree" placeholder="请输入收件人" class="layui-input" lay-verify="required"
+              autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-form-item ">
+          <label class="layui-form-label">收件人电话：</label>
+          <div class="layui-input-block">
+            <input type="text" name="receiverPhone" placeholder="请输入电话号码" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-form-item ">
+          <label class="layui-form-label">邮寄地址：</label>
+          <div class="layui-input-block">
+            <input type="text" name="mailAddress" placeholder="请输入邮寄地址" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">邮寄公司：</label>
+          <div class="layui-input-block">
+            <select name="mailCompany">
+              <option value=""></option>
+              <option value="顺丰速运">顺丰速运</option>
+              <option value="邮政EMS">邮政EMS</option>
+              <option value="圆通快递">圆通快递</option>
+              <option value="申通快递">申通快递</option>
+              <option value="韵达快递">韵达快递</option>
+              <option value="汇通快递">汇通快递</option>
+              <option value="中通快递">中通快递</option>
+              <option value="宅急送">宅急送</option>
+              <option value="天天快递">天天快递</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item ">
+          <label class="layui-form-label">邮寄单号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="mailNumber" placeholder="请输入邮寄单号" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item ">
+        <label class="layui-form-label">备注：</label>
+        <div class="layui-input-block">
+          <input type="text" name="remark" placeholder="请输入备注" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item" id="attachmentIdsDiv">
+        <label class="layui-form-label">附件：</label>
+        <div class="layui-input-block">
+          <u class="layui-color-blue choiceShow"></u>
+          <i id="uploadA" class="layui-btn layui-bg-blue layui-btn-xs">上传</i>
+        </div>
+      </div>
+      <br>
+      <div class="layui-form-item">
+        <label class="layui-form-label">领取人签名：</label>
+        <div class="layui-input-block">
+          <img src="" >
+          <!-- <textarea placeholder="请输入内容" name="receiverSignature" class="layui-textarea"></textarea> -->
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">领取人签名：</label>
+        <div class="layui-input-block">
+      
+        <div style="width:300px; display:inline-block;height:200px" class="js-signature" 
+          data-width="300" 
+          data-height="200" 
+          data-border="1px solid black" 
+          data-line-color="#000" 
+          data-auto-fit="true">
+        </div>
+        <div id="qianButton">
+    <input type="button" value="保存" id="yes"/>
+    <input type="button" value="重写" id="reset"/>
+    </div>
+        </div>
+      </div>
+     
+      <br>
+    </div>
+    <div class="btnPrevNext">
+      <a class="layui-btn issueWay-threebtn" style="display:none">
+        打印邮寄单
+      </a>
+      <a class="layui-btn" onclick="InitObj.save()">
+        确定
+      </a>
+      <a class="layui-btn cancel" onclick="InitObj.cancel()">
+        取消
+      </a>
+    </div>
+  </form>
+  </div>
+  <script>
+    $(function () {
+
+    initImages($('#signatureImageSrc').val());
+
+    // var uploader = WebUploader.create({
+    //   auto: true,
+    //   swf: basePath + '/plug-in/webuploader/Uploader.swf',
+    //   server: basePath + '/uploadController.do?upload',
+    //   pick: '#fileUpload',
+    //   multiple: false,
+    //   accept: {
+    //     extensions: 'png,jpg',
+    //     mimeTypes: 'image/*'
+    //   }
+    // });
+
+    // uploader.on('uploadSuccess', function (file, data) {
+    //   if (data.success) {
+    //     if (data.obj[0] && data.obj[0].realpath) {
+    //       var path = data.obj[0].realpath;
+    //       $('#signatureImageSrc').val(path);
+    //       initImages(path);
+    //     }
+    //   }
+    // });
+
+    if ($('.js-signature').length) {
+      $('.js-signature').jqSignature();
+    }
+  });
+
+  //初始化表单验证改为传值的方式，方便其他页面动态修改
+  function initValidForm(configs) {
+    $("#form").Validform(configs);
+  }
+
+  function initImages(uri) {
+    if (uri) {
+      $('#form img').attr('src', uri);
+    }
+  }
+  // var layerIndex = 0;
+  // function uploadSignPhoto() {
+  //   /*   var url='uploadController.do?goUpload';
+  //     layerIndex=layerCreateWindow('上传签名',url,['确定','关闭'],['90%','90%'],'') */
+  // }
+  // function uploadSuccess(data) {
+  //   if (data.obj[0] && data.obj[0].realpath) {
+  //     var path = data.obj[0].realpath;
+  //     $('#signatureImageSrc').val(path);
+  //     layer.close(layerIndex);
+  //     initImages(path);
+  //   }
+  // }
+
+  function dataURLtoFile(dataurl, filename) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  }
+  var signChanged = false;
+  $('.js-signature').eq(0).on('jq.signature.changed', function () {
+    signChanged = true;
+  });
+
+  function saveSignature() {
+    if (signChanged) {
+      var dataurl = $('.js-signature').eq(0).jqSignature('getDataURL');
+      initImages(dataurl);
+      var fd = new FormData();
+      fd.append('file', dataURLtoFile(dataurl, 'test.png'));
+      $.ajax({
+        url: "uploadController.do?upload&folderId=",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: fd,
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+         console.log('111111',data)
+          if (data.obj[0] && data.obj[0].realpath) {
+            var path = data.obj[0].realpath;
+            $('#signatureImageSrc').val(path);
+          }
+        }
+      });
+    }
+
+  }
+    
+    
+    
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer', 'upload'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        var upload = layui.upload;
+        laydate.render({
+          elem: '#testTime'
+          , format: 'yyyy-MM-dd'
+        });
+        InitObj.init(form, upload)
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      uploadLayerM: null, // upload对象 
+      issueId: GetQueryString("issueId"), // 发放报告id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      reportId: GetQueryString("reportId"), // 报告id
+      issueWayLen: GetQueryString("issueWayLen"), // 报告id
+      detailUrl: 'reportIssueController.do?getDetail', // 获取数据详情
+      saveUrl: 'reportIssueController.do?saveOrUpdate', // 获取数据详情
+      issueWayOne: $('.issueWay-one'), // 自取
+      issueWayThree: $('.issueWay-three'), // 邮寄
+      issueWayThreeBtn: $('.issueWay-threebtn'), // 邮寄
+      issueWayFour: $('.issueWay-four'), // 传真
+      issueWayStatus: '1', // 发放方式状态
+      userId: $('#userId').html(),
+      userName: $('#userName').html(),
+      reportIds: [], // 报告id集合
+      attachmentIdsHtml: $('#attachmentIdsDiv .choiceShow'), // dom 报告文件集合,这里传commonAttachmentId
+      attachmentIds: [], // 附件id 集合
+      issueWayDiv: $('#issueWayDiv'), // 发放方式
+      operatorName: $('input[name="operatorName"]'),
+      issueDate: $('input[name="issueDate"]'),
+      receiverone: $('input[name="receiverone"]'),
+      faxNumber: $('input[name="faxNumber"]'),
+      receiverthree: $('input[name="receiverthree"]'),
+      receiverPhone: $('input[name="receiverPhone"]'),
+      mailAddress: $('input[name="mailAddress"]'),
+      mailCompany: $('select[name="mailCompany"]'),
+      mailNumber: $('input[name="mailNumber"]'),
+      remark: $('input[name="remark"]'),
+      receiverSignature: $('textarea[name="receiverSignature"]'),
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.uploadLayerM = upload;
+        this.uploadFun(this.uploadLayerM)
+        console.log('issueId', this.issueId)
+        console.log('detail', this.detail)
+        
+        if(this.reportId){
+         this.reportIds = this.reportId.split(',')
+        }
+        console.log('this.reportIds', this.reportIds)
+        if (this.issueId) {
+          this.editFun({ "issueId": this.issueId });
+          if (this.detail === 'detailPage') {
+            // 处理报告详情及检测任务
+            $('.modal').show();
+          } else {
+            $('.modal').hide();
+          }
+        }else{
+          if('1' !== this.issueWayLen){
+           this.issueWayDiv.find('input[value="1"]').attr('checked', false)
+           this.issueWayDiv.find('input[value="' + this.issueWayLen + '"]').attr('checked', true)
+         }
+        }
+        this.formBtn(form)
+      },
+      // 编辑数据处理
+      editData: function (data) {
+        console.log('editData', data) // 报告编号 reportSn
+        this.reportIds.push(data.reportId)
+        this.formDisplay(data.issueWay)
+        this.operatorName.val(data.operatorName)
+        this.issueDate.val(new Date(data.issueDate).Format("yyyy-MM-dd"))
+        this.remark.val(data.remark)
+        this.receiverSignature.val(data.receiverSignature)
+        $('img').attr('src', data.receiverSignature);
+        if ('1' === data.issueWay) {
+          console.log('data.issueWay1',data.issueWay)
+          this.receiverone.val(data.receiver)
+        } else if ('3' === data.issueWay) {
+          this.receiverthree.val(data.receiver)
+          this.receiverPhone.val(data.receiverPhone)
+          this.mailAddress.val(data.mailAddress)
+          this.mailCompany.val(data.mailCompany)
+          this.mailNumber.val(data.mailNumber)
+          this.issueWayDiv.find('input[value="1"]').attr('checked', false)
+          this.issueWayDiv.find('input[value="' + data.issueWay + '"]').attr('checked', true)
+        } else if ('4' === data.issueWay) {
+          this.faxNumber.val(data.faxNumber)
+          this.issueWayDiv.find('input[value="1"]').attr('checked', false)
+          this.issueWayDiv.find('input[value="' + data.issueWay + '"]').attr('checked', true)
+        }
+        if (data.listFile && data.listFile.length > 0) {
+          var html = '';
+          for (var i = 0; i < data.listFile.length; i++) {
+            html += data.listFile[i].title + '; '
+          }
+          this.attachmentIdsHtml.html(html)
+        } else {
+          this.attachmentIdsHtml.html('未上传附件')
+        }
+        this.formLayerM.render();
+
+      },
+      editFun: function (dataJson) {
+        console.log(dataJson)
+        ajaxRequest(this.detailUrl, dataJson, this.editAjaxCallback, false, true)
+      },
+      // 查看报告详情ajax回调
+      editAjaxCallback: function (res) {
+        console.log('报告详情', res)
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 5 });
+          return;
+        } else {
+          InitObj.editData(res.obj)
+          return;
+        }
+      },
+      // 保存数据处理
+      saveData: function () {
+        var data = $('#commonQueryForm').serializeJSON();
+        console.log(data)
+        const receiverData = {
+          '1': ['receiverone'],
+          '3': ['receiverthree'],
+        }
+        var formdata = {
+          issueWay: this.issueWayDiv.find('input:checked').val(),
+          operatorName: data.operatorName,
+          issueDate: data.issueDate,
+          remark: data.remark,
+          remreceiverSignatureark: data.receiverSignature
+        }
+
+         formdata.operatorId = (this.userName===data.operatorName?this.userId:'')
+
+        if ('1' === this.issueWayStatus) {
+          formdata.receiverone = data.receiverone
+        } else if ('3' === this.issueWayStatus) {
+          formdata.receiverthree = data.receiverthree
+          formdata.receiverPhone = data.receiverPhone
+          formdata.mailCompany = data.mailCompany
+          formdata.mailAddress = data.mailAddress
+          formdata.mailNumber = data.mailNumber
+        } else if ('4' === this.issueWayStatus) {
+          formdata.faxNumber = data.faxNumber
+        }
+        console.log('formdata', formdata)
+        if (this.dataRequired(formdata)) {
+          saveSignature()
+          formdata.receiver = formdata[receiverData[this.issueWayStatus]]
+          formdata.receiverSignature = $('#signatureImageSrc').val();
+          delete formdata[receiverData[this.issueWayStatus]]
+          if (this.issueId) {
+            formdata.id = this.issueId
+            console.log('396formdata', formdata)
+          }
+          var saveParam = {
+            'reportIds': this.reportIds,
+            'attachmentIds':this.attachmentIds,
+            'reportIssueEntity':formdata
+          }
+          return saveParam
+        }
+      },
+      save: function () {
+        console.log('点击了保存')
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          console.log('formdata', saveParam)
+          if (saveParam) {
+
+           ajaxRequest(this.saveUrl, { saveParamStr: JSON.stringify(saveParam) }, this.saveAjaxCallback, false, true)
+          }
+        } else {
+          this.cancel()
+        }
+      },
+      // 保存报告回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj;
+        console.log('saveAjaxCallback',res)
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 5 });
+          return;
+        } else {
+          layer.msg(res.msg, { icon: 6 });
+          that.cancel()
+          return;
+        }
+      },
+      cancel: function () {
+        console.log('点击了取消')
+        //假设这是iframe页
+        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        parent.layer.close(index); //再执行关闭 
+      },
+      // 上传文件
+      uploadFun: function (upload) {
+        var html = '';
+        var that = this;
+        var uploadInst = upload.render({
+          elem: '#uploadA', //绑定元素
+          url: 'uploadController.do?upload',
+          accept: 'file', //允许的文件类型file（所有文件）详见https://www.layui.com/doc/modules/upload.html文件上传模块
+          size: 50000, //允许的大小(kb)
+          multiple: true, //允许多文件上传
+          number: 5, //一次上传文件数量最大值
+          data: {
+            folderId: ''
+          }, //跟随本次上传操作一同提交的数据信息
+          before: function (obj) { //提交前触发的函数
+            console.log('512', obj)
+            html = '';
+            that.attachmentIds = [];
+            uploadLoading = layer.load(0, {
+              shade: 0.2
+            });
+          },
+          done: function (res) {
+            console.log('res', res)
+            if (res.success) {
+              layer.msg('单个成功');
+              that.attachmentIds.push(res.obj[0].id)
+              html += res.obj[0].attachmenttitle + '; ';
+            } else {
+              layer.msg(res.msg, function () { });
+            }
+          },
+          allDone: function (obj) { //当文件全部被提交后，才触发
+            //刷新页面信息
+            console.log('文件', obj)
+            layer.msg('上传成功');
+            that.attachmentIdsHtml.html(html)
+            layer.close(uploadLoading);
+          },
+          error: function () {
+            //请求异常回调
+            layer.close(uploadLoading);
+            layer.msg('上传失败,请重试');
+          }
+        });
+
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        console.log('编号', queryParams)
+        console.log('this.issueWayStatus', this.issueWayStatus)
+        if (!queryParams.operatorName) {
+          layer.msg('经办人不能为空')
+          return false;
+        }
+        if (!queryParams.issueDate) {
+          layer.msg('发放日期不能为空')
+          return false;
+        }
+        if ('1' === this.issueWayStatus && !queryParams.receiverone) {
+          layer.msg('领取人不能为空')
+          return false;
+        }
+        if ('3' === this.issueWayStatus && !queryParams.receiverthree) {
+          layer.msg('收件人不能为空')
+          return false;
+        }
+        if ('4' === this.issueWayStatus && !queryParams.faxNumber) {
+          layer.msg('传真号不能为空')
+          return false;
+        }
+        return true;
+      },
+      formDisplay: function (status) {
+       this.issueWayStatus = status;
+        if ('1' === status) {
+          console.log('自取')
+          this.issueWayOne.show()
+          this.issueWayThree.hide()
+          this.issueWayThreeBtn.hide()
+          this.issueWayFour.hide()
+        } else if ('3' === status) {
+          console.log('邮寄')
+          this.issueWayOne.hide()
+          this.issueWayThree.show()
+          this.issueWayThreeBtn.show()
+          this.issueWayFour.hide()
+        } else if ('4' === status) {
+          console.log('传真')
+          this.issueWayOne.hide()
+          this.issueWayThree.hide()
+          this.issueWayThreeBtn.hide()
+          this.issueWayFour.show()
+        }
+      },
+      formBtn: function (form) {
+        var that = this;
+        form.on('radio(issueWay)', function (data) {
+          console.log(data.value)
+          console.log(typeof data.value)
+          that.formDisplay(data.value)
+        });
+      },
+
+    }
+
+  </script>
+</body>
+
+</html>

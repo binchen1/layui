@@ -1,0 +1,287 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<script type="text/javascript" src="plug-in/easyui-1.5.5.2/jquery.min.js"></script>
+<script>
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+
+</style>
+<!-- layui的table控件， -->
+
+<body>
+  <div class="easyui-layout" fit="true">
+    <div data-options="region:'west',title:'参数列表',split:true" style="width:160px; ">
+      <div class="layui-col-xs2 layui-col-sm2 layui-col-md2">
+        <ul id="paramsList" class="layui-nav layui-nav-tree layui-bg-green" lay-filter="paramsList" style="width: 150px;margin-top: 10px;">
+        </ul>
+      </div>
+    </div>
+    <div data-options="region:'center',title:''">
+      <div class="layui-row" style="margin: 5px 0 0 5px">
+        <a title="新增项目" name="addResult" class="layui-btn layui-btn-sm" href="javascript:addResult();">
+          新增项目
+        </a>
+      </div>
+      <table class="layui-hide" id="testParamResult" lay-filter="testParamResult">
+      </table>
+    </div>
+  </div>
+</body>
+<script type="text/javascript">
+
+  var testTaskId = GetQueryString("testTaskId");	// 任务ID
+  var testObjectParamId = GetQueryString("testObjectParamId");	// 收样参数ID
+
+  $(function () {
+    initParamsList();
+  });
+
+  // 初始化参数列表
+  function initParamsList() {
+
+    var url = "testTaskController.do?getTestTaskParamsByTaskId";
+    var jsonParam = { testTaskId: testTaskId };
+    ajaxRequest(url, jsonParam, renderParamList, false, false);
+    loadParamResult();
+  }
+
+  // 加载收样参数试验检测结果
+  function loadParamResult(testObjectId, testParamId) {
+
+    if (testParamId != undefined) {
+      if (testObjectParamId != testParamId) {
+        saveData();// 切换参数时，保存数据
+      }
+      testObjectParamId = testParamId;
+    }
+
+    // 切换左侧选中列表的颜色
+    $("#" + testObjectParamId).addClass("layui-bg-cyan");
+    $("#" + testObjectParamId).siblings().removeClass("layui-bg-cyan");
+
+    var url = 'testObjectParamController.do?getTestObjectParamMiddleResult';
+    var jsonParam = { testObjectParamId: testObjectParamId };
+    ajaxRequest(url, jsonParam, setTableData, false, false);
+    tableRender();	// 表格数据渲染
+  }
+
+  // 根据后台返回结果，渲染参数列表
+  function renderParamList(res) {
+    if (!res.success) {	// 如果请求失败
+      layer.msg('获取参数列表失败', { icon: 5 });
+      return;
+    }
+
+    if (res.obj) {	// 操作成功，且有已使用设备的记录
+      var testParamsList = res.obj;
+      var testParamsLi = "";
+      for (var i = 0; i < testParamsList.length; i++) {
+        var li = '<li id="' + testParamsList[i].testParamId + '" class="layui-nav-item"><a title="' + testParamsList[i].testParamDisplayName
+          + '" href="javascript:loadParamResult(\'' + testParamsList[i].testObjectId + '\',\''
+          + testParamsList[i].testParamId + '\');">' + testParamsList[i].testParamDisplayName + '</a>'
+          + '</li>';
+        testParamsLi += li;
+      }
+      $("#paramsList").append(testParamsLi);
+    }
+  }
+
+  var testParamResults = [];	// 测试参数结果
+  layui.use(['table', 'form'], function () {
+    var table = layui.table
+      , form = layui.form
+      , $ = layui.$;
+
+    // 表格事件监听
+    table.on('tool(testParamResult)', function (obj) {
+      var data = obj.data;
+
+      if (obj.event === 'copyResult') {
+        copyResult(obj, data);
+      } else if (obj.event === 'delResult') {
+        delResult(obj, data);
+      }
+    });
+
+  });
+
+  // 表格数据渲染
+  function tableRender() {
+    layui.use(['table'], function () {
+      var table = layui.table;
+      table.render({
+        elem: '#testParamResult'
+        , cols: [[
+          { field: 'resultName', title: '中间检测结果项目', align: 'center', width: 350, edit: 'text' }
+          , { field: 'value', title: '值', align: 'center', width: 240, edit: 'text' }
+          , {
+            field: 'id', title: '操作', align: 'center', width: 180, templet: function (d) {
+              var buttonGroup = '<div class="layui-btn-group">';
+              buttonGroup += '<button type="button" title="复制项目" lay-event="copyResult" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe621;</i></button>';
+              if (d.sourceType != '2') {
+                buttonGroup += '<button type="button" title="删除项目" lay-event="delResult" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe640;</i></button>';
+              }
+              buttonGroup += '</div>';
+              return buttonGroup;
+            }
+          }
+        ]]
+        , data: testParamResults
+        //,size: 'lg'
+        , limit: 1000
+        , done: function (res, curr, count) {
+          // 如果是系统默认的中间检测结果，则不允许编辑
+          if (res.count > 0) {
+            var data = res.data;
+            for (var i = 0; i < data.length; i++) {
+              if (data[i]['sourceType'] == '2') {
+                var rowIndex = data[i]['LAY_TABLE_INDEX'];
+                var tr$ = $("tr[data-index='" + rowIndex + "']");
+                tr$.find("td[data-field='resultName'],td[data-field='value']").removeAttr("data-edit");
+              }
+            }
+          }
+        }
+      });
+
+
+    });
+
+
+    // 初始化完成了，现在干掉前面 的可编辑属性
+    //$("td").removeAttr("data-edit");
+		/* $("td[data-field='id'][data-content='']").parent()
+			.find("td[data-field='resultName'],td[data-field='value']")
+			.attr("data-edit","text"); */
+  }
+
+  // 设置表格数据
+  function setTableData(res) {
+    if (res.success) {
+      testParamResults = res.obj;
+    } else {
+      layer.msg('查询检测结果异常', { icon: 5 });
+    }
+  }
+
+  // 新增
+  function addResult() {
+    var addData = {
+      id: '', resultName: '', value: '', sourceType: '1'
+      , uniqueNum: Math.random()
+    };
+    testParamResults.push(addData);
+    tableRender();
+  }
+
+  // 复制新增一条结果
+  function copyResult(obj, data) {
+    var cloneData = JSON.parse(JSON.stringify(data));
+    cloneData['id'] = '';
+    cloneData['sourceType'] = '1';
+    cloneData['uniqueNum'] = Math.random();
+    testParamResults.push(cloneData);
+    tableRender();
+  }
+
+  // testParamResults
+  function delResult(obj, data) {
+    obj.del();
+    var id = data.id;
+    if (id == '') { 	// 当前页面新增未保存的数据，没有ID
+      var u = data.uniqueNum;
+      for (var i = 0; i < testParamResults.length; i++) {
+        if (u == testParamResults[i].uniqueNum) {
+          testParamResults.removeByValue(testParamResults[i]);
+          break;
+        }
+      }
+    } else {
+      for (var i = 0; i < testParamResults.length; i++) {
+        if (id == testParamResults[i].id) {
+          testParamResults.removeByValue(testParamResults[i]);
+          break;
+        }
+      }
+      // 发送异步请求更新到数据库
+      var url = "testObjectParamController.do?doDelTestParamMiddleResult";
+      var jsonParam = { id: id };
+      ajaxRequest(url, jsonParam, delAfter);
+    }
+  }
+
+  // 保存当前参数的试验检测结果   	
+  function saveData(resultIndex) {
+    var url = "testObjectParamController.do?doSaveTestParamMiddleResult";
+    var jsonParam = { testObjectParamId: testObjectParamId, testObjectParamResult: JSON.stringify(testParamResults) };
+
+    var isDuplicate = checkResultNameDuplicate();
+    if (isDuplicate) {
+      layer.msg('中间检测结果项目重复', { icon: 2 });
+      return;
+    }
+
+    ajaxRequest(url, jsonParam, saveAfter, true, false, resultIndex);
+    // if(resultIndex){
+    // 	parent.layer.close(resultIndex);
+    // }
+  }
+
+  // 判断，中间检测结果项不能有重复名称
+  function checkResultNameDuplicate() {
+
+    var flag = false;	// 默认不重复
+    for (var i = 0; i < testParamResults.length; i++) {
+      var num = 0;
+      for (var j = 0; j < testParamResults.length; j++) {
+        if (testParamResults[i].resultName == testParamResults[j].resultName) {
+          num++;
+        }
+        if (num > 1) {	// 有重复项
+          flag = true;
+        }
+      }
+    }
+    return flag;
+  }
+
+  // 删除操作回调函数
+  function delAfter(res) {
+    if (res.success) {
+      layer.msg('删除成功', { icon: 6 });
+    } else {
+      layer.msg('删除失败', { icon: 5 });
+    }
+  }
+
+  // 保存操作回调函数
+  function saveAfter(res, resultIndex) {
+    if (res.success) {
+      layer.msg('保存成功', { icon: 6 });
+      // console.dir(parent)
+      // window.parent.location.reload();
+      // console.log('保存成功')
+      window.parent.reloadTable();
+      parent.layer.close(resultIndex);
+    } else {
+      layer.msg('保存失败', { icon: 5 });
+      parent.layer.close(resultIndex);
+    }
+  }
+
+</script>
+<!-- <script type="text/html" id="isQualified">
+{{#  if(d.isQualified == '0'){ }}
+不合格
+{{#  } else if(d.isQualified == '2'){ }}
+不判定
+{{#  } else if(d.isQualified == '1'){ }}
+合格
+{{#  } else {}}
+{{d.isQualified}}
+{{#} }} 
+</script> -->

@@ -1,0 +1,86 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+
+  <t:datagrid name="operationList" title="执行权限" actionUrl="functionController.do?functionTreegrid&parentFuncId=${functionId}&functionType=1"
+    idField="id">
+    <t:dgCol title="common.id" field="id" checkbox="true" hidden="true"></t:dgCol>
+    <t:dgCol title="执行权限名称" field="functionName" width="20"></t:dgCol>
+    <t:dgCol title="说明" field="operationcode" width="80"></t:dgCol>
+    <%--  <t:dgCol title="common.operation" field="opt" width="100"></t:dgCol>
+   <t:dgDelOpt url="functionController.do?del&id={id}" title="common.delete" urlclass="ace_button" urlfont="fa-trash-o"></t:dgDelOpt> --%>
+    <t:dgToolBar title="保存" langArg="common.operation" icon="icon-add" funname="mySave"></t:dgToolBar>
+  </t:datagrid>
+
+
+<script type="text/javascript">
+  var functionIds = GetQueryString("functionId")
+
+  var tableData = [], myData = [];
+  $(function () {
+    var roleId = $("#rid").val();
+    var data = { 'roleId':roleId,'functionType': '1', 'parentFuncId': '${functionId}' }
+    ajaxRequest('functionController.do?getFunctionsByRole', data, detailSucFunc, false, false)
+    dataGrid = $('#operationList').datagrid({
+      scrollbarSize: 0,
+      singleSelect: false,
+      pagination: false,
+      rownumbers: false,
+      onLoadSuccess: function (data) {
+        console.log('23data', data)
+        //最后的data全都是未绑定的送样人员
+        var hiddenRowIds = [];
+        var deleteRows = [];
+        var hiddenRows = myData;
+
+        //记录父容器中送样人员列表加载的已绑定的送样人员
+        if (hiddenRows && hiddenRows.length > 0) {
+          $.each(hiddenRows, function (i, v) {
+            hiddenRowIds.push(hiddenRows[i].id);
+          })
+        }
+        console.log('hiddenRowIds', hiddenRowIds)
+
+        //记录加载的数据中，已绑定的送样人员
+        for (var i in data.rows) {
+          if ($.inArray(data.rows[i].id, hiddenRowIds) >= 0) {
+            deleteRows.push(data.rows[i]);
+          }
+        }
+        console.log('deleteRows', deleteRows)
+
+        //此处dataGrid是送样人员弹窗页面的表格，这里只加载未绑定的送样人员
+        $.each(deleteRows, function (i, v) {
+          // dataGrid.datagrid('deleteRow', dataGrid.datagrid('getRowIndex', v));
+          dataGrid.datagrid('checkRow', dataGrid.datagrid('getRowIndex', v));
+        })
+      }
+    });
+
+  })
+  function detailSucFunc(res) {
+    console.log('27res', res)
+    myData = res.obj
+  }
+
+  function mySave() {
+    console.log('baocun')
+    var rowData = $('#operationList').datagrid('getSelections');
+    console.log('rowData', rowData)
+    var cnodes = '';
+    for (var i = 0; i < rowData.length; i++) {
+      cnodes += rowData[i].id + ',';
+    }
+    cnodes = cnodes.substring(0, cnodes.length - 1);
+
+    var roleId = $("#rid").val();
+    console.log('roleId', roleId)
+    console.log('cnodes', cnodes)
+    // doSubmit("roleController.do?updateAuthority&rolefunctions=" + cnodes + "&roleId=" + roleId);
+    var data = { 'roleId': roleId, 'rolefunctions': cnodes }
+    ajaxRequest('roleController.do?updateRoleExecFunction', data, successFunc, false, true)
+  }
+  function successFunc(res) {
+    console.log('48res', res)
+  }
+</script>

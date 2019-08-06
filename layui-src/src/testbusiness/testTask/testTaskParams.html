@@ -1,0 +1,437 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%-- <%@include file="/context/layuiCommon.jsp" %> --%>
+<!DOCTYPE html>
+<style>
+  .layui-table-cell {
+    height: auto;
+    line-height: 20px;
+    padding-left: 3px;
+  }
+
+  .myRow-col {
+    padding: 5px 32px 5px 2px;
+    min-height: 30px;
+    /* background: red; */
+  }
+
+  .myRow-col button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+
+  }
+
+  .myRow-col p {
+    white-space: normal;
+    text-align: left;
+    /* background: #17f7d9; */
+
+  }
+</style>
+
+<body>
+  <div class="layui-container" style="width: 100%;">
+
+    <input type="hidden" name="testTaskId" value="${testTask.id}" />
+    <div style="padding-top: 10px;">
+      <button class="layui-btn layui-btn-xs" onclick="importLatestStandard();">引用最近使用规程</button>
+      <button class="layui-btn layui-btn-xs" onclick="importLatestEquipment();">引用最近使用设备</button>
+      <div id="importTipmsg" style="color: red;"></div>
+    </div>
+    <table class="layui-table" id="testParamDatas" lay-filter="testParamDatas" style="margin-top: 0px;width: 95%;">
+    </table>
+
+  </div>
+
+  <script>
+    var reloadTable;
+    var canEditTestParamResult = false;// 默认不能编辑试样参数的检测结果
+
+    $(function () {
+      layui.use(['form', 'table'], function () {
+        var $ = layui.$
+          , form = layui.form
+          , table = layui.table;
+        var testTaskParamDatas;
+
+        // 是否能编辑检测结果
+        ajaxRequest('testObjectUseUdrController.do?isContainUdrRecordSet', {
+          testTaskId: $("input[name='testTaskId']").val()
+        }, isContainUdrRecordSetCallBack);
+
+        $.ajax({
+          url: 'testTaskController.do?getTestTaskParams'
+          , data: {
+            testTaskId: $("input[name='testTaskId']").val()
+          }
+          , dataType: 'json'
+          , type: "POST"
+          , async: false
+          , success: function (res) {
+            if (res.success) {
+              testTaskParamDatas = res.obj;
+              tableRender(table, testTaskParamDatas)
+            }
+          }
+        });
+
+
+        // 表刷新方法
+        reloadTable = function () {
+          console.log('表刷新方法')
+          $.ajax({
+            url: 'testTaskController.do?getTestTaskParams'
+            , data: {
+              testTaskId: $("input[name='testTaskId']").val()
+            }
+            , dataType: 'json'
+            , type: "POST"
+            , async: false
+            , success: function (res) {
+              console.log('res', res)
+              if (res.success) {
+                testTaskParamDatas = res.obj;
+                // tableRender(testTaskParamDatas)
+                tableRender(table, testTaskParamDatas)
+              }
+            }
+          });
+        };
+        importDefault();
+        reloadTable()
+
+        // // 鼠标移动事件
+        // var tdSelector = "td[data-field='testParamBasisNames'], td[data-field='testParamStandardNames'],"
+        //   + " td[data-field='equipments'], td[data-field='conclusions'], td[data-field='middleResults']";
+        // $(tdSelector).each(function () {
+        //   $(this).on("mouseover mouseout", function () {
+        //     if (event.type == "mouseover") {
+        //       $(this).find("button").removeClass("layui-hide");
+        //     } else if (event.type == "mouseout") {
+        //       $(this).find("button").addClass("layui-hide");
+        //     }
+        //   });
+        // });
+
+        var readType = GetQueryString("readType");
+        console.log('readType')
+        if (readType != undefined) {  // 只读，隐藏所有的操作按钮
+          $("button").hide();
+        }
+
+
+      });
+
+    });
+
+    /***
+    *   是否已引用规程，否，则做默认引用操作
+    *   20190402 weiheng
+    */
+    function importDefault() {
+      var testTaskId = $("input[name='testTaskId']").val();
+      var url = "testTaskController.do?doImportDefault";
+      var res = ajaxRequestSync2(url, { 'testTaskId': testTaskId });
+      if (res.success) {
+        if (res.msg.length > 6) {
+          console.log('res.msg', res.msg)
+          var msgArr = res.msg.split(';'), html = '';
+          //layer.msg(res.msg, {time: 5000});
+
+          $.each(msgArr, function (i, v) {
+            html += '<p>' + v + '</p>'
+          })
+          $("#importTipmsg").html(html);
+        }
+      } else {
+        layer.msg("执行默认引用失败", { icon: 5 });
+      }
+    }
+
+
+    /*  table td中的templet 以及 点击显示内容详情的templet 
+      d tr行数据
+      btnName button name的值
+      strData tr中对应td的数据
+      clickFun td中对应点击函数
+      reg 字符串替换规则
+    */
+    function tableTipsMain(d, btnName, strData, clickFun, reg) {
+      strData = strData.replace(/\(\)/g,"");
+      console.log('tableTipsMain', strData)
+      if (strData.length > 0) {
+        var btn = '<div class="myRow-col"><button  name=' + btnName + ' onclick="' + clickFun + '(\'' + d.id + '\',event);" class="layui-btn layui-btn-sm layui-hide">' +
+          '<i class="layui-icon">&#xe642;</i>' +
+          '</button><div><p>' + strData.replace(reg, "</p><p>") + '</p></div></div>';
+        return btn;
+      } else {
+        var btn = '<div class="myRow-col"><button name=' + btnName + ' onclick="' + clickFun + '(\'' + d.id + '\',event);" class="layui-btn layui-btn-sm layui-hide">' +
+          '<i class="layui-icon">&#xe642;</i>' +
+          '</button></div>';
+
+        return btn;
+      }
+    }
+    // 初始化试验检测参数
+    function tableRender(table, testTaskParamDatas) {
+      dataGrid = table.render({
+        elem: '#testParamDatas'
+        , cols: [[
+          { field: 'displayName', title: '检测参数', width: 100 }
+          , {
+            field: 'testParamBasisNames', title: '试验依据', width: 300, templet: function (d) {
+              var str = /,/g;
+              return tableTipsMain(d, "editTestParamBasis", d.testParamBasisNames, "editTestParamStandard", str)
+            }
+          }
+          , {
+            field: 'testParamStandardNames', title: '评定标准', templet: function (d) {
+              var str = /,/g;
+              return tableTipsMain(d, "editTestParamStandard", d.testParamStandardNames, "editTestParamStandard", str)
+
+            }
+          }
+          , {
+            field: 'equipments', title: '仪器设备及编号', templet: function (d) {
+              var str = /;/g;
+              return tableTipsMain(d, "editEquipment", d.equipments, "editTestParamEquipment", str)
+            }
+          }
+          , {
+            field: 'conclusions', title: '检测结果', width: 312, templet: function (d) {
+              var str = /;/g;
+              return tableTipsMain(d, "editResult", d.conclusions, "editTestParamResult", str)
+            }
+          }
+          , {
+            field: 'middleResults', title: '中间检测结果', templet: function (d) {
+              var str = /;/g;
+              return tableTipsMain(d, "editMiddleResult", d.middleResults, "editTestParamMiddleResult", str)
+            }
+          }
+        ]]
+        , data: testTaskParamDatas
+        , page: false
+        , limit: 1000
+        , done: function (res, curr, count) {
+          //如果是异步请求数据方式，res即为你接口返回的信息。
+          //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+          console.log('148', res);
+        }
+      });
+      // 鼠标移动事件
+      var tdSelector = "td[data-field='testParamBasisNames'], td[data-field='testParamStandardNames'],"
+        + " td[data-field='equipments'], td[data-field='conclusions'], td[data-field='middleResults']";
+      $(tdSelector).each(function () {
+        $(this).on("mouseover mouseout", function () {
+          if (event.type == "mouseover") {
+            $(this).find("button").removeClass("layui-hide");
+          } else if (event.type == "mouseout") {
+            $(this).find("button").addClass("layui-hide");
+          }
+        });
+      });
+    }
+
+
+
+    // 编辑试验依据
+    function editTestParamBasis(testObjectParamId, event) {
+      layui.stope(event);
+      editStandard(testObjectParamId, 1);
+    };
+
+    // 编辑评定标准
+    function editTestParamStandard(testObjectParamId, event) {
+      layui.stope(event);
+      editStandard(testObjectParamId, 2);
+    };
+
+    // 编辑试验检测参数引用章程
+    function editStandard(testObjectParamId, standardType) {
+      var index = layer.tips();
+      layer.close(index);
+      var testTaskId = $("input[name='testTaskId']").val(); // 任务ID
+      var url = "baseStandardNewController.do?golist&testObjectParamId=" + testObjectParamId
+        + "&testTaskId=" + testTaskId + "&standardType=" + standardType;
+      layer.open({
+        type: 2,
+        title: '选择规程',
+        offset: 'auto',
+        skin: 'mylayui-layer-molv',
+        content: url,
+        closeBtn: 0,
+        btn: ['确定', '取消'],
+        area: ['940px', '90%'],
+        btn1: function (index, layero) {
+          console.log('弹出框', index, layero)
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+          iframeWin.saveData(1);
+        },
+        btn2: function () {
+          reloadTable();
+          layer.close();
+        },
+      });
+
+    };
+
+    // 编辑试验检测参数的使用设备
+    function editTestParamEquipment(testObjectParamId, event) {
+      layui.stope(event);
+      var index = layer.tips();
+      layer.close(index);
+      var testTaskId = $("input[name='testTaskId']").val(); // 任务ID
+      var url = "equipmentController.do?goTestTaskUseEquipmentsNew&testObjectParamId=" + testObjectParamId;
+      url += "&testTaskId=" + testTaskId;
+      layer.open({
+        type: 2,
+        title: '选择设备',
+        offset: 'auto',
+        skin: 'mylayui-layer-molv',
+        content: url,
+        closeBtn: 0,
+        btn: ['确定', '取消'],
+        area: ['940px', '90%'],
+        btn1: function (index, layero) {
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+          iframeWin.saveData(1);
+          //layer.close();
+        },
+        btn2: function () {
+          layer.close();
+        },
+      });
+    }
+
+    // 编辑试验检测结果
+    function editTestParamResult(testObjectParamId, event) {
+      layui.stope(event);
+
+      if (!canEditTestParamResult) {
+        layer.msg("样品含udr，不允许编辑试样参数检测结果");
+        return;
+      }
+      // event.stopPropagation();
+      var index = layer.tips();
+      layer.close(index);
+      var testTaskId = $("input[name='testTaskId']").val(); // 任务ID
+      var url = "testObjectParamController.do?c&testObjectParamId=" + testObjectParamId;
+      url += "&testTaskId=" + testTaskId;
+      var resultIndex = layer.open({
+        type: 2,
+        title: '检测结果',
+        offset: 'auto',
+        skin: 'mylayui-layer-molv',
+        content: url,
+        closeBtn: 0,
+        btn: ['确定', '取消'],
+        area: ['940px', '90%'],
+        //area: ['940px', '730px'],
+        btn1: function (index, layero) {
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+          iframeWin.saveData(resultIndex);
+          //layer.close(resultIndex);
+        },
+        btn2: function () {
+          layer.close();
+        },
+      });
+    }
+
+    // 编辑试验检测中间结果
+    function editTestParamMiddleResult(testObjectParamId, event) {
+      layui.stope(event);
+      var index = layer.tips();
+      layer.close(index);
+      var testTaskId = $("input[name='testTaskId']").val(); // 任务ID
+      var url = "testObjectParamController.do?goTestTaskParamMiddleResultEdit&testObjectParamId=" + testObjectParamId;
+      url += "&testTaskId=" + testTaskId;
+      var middleResultIndex = layer.open({
+        type: 2,
+        title: '中间检测结果',
+        offset: 'auto',
+        skin: 'mylayui-layer-molv',
+        content: url,
+        closeBtn: 0,
+        btn: ['确定', '取消'],
+        area: ['940px', '90%'],
+        btn1: function (index, layero) {
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+          iframeWin.saveData(middleResultIndex);
+        },
+        btn2: function () {
+          layer.close();
+        },
+      });
+    }
+
+    // 引用最近使用规程
+    function importLatestStandard() {
+      $.ajax({
+        url: 'testTaskController.do?doImportLatestStandard'
+        , data: {
+          testTaskId: $("input[name='testTaskId']").val()
+        }
+        , dataType: 'json'
+        , type: "POST"
+        , async: false
+        , success: function (res) {
+          if (res.success) {
+            reloadTable();
+            var msgLength = res.msg.length;
+            var msgTimeOut = msgLength * 0.3 * 1000;
+            layer.msg(res.msg, { icon: 6, time: msgTimeOut });
+            //setTimeout("window.location.reload()", msgTimeOut );
+            /* layer.alert(res.msg, function(index){
+	            window.location.reload();
+            }); */
+          } else {
+            layer.msg('操作失败', { icon: 5 });
+          }
+        }
+      });
+
+    }
+
+    // 引用最近使用设备
+    function importLatestEquipment() {
+      $.ajax({
+        url: 'testTaskController.do?doImportLatestEquipment'
+        , data: {
+          testTaskId: $("input[name='testTaskId']").val()
+        }
+        , dataType: 'json'
+        , type: "POST"
+        , async: false
+        , success: function (res) {
+          if (res.success) {
+            reloadTable();
+            var msgLength = res.msg.length;
+            var msgTimeOut = msgLength * 0.3 * 1000;
+            layer.msg(res.msg, { icon: 6, time: msgTimeOut });
+            //setTimeout("window.location.reload()", msgTimeOut );
+            /* layer.alert(res.msg, function(index){
+                window.location.reload();
+            }); */
+          } else {
+            layer.msg('操作失败', { icon: 5 });
+          }
+        }
+      });
+
+    }
+
+    // isContainUdrRecordSet 请求回调
+    function isContainUdrRecordSetCallBack(data) {
+      if (data.success && data.obj == '1') {    // 样品含有udr，不允许编辑
+        canEditTestParamResult = false;
+      } else if (data.success) {
+        canEditTestParamResult = true;
+      }
+    }
+
+  </script>
+</body>

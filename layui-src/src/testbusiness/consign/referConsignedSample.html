@@ -1,0 +1,79 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href ; 
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/extends/datagrid-detailview.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/consign/referConsignedSample.js'><\/script>");
+</script>
+<script type="text/javascript" src="plug-in/My97DatePicker/WdatePicker.js"></script>
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<style>
+  .detail-table {
+    width: 100%;
+    border-top: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-spacing: 0;
+  }
+
+  .detail-table th {
+    text-align: center;
+    height: 30px;
+    border-top: 1px solid #DDD;
+    border-left: 1px solid #DDD;
+  }
+
+  .detail-table td {
+    padding: 5px;
+    border-top: 1px solid #DDD;
+    border-left: 1px solid #DDD;
+    border-bottom: 0;
+    border-right: 0;
+  }
+
+  input {
+    height: 24px;
+  }
+</style>
+
+<div class="easyui-layout" fit="true">
+  <div class="dataGrid" data-options="region: 'center'">
+    <div class="toolbar">
+
+      <div class="search-box">
+        <form id="commonQueryForm">
+          <table class="formtable" cellpadding="0" cellspacing="1">
+            <tr>
+              <td>样品编号：</td>
+              <td>
+                <input type="text" name="testObjectCode" style="line-height:24px; border:1px solid #ccc" autocomplete="off">
+                <input type="hidden"  name="">
+              </td>
+              <td>
+                <!-- <div class="tb-box datagrid-toolbar"> -->
+                  <span style="float:right; height: auto;">
+                    <a class="easyui-linkbutton btn-4-search" plain="true" icon="iconfont icon-search">查询</a>
+                    <a class="easyui-linkbutton btn-4-reset" plain="true" icon="iconfont icon-reload">重置</a>
+                  </span>
+                <!-- </div> -->
+              </td>
+            </tr>
+          </table>
+        </form>
+
+      </div>
+
+
+    </div>
+    <table id="dataGrid"></table>
+  </div>
+</div>

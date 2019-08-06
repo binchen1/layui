@@ -1,0 +1,206 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/extends/datagrid-detailview.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/consign/list.js'><\/script>");
+
+  function echoReferConsignedSample() {
+    var jsonData = {};
+    jsonData.id = "";    //这是引用对象的ID
+    jsonData.consignCode = $("#consignCode").val();                     //委托编号，创建的委托，该数据为空
+    jsonData.testObjectCode = $("#testObjectCode").val();                  //样品编号，创建的委托，该数据为空
+    jsonData.quantity = $("#quantity").val();                  //样品编号，创建的委托，该数据为空
+    jsonData.testSampleDisplayName = $("#testSampleDisplayName").val();//样品显示名称
+    jsonData.testObjectParams = $("#testObjectParams").val(); //样品收样参数
+    jsonData.standard = $("#standard").val();
+    jsonData.manufacturer = $("#manufacturer").val();
+    jsonData.manufactureLocation = $("#manufactureLocation").val();
+    jsonData.manufactureDate = $("#manufactureDate").val();
+    jsonData.ccrq = $("#ccrq").val();
+    jsonData.representNum = $("#representNum").val();
+    jsonData.batchNumber = $("#batchNumber").val();
+    jsonData.remark = $("#remark").val();
+    jsonData.reportCode = $("#reportCode").val();
+    jsonData.samplingPlace = $("#samplingPlace").val();
+    jsonData.recommendedDosage = $("#recommendedDosage").val();
+    jsonData.dosage = $("#dosage").val();
+    jsonData.unitRatio = $("#unitRatio").val();
+    jsonData.description = $("#description").val();
+    return jsonData;
+  }
+</script>
+<script type="text/javascript" src="plug-in/My97DatePicker/WdatePicker.js"></script>
+<style>
+  .input-box {
+    padding: 20px;
+  }
+
+  .input-box input {
+    padding-left: 5px;
+  }
+
+  .form-row {
+    width: 100%;
+  }
+
+  .form-row .form-inline {
+    display: inline-block;
+    width: 33%;
+    margin: 5px 0;
+  }
+
+  .form-row .form-inline label {
+    width: 73px;
+    text-align: right;
+    display: inline-block;
+    float: left;
+    line-height: 32px;
+  }
+
+  .form-inline div {
+    margin-left: 80px;
+  }
+
+  .form-inline div input {
+    width: 100%;
+  }
+  .Wdate {
+    -ms-background-position-x: 88%;
+  }
+</style>
+<!-- 用于手动录入样品信息，这种样品不用做试验，纯粹是个记录 -->
+<!-- 没有产品经理是多少苦逼的事情 -->
+<div class="easyui-layout" fit="true">
+  <div class="dataGrid self-noscroll input-box" data-options="region: 'center'">
+    <div class="form-row">
+      <div class="form-inline">
+        <label for="testSampleDisplayName">样品名称</label>
+        <div>
+          <input id="testSampleDisplayName" name="testSampleDisplayName" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="testObjectParams">字段待确认 </label>
+        <div>
+          <input id="testObjectParams" name="testObjectParams" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="standard">规格型号 </label>
+        <div>
+          <input id="standard" name="standard" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="testObjectCode">样品编号 </label>
+        <div>
+          <input id="testObjectCode" name="testObjectCode" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="quantity">试样数量 </label>
+        <div>
+          <input id="quantity" name="quantity" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="representNum">代表数量</label>
+        <div>
+          <input id="representNum" name="representNum" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="manufacturer">生产厂家</label>
+        <div>
+          <input id="manufacturer" name="manufacturer" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="manufactureLocation">生产产地</label>
+        <div>
+          <input id="manufactureLocation" name="manufactureLocation" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="manufactureDate">生产日期</label>
+        <div>
+          <input id="manufactureDate" name="manufactureDate" class="Wdate" autocomplete="off"
+            onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" type="text">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="ccrq">出厂日期</label>
+        <div>
+          <input id="ccrq" name="ccrq" class="Wdate" autocomplete="off" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})"
+            type="text">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="batchNumber">批号</label>
+        <div>
+          <input id="batchNumber" name="batchNumber" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="consignCode">委托编号</label>
+        <div>
+          <input id="consignCode" name="consignCode" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="reportCode">报告编号</label>
+        <div>
+          <input id="reportCode" name="reportCode" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="samplingPlace">取样地点</label>
+        <div>
+          <input id="samplingPlace" name="samplingPlace" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="recommendedDosage">推荐掺量</label>
+        <div>
+          <input id="recommendedDosage" name="recommendedDosage" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="dosage">用量kg/m³</label>
+        <div>
+          <input id="dosage" name="dosage" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="unitRatio">单位比</label>
+        <div>
+          <input id="unitRatio" name="unitRatio" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="description">样品描述</label>
+        <div>
+          <input id="description" name="description" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-inline">
+        <label for="remark">备注</label>
+        <div>
+          <input id="remark" name="remark" type="text" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

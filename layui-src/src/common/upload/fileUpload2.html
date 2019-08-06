@@ -1,0 +1,252 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>文件上传</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+</head>
+
+<body>
+  <!-- <div style="padding:10px 10px 10px">
+    <p id="tipsMsg" style="color: red;display: none;">请选择文件大小限制在2M(2048KB)以内</p>
+    <div class="layui-upload">
+      <div class="layui-upload-list">
+        <table class="layui-table" id="table-box">
+          <thead>
+            <tr>
+              <th>文件名</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="filesList"></tbody>
+          <tbody id="demoList"></tbody>
+        </table>
+      </div>
+      <button type="button" class="layui-btn layui-btn-normal" id="testList">选择文件</button>
+      <button type="button" style="display:none" class="layui-btn" id="testListAction">开始上传</button>
+    </div>
+  </div> -->
+  <div style="padding:10px 10px 10px">
+    <p id="tipsMsg" style="color: red;display: none;">请选择文件大小限制在2M(2048KB)以内</p>
+    <div class="layui-upload">
+      <div class="layui-upload-list">
+        <div class="layui-row">
+          <div class="layui-col-xs4">文件名</div>
+          <div class="layui-col-xs4">状态</div>
+          <div class="layui-col-xs4">操作</div>
+        </div>
+
+        <div class="layui-row" id="filesList"> </div>
+        <div class="layui-row" id="demoList"></div>
+        </table>
+      </div>
+      <button type="button" class="layui-btn layui-btn-normal" id="testList">选择文件</button>
+      <button type="button" style="display:none" class="layui-btn" id="testListAction">开始上传</button>
+    </div>
+  </div>
+</body>
+
+<script text="text/javascript">
+  var $, fristConfirm = true; //是否第一次点击提交
+  //调用时传入的目标目录id
+  var folderId = GetQueryString('folderId');
+  console.log('parent.filesObj', parent.filesObj)
+  var files = parent.filesObj.files; // 已上传的文件
+  var fileSize = parent.filesObj.fileSize; // 需要上传文件的大小
+  var numbers = parent.filesObj.numbers || 5; // 一次上传的最大数量
+  var accepts = parent.filesObj.accepts; // 上传类型
+  console.log('parent.filesObj', files, fileSize, numbers, accepts)
+  var tipsMsgEle = document.getElementById('tipsMsg');
+  if (fileSize) { // 隐藏
+    tipsMsgEle.style.display = "none";
+    fileSize = parseFloat(fileSize);
+  } else { // undefind 显示
+    if (0 === parseFloat(fileSize)) { // 0显示
+      tipsMsgEle.style.display = "none";
+      fileSize = 0;
+    } else {
+      tipsMsgEle.style.display = "block";
+    }
+  }
+  if (files && files.length > 0) {
+    var demoListView = document.getElementById('filesList')
+    tableRender(files, demoListView)
+  }
+  //上传完成后返回的附件对象数组
+  var attachmentArray = new Array();
+
+  //点击弹窗的完成事件的回调
+  function uploadResult() {
+    if (fristConfirm) {
+      fristConfirm = false;
+      $('#testListAction').click();
+      var demoListView = document.getElementById('demoList').childNodes;
+      if (demoListView.length === 0) {
+        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        parent.layer.close(index); //再执行关闭   
+      }
+      if (demoListView.length > numbers) {
+        fristConfirm = true;
+      }
+    }
+  }
+  //点击删除按钮调用父页面方法
+  function deleteFun(delId, index) {
+    parent.deleteFiles(delId)
+    for (var i = 0; i < files.length; i++) {
+      if (delId === files[i].id) {
+        files.splice(i, 1)
+      }
+    }
+    var parents = document.getElementById('filesList')
+    var childs = document.getElementById('upload-' + index);
+    parents.removeChild(childs);
+  }
+  //点击下载调用父页面的下载方法
+  function downloadFun(loadId) {
+    parent.downloadFiles(loadId)
+  }
+  function tableRender(obj, demoListView) {
+    console.log('tableRender', obj)
+    var demoListView = document.getElementById('filesList'), htm = '';
+    // var htm = '';
+    for (var index = 0; index < obj.length; index++) {
+      var file = obj[index]
+      var str = file.realpath || file.name;
+      var num = str.lastIndexOf('.')
+      var strs = str.slice(num);
+      var temp = strs.substring(1);
+      htm += '<tr id="upload-' + index + '">';
+      if (str.indexOf('.png') > 0 || str.indexOf('.jpg') > 0) {
+        htm += '<td><img src=\'' + file.realpath + '\' width=\'70px\' height=\'50px\'/></td>'
+      } else {
+        htm += '<td>' + file.attachmenttitle + '</td>'
+      }
+      htm += '<td>已上传文件</td>'
+      htm += '<td>'
+      htm += '<button class="layui-btn layui-btn-xs demo-reload" onclick="downloadFun(\'' + file.id + '\')">下载</button>'
+      htm += '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete" onclick="deleteFun(\'' + file.id + '\',\'' + index + '\')">删除</button>'
+      htm += '</td>'
+      htm += '</tr>'
+    }
+    // demoListView.innerHTML = htm;
+    var div = document.createElement('div')
+    div.innerHTML = '<table>' + htm + '</table>'
+    demoListView.parentNode.replaceChild(div.firstChild.firstChild, demoListView)
+  }
+
+
+  layui.use('upload', function () {
+    $ = layui.jquery
+      , upload = layui.upload, files;
+    var layerAjaxMaskIndex = '', choose_file_flag = false;
+    //多文件列表
+    var demoListView = $('#demoList'),
+      uploadListIns = upload.render({
+        elem: '#testList',
+        url: 'uploadController.do?upload',
+        accept: accepts,
+        number: numbers,		//一次上传文件数量最大值
+        multiple: true,
+        auto: true, // 是否选完文件后自动上传。
+        size: fileSize || 2048,
+        bindAction: '#testListAction',
+        data: { folderId: folderId },
+        choose: function (obj) {
+          console.log('choose', obj)
+          files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列 \
+          if (files) { choose_file_flag = true; }
+          console.log('files147',files)
+          // 读取本地文件
+          obj.preview(function (index, file, result) {
+            var tr = $(['<tr id="upload-' + index + '">'
+              , '<td>' + file.name + '</td>'
+              , '<td>等待上传</td>'
+              , '<td>'
+              , '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>'
+              , '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete">删除</button>'
+              , '</td>'
+              , '</tr>'].join(''));
+            //单个重传
+            tr.find('.demo-reload').on('click', function () {
+              obj.upload(index, file);
+            });
+            //删除
+            tr.find('.demo-delete').on('click', function () {
+              delete files[index]; //删除对应的文件
+              tr.remove();
+              uploadListIns.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
+            });
+            demoListView.append(tr);
+          });
+          // var filesArr = [];
+          // var html = '';
+          // for (var key in files) {
+          //   html += '<tr id="upload-' + key + '">'
+          //   html += '<td>' + files[key].name + '</td>'
+          //   html += '</tr>'
+          // }
+          // demoListView.append(html);
+        },
+        before: function (obj) { //obj参数包含的信息，跟 choose回调完全一致，可参见上文。
+          console.log('before', obj)
+          if (choose_file_flag) {
+            layerAjaxMaskIndex = SHOW_LOAD_LAYER('正在执行...');
+          } else {
+            return false;
+          }
+        },
+        done: function (res, index, upload) {
+          console.log('done',res)
+          choose_file_flag = false;
+          layer.close(layerAjaxMaskIndex)
+          //res:{"success":true,"msg":"操作成功","obj":[{"id":"402882206565747f016565dd420a0001","businessKey":null,"subclassname":null,"attachmenttitle":"taskUserChoose.jsp","realpath":"http://192.168.2.4:8801/fileShare/A03/images/2018/e6832476-636c-4e62-951b-ea77c2aeb5d4.jsp","createdate":null,"note":null,"swfpath":null,"extend":null,"relevantEntityId":null}],"attributes":null,"jsonStr":"{\"msg\":\"操作成功\",\"success\":true,\"obj\":[{\"attachmenttitle\":\"taskUserChoose.jsp\",\"id\":\"402882206565747f016565dd420a0001\",\"realpath\":\"http://192.168.2.4:8801/fileShare/A03/images/2018/e6832476-636c-4e62-951b-ea77c2aeb5d4.jsp\"}]}"}
+          if (res.success) { //上传成功
+
+            tableRender(res.obj)
+            //table操作
+            var tr = demoListView.find('tr#upload-' + index)
+              , tds = tr.children();
+            tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
+            tds.eq(3).html('');
+            //将本次成功的附件对象放入返回的对象数组中
+            var obj = res.obj[0];
+            attachmentArray.push(obj);
+
+            //删除文件队列已经上传成功的文件
+            return delete this.files[index];
+          }
+          this.error(index, upload);
+        },
+        allDone: function (obj) {
+          /* obj.total //得到总文件数 successful); //请求成功的文件数 obj.aborted); //请求失败的文件数 */
+          if (obj.successful > 0) {
+            parent.uploadFinish(attachmentArray);
+          }
+        },
+        error: function (index, upload) {
+          choose_file_flag = false;
+          layer.close(layerAjaxMaskIndex)
+          var tr = demoListView.find('tr#upload-' + index),
+            tds = tr.children();
+          tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
+          tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
+        }
+      });
+
+  });
+  //获取地址栏参数的方法
+  function GetQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+  }
+</script>
+
+</html>

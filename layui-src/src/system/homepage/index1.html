@@ -1,0 +1,432 @@
+<!-- <%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title></title>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script type="text/javascript" src="../../Highcharts-5.0.14/code/highcharts.js"></script>
+  <!-- <script src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script> -->
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <!-- <div id="container" style="width: 600px;height:400px;"></div> -->
+  <div class="layui-container">
+    常规布局（以中型屏幕桌面为例）：
+    <div class="layui-row">
+      <div class="layui-col-xs2">
+        排名
+      </div>
+      <div class="layui-col-xs3">
+        姓名
+      </div>
+      <div class="layui-col-xs7">
+        工时情况
+      </div>
+    </div>
+    <div id="layuiRow">
+      <div class="layui-row">
+        <div class="layui-col-xs2">
+          5
+        </div>
+        <div class="layui-col-xs3">
+          张红
+        </div>
+        <div class="layui-col-xs7">
+          <div class="layui-progress" lay-showPercent="yes">
+            <div class="layui-progress-bar layui-bg-red" lay-percent="30"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layui-row">
+        <div class="layui-col-xs2">
+          5
+        </div>
+        <div class="layui-col-xs3">
+          张红
+        </div>
+        <div class="layui-col-xs7">
+          <div class="layui-progress" lay-showPercent="yes">
+            <div class="layui-progress-bar layui-bg-red" lay-percent="60"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    移动设备、平板、桌面端的不同表现：
+    <div class="layui-row">
+      <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        移动：6/12 | 平板：6/12 | 桌面：4/12
+      </div>
+      <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        移动：6/12 | 平板：6/12 | 桌面：4/12
+      </div>
+      <div class="layui-col-xs4 layui-col-sm12 layui-col-md4">
+        移动：4/12 | 平板：12/12 | 桌面：4/12
+      </div>
+      <div class="layui-col-xs4 layui-col-sm7 layui-col-md8">
+        移动：4/12 | 平板：7/12 | 桌面：8/12
+      </div>
+      <div class="layui-col-xs4 layui-col-sm5 layui-col-md4">
+        移动：4/12 | 平板：5/12 | 桌面：4/12
+      </div>
+    </div>
+  </div>
+  <div class="layui-progress" lay-showPercent="true">
+    <div class="layui-progress-bar layui-bg-red" lay-percent="1/3"></div>
+  </div>
+  <br>
+  <div class="layui-progress" lay-showPercent="yes">
+    <div class="layui-progress-bar layui-bg-red" lay-percent="30"></div>
+  </div>
+  <br>
+  <div class="layui-progress layui-progress-big" lay-showPercent="yes">
+    <div class="layui-progress-bar layui-bg-green" lay-percent="50%"></div>
+  </div>
+  <br>
+  <button id="btn_sub" name="btn_sub" class="layui-btn layui-hide" lay-submit lay-filter="isSubmit">提交</button>
+  <div id="container"></div>
+  <div id="container2"></div>
+  <div id="container3" style="width: 100%;height:100%;"></div>
+  <div id="container4"></div>
+  <div id="container5"></div>
+  <div id="container6" style="min-width:400px;height:400px"></div>
+  <h2>Basic ProgressBar</h2>
+  <p>Click the button below to show progress information.</p>
+  <div style="margin:20px 0;">
+    <a href="#" class="easyui-linkbutton" onclick="start()">Start</a>
+  </div>
+  <div id="p" class="easyui-progressbar" style="width:400px;" value="30"></div>
+  <script>
+    var arr = [{ name: 'zhang', months: '30' }, { name: 'zhajjjng', months: '60' }, { name: 'zha369ng', months: '46' }]
+    var html = '';
+
+    arr.forEach(element => {
+      html += '<div class="layui-row">'
+      html += '  <div class="layui-col-xs2">'
+      html += element.name
+      html += '  </div>'
+      html += '  <div class="layui-col-xs3">'
+      html += element.name
+      html += '  </div>'
+      html += '   <div class="layui-col-xs7">'
+      html += '    <div class="layui-progress" lay-showPercent="yes">'
+      html += '      <div class="layui-progress-bar layui-bg-red" lay-percent="' + element.months + '"></div>'
+      html += '    </div>'
+      html += '  </div>'
+      html += '</div>'
+    });
+    $('#layuiRow').append(html)
+    layui.use(['table', 'element'], function () {
+      var table = layui.table;
+      var element = layui.element;
+
+    });
+
+    function start() {
+      var value = $('#p').progressbar('getValue');
+      console.log(value)
+      if (value < 100) {
+        value += Math.floor(Math.random() * 10); $('#p').progressbar('setValue', value);
+        setTimeout(arguments.callee, 200);
+      }
+    }; </script>
+  <script>
+    $(function () {
+      // 全局配置，针对页面上所有图表有效
+      Highcharts.setOptions({
+        colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572',
+          '#FF9655', '#FFF263', '#6AF9C4'],
+        chart: {
+          backgroundColor: {
+            linearGradient: [0, 0, 500, 500],
+            stops: [
+              [0, 'rgb(255, 255, 255)'],
+              // [0, 'rgb(255, 0, 0)'],
+              [1, 'rgb(240, 240, 255)']
+            ]
+          },
+          borderWidth: 2,
+          plotBackgroundColor: 'rgba(255, 255, 255, .9)',
+          // plotBackgroundColor: 'rgba(255, 255, 0, .8)',
+          plotShadow: true,
+          plotBorderWidth: 10,
+          style: {
+            fontFamily: "",
+            fontSize: '42px',
+            fontWeight: 'bold',
+            color: 'red'
+          }
+        }
+      });
+      Highcharts.theme = {
+        colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572',
+          '#FF9655', '#FFF263', '#6AF9C4'],
+        chart: {
+          backgroundColor: {
+            linearGradient: [0, 0, 500, 500],
+            stops: [
+              [0, 'rgb(255, 255, 0)'],
+              [1, 'rgb(240, 240, 255)']
+            ]
+          },
+        },
+        title: {
+          style: {
+            color: '#000',
+            font: 'bold 16px "Trebuchet MS", Verdana, sans-serif'
+          }
+        },
+        subtitle: {
+          style: {
+            color: '#666666',
+            font: 'bold 12px "Trebuchet MS", Verdana, sans-serif'
+          }
+        },
+
+        legend: {
+          itemStyle: {
+            font: '9pt Trebuchet MS, Verdana, sans-serif',
+            color: 'black'
+          },
+          itemHoverStyle: {
+            color: 'gray'
+          }
+        }
+      };
+
+      var chart1 = new Highcharts.Chart({
+        chart: {
+          renderTo: 'container',
+        },
+        xAxis: {
+          type: 'datetime'
+        },
+        series: [{
+          data: [29.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4],
+          pointStart: Date.UTC(2010, 0, 1),
+          pointInterval: 3600 * 1000 // one hour
+        }]
+      });
+      var chart2 = new Highcharts.Chart({
+        chart: {
+          renderTo: 'container2',
+          type: 'column'
+        },
+        xAxis: {
+          type: 'datetime'
+        },
+        series: [{
+          data: [29.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4],
+          pointStart: Date.UTC(2010, 0, 1),
+          pointInterval: 3600 * 1000 // one hour
+        }]
+      });
+    });
+  </script>
+  <!-- 引入 highcharts.js -->
+  <script>
+    // 图表配置
+    var series = [{
+      name: '小明',
+      data: []
+    }];
+
+    series.push({
+      name: '小红',
+      data: []
+    });
+
+    series[1].name;
+
+    console.log(series[1].name)
+    var arr = [1, 2, 4, 10, 20];
+    var arrJoin = arr.join(); // 结果"1,2,4,10,20"，默认的分隔符是 ,
+    arrJoin.split(',');
+    var options = {
+      chart: {
+        type: 'bar',                         //指定图表的类型，默认是折线图（line）
+
+      },
+      title: {
+        text: '我的第一个图表',              // 标题
+        style: {
+          color: "#ff0000"
+        }
+      },
+      // colors: ['red', 'orange', 'green', 'lightblue', 'purple', 'brown'],
+      colors: ['red'],
+      xAxis: {
+        categories: ['苹果', '香蕉', '橙子'],  // x 轴分类
+        style: {
+          color: "#ff6600"
+        }
+      },
+      yAxis: {
+        title: {
+          text: '吃水果个数',               // y 轴标题
+          style: {
+            color: "#ff6600"
+          }
+        }
+      },
+      series: [{                              // 数据列
+        name: '小明',                        // 数据列名
+        data: [1, 0, 4]                     // 数据
+      }, {                              // 数据列
+        name: '小明2',                        // 数据列名
+        data: [2, 1, 3]                     // 数据
+      }, {
+        name: '小红',
+        data: [5, 7, 3]
+      }]
+    };
+    // 图表初始化函数
+    var chart = Highcharts.chart('container3', options);
+    $(document).ready(function () {
+
+      var options = {
+        chart: {
+          type: 'spline'
+        },
+        series: [{}]
+      };
+
+      $.getJSON('../../data/table/demo1.json', function (data) {
+        console.log('data', data)
+        options.series[0].data = []
+        $.each(data, function (i, v) {
+          options.series[0].data.push(v.number)
+        })
+        console.log(options.series)
+        // options.series[0].data = data;
+        var chart = Highcharts.chart('container4', options);
+      });
+    })
+    Highcharts.chart('container5', {
+      chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+      },
+      title: {
+        text: '2018年1月浏览器市场份额'
+      },
+      tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          dataLabels: {
+            enabled: true,
+            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+            style: {
+              color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+            }
+          }
+        }
+      },
+      series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+          name: 'Chrome',
+          y: 61.41,
+          sliced: true,
+          selected: true
+        }, {
+          name: 'Internet Explorer',
+          y: 11.84
+        }, {
+          name: 'Firefox',
+          y: 10.85
+        }, {
+          name: 'Edge',
+          y: 4.67
+        }, {
+          name: 'Safari',
+          y: 4.18
+        }, {
+          name: 'Sogou Explorer',
+          y: 1.64
+        }, {
+          name: 'Opera',
+          y: 1.6
+        }, {
+          name: 'QQ',
+          y: 1.2
+        }, {
+          name: 'Other',
+          y: 2.61
+        }]
+      }]
+    });
+
+   Highcharts.chart('container6', {
+      chart: {
+        type: 'bar'
+      },
+      title: {
+        text: '堆叠条形图'
+      },
+      xAxis: {
+        categories: ['张三','李四','王五','李二','周闪','米大','刘二','开朗','郎朗']
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          text: '水果消费总量'
+        }
+      },
+      legend: {
+        /* 图例显示顺序反转
+         * 这是因为堆叠的顺序默认是反转的，可以设置 
+         * yAxis.reversedStacks = false 来达到类似的效果 
+         */
+        reversed: true
+      },
+      plotOptions: {
+        series: {
+          stacking: 'normal'
+        }
+      },
+      series: [{
+        name: '工时情况',
+        data: [328, 258, 244, 235, 221, 209, 202, 198, 168]
+      }]
+    });
+  </script>
+</body>
+
+</html>

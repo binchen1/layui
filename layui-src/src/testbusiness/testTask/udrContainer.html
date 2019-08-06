@@ -1,0 +1,207 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+
+<head>
+  <script>
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+        /* document.write("<script type='text/javascript' src='" + basePath + "/plug-in/base64/base64.js'><\/script>"); */
+  </script>
+</head>
+
+<body>
+  <div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'north',border:false" style="height: 28px;">
+      <a class="easyui-linkbutton btn-4-save" icon="icon-save">保存</a>
+      <a class="easyui-linkbutton" icon="icon-add"
+        onclick="window.frames['inputTemplateContainer'].window.addComment()">添加批注</a>
+      <a class="easyui-linkbutton" icon="icon-remove"
+        onclick="window.frames['inputTemplateContainer'].window.removeComment()">删除批注</a>
+      <a class="easyui-linkbutton " icon="icon-save" onclick="lookprint()">打印预览</a>
+      <a class="easyui-linkbutton " icon="icon-save" onclick="printUdr()">打印</a>
+    </div>
+    <input type="hidden" id="testTaskIdd" value="${testTaskIdd}">
+    <input type="hidden" id="print" value="${print}">
+    <input type="hidden" id="taskId" value="${taskId}">
+    <input type="hidden" id="testTaskAttachmentId" value="${testTaskAttachmentId}">
+    <input type="hidden" id="defaultTabTitle" value="${defaultTabTitle}">
+    <div data-options="region:'center'">
+      <div id="contentLayout" class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'west',split:true,title: '检测样品'" style="width: 200px;">
+          <ul id="testTaskObjects"></ul>
+        </div>
+        <div data-options="region:'center',split:true">
+          <div id="tabs" class="easyui-tabs" data-options="fit:true,border:false">
+            <div title="检测数据录入">
+              <iframe id="inputTemplateContainer" src="" style="width: inherit;height: 99%;" frameborder="no"></iframe>
+            </div>
+            <div title="原始记录单">
+              <iframe id="recordTemplateContainer" src="" style="width: inherit;height: 99%;" frameborder="no"></iframe>
+            </div>
+            <div title="检测报告">
+              <iframe id="reportTemplateContainer" src="" style="width: inherit;height: 99%;" frameborder="no"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function lookprint() {
+      var pp = $('#tabs').tabs('getSelected');
+      pp.find('iframe')[0].contentWindow.lookprint();
+    }
+
+    $(function () {
+      initTestTaskObjects();
+      initEvents();
+    });
+
+    function initEvents() {
+      $('.btn-4-save').click(function () {
+        /*调用检测数据录入页面的save()方法*/
+        $('#inputTemplateContainer')[0].contentWindow.save();
+      });
+    }
+
+    var objects;
+
+    function initTestTaskObjects() {
+      var defaultTabTitle = $("#defaultTabTitle").val();
+      var url = 'testTaskController.do?getTestTaskTestObjects';
+      url += '&id=' + $('#testTaskIdd').val();
+      objects = $('#testTaskObjects').tree({
+        url: url,
+        lines: true,
+        onLoadSuccess: function (node, data) {
+          initTabs();
+          preHandle(data);
+          if (defaultTabTitle.length > 0) {
+            tabs.tabs('select', defaultTabTitle);
+          } else {
+            tabs.tabs('select', 0);
+          }
+        },
+        onSelect: function (node) {
+          tabs.tabs('select', 0);
+        }
+      });
+    };
+
+    function getSelectTestObjectId() {
+      var row = $('#testTaskObjects').tree('getSelected');
+      return row.id;
+    };
+
+    // 测试任务ID
+    function getTestTaskId() {
+      var testTaskId = $('#testTaskIdd').val();
+      return testTaskId;
+    }
+
+    function preHandle(data) {
+      if (data && data.length > 0) {
+        if (data.length == 1) {
+          $('#contentLayout').layout('collapse', 'west');
+        }
+        var selectNode = objects.tree('find', data[0].id);
+        if (selectNode) {
+          objects.tree('select', selectNode.target);
+        }
+      }
+    };
+
+    var tabs, tabsIndex;
+
+    function initTabs() {
+      tabs = $('#tabs').tabs({
+        onSelect: function (title, index) {
+          var node = objects.tree('getSelected');
+          if (!node) {
+            return;
+          }
+          var url;
+          var paramString = '';
+          paramString += '&testObjectId=' + node.id;
+          paramString += '&testTaskId=' + $('#testTaskIdd').val();
+          if (index == 0) {
+            url = 'udrController.do?openUdrInputTemplate';
+            url += paramString;
+            $('#inputTemplateContainer').attr('src', url);
+          } else if (index == 1) {
+            if (0 === tabsIndex) {
+              $('.btn-4-save').click();
+            }
+            url = 'udrController.do?openUdrRecordTemplate';
+            url += paramString;
+            $('#recordTemplateContainer').attr('src', url);
+          } else if (index == 2) {
+            if (0 === tabsIndex) {
+              $('.btn-4-save').click();
+            }
+            url = 'udrController.do?openUdrReportTemplate';
+            url += paramString;
+            $('#reportTemplateContainer').attr('src', url);
+          }
+          tabsIndex = index;
+        } 
+      });
+    };
+
+    //打印
+    function printUdr() {
+      var pp = $('#tabs').tabs('getSelected');
+      if ($('#print').val() == 'a') {
+        doPrint();
+      }
+      pp.find('iframe')[0].contentWindow.print();
+      // window.frames['inputTemplateContainer'].window.print();
+    };
+
+    function doPrint() {
+      var actTaskId = $('#taskId').val();
+      var data = { actTaskId: actTaskId };
+      $.ajax({
+        type: "post",
+        url: "tSReportController.do?doPrint_workflow",
+        contentType: "application/x-www-form-urlencoded",
+        data: data,
+        success: function (data) {
+          try {
+            data = JSON.parse(data)
+            if (data.success) {
+              //alert("服务器记录打印成功，如果打印机打印失败，请申请重新打印！");
+              //刷新首页
+              window.parent.refreshMainTab();
+              // frameElement.api.opener.reloadtSReportList();
+              // frameElement.api.opener.parent.frames["awaitTaking"].reloadtSReportList();
+
+
+            } else {
+              alert("服务器记录打印失败，如果打印机打印成功，请申请重新打印！");
+              frameElement.api.opener.reloadtSReportList();
+              frameElement.api.opener.parent.frames["awaitTaking"].reloadtSReportList();
+
+
+            }
+          } catch (e) {
+
+          } finally {
+            isAwaitPrinting = false;
+            if (!frameElement.api.opener.theDialog) {
+              frameElement.api.opener.theDialog.close();
+            } else {
+              frameElement.api.opener.close();
+            }
+          }
+        }
+      });
+    };
+  </script>
+</body>

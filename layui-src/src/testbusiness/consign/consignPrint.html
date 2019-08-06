@@ -1,0 +1,755 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/system/log/logProcess.js"></script>
+  <style>
+    .layui-form-item .layui-form-checkbox[lay-skin=primary] {
+      margin-top: 4px;
+    }
+
+    .layui-form-checkbox[lay-skin=primary] {
+      height: 30px !important;
+    }
+  </style>
+</head>
+
+<body id="printBody">
+  <div id="tableBox" class="height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-form">
+        <form id="commonQueryForm" class="layui-form">
+          <div class="layui-row">
+            <div class="layui-col-xs8 ordinary">
+              <div class="layui-input-inline" style="width:80%">
+                <input type="text" name="queryCondition" class="layui-input" placeholder="输入委托编号/委托单位/工程项目/样品名称后回车即可查询"
+                  autocomplete="off">
+              </div>
+              <div class="layui-input-inline">
+                <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+                  onclick="InitObj.quickSearch()">查询</a>
+              </div>
+            </div>
+            <div class="layui-col-xs8 senior seniorText" style="display:none">
+              高级查询
+              <span id="retractIcon" onclick="InitObj.retractFun()">
+                <i class="layui-icon layui-icon-up"></i>
+              </span>
+            </div>
+            <div class="layui-col-xs4" id="searchSwitch">
+              <a href="###" class="easyui-linkbutton" iconCls="icon-reload" plain="true">切换到高级查询</a>
+            </div>
+          </div>
+          <div class="senior retract" style="display:none">
+            <div class="layui-form-item">
+              <label class="layui-form-label">委托编号</label>
+              <div class="layui-input-block">
+                <input type="text" name="consignCode" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">委托单位</label>
+              <div class="layui-input-block">
+                <input type="text" name="consignUnit" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">工程项目</label>
+              <div class="layui-input-block">
+                <input type="text" name="consignProject" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">样品名称</label>
+              <div class="layui-input-block">
+                <input type="text" name="sampleName" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">委托日期</label>
+              <div class="layui-input-block">
+                <input type="text" class="layui-input" name="consignDates" id="consignDates" readonly
+                  autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">委托状态</label>
+              <div class="layui-input-block" id="consignStatus">
+                <input type="checkbox" name="status[10]" lay-skin="primary" title="委托填写中" checked="">
+                <input type="checkbox" name="status[20]" lay-skin="primary" title="委托填写完成">
+                <input type="checkbox" name="status[40]" lay-skin="primary" title="退回修改中" checked="">
+                <input type="checkbox" name="status[50]" lay-skin="primary" title="通知修改中" checked="">
+                <input type="checkbox" name="status[30]" lay-skin="primary" title="委托作废">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">缴费状态</label>
+              <div class="layui-input-block">
+                <select name="feeStatus" id="feeStatus">
+                  <option value=""></option>
+                  <option value="1">已结清</option>
+                  <option value="2">部分缴费</option>
+                  <option value="3">未缴费</option>
+                </select>
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">收样人员</label>
+              <div class="layui-input-block">
+                <select name="sampleAcceptorId" id="sampleAcceptorId">
+                  <option value=""></option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+                onclick="InitObj.seniorQuickSearch()">查询</a>
+              <button class="easyui-linkbutton" type="reset" iconCls="icon-reload" plain="true">重置</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" style="display:none" data-funCode="goConsignInfoPage" class="easyui-linkbutton funBtn_add"
+            iconCls="icon-add" plain="true">新增</a>
+          <a href="#" style="display:none" data-funCode="completeConsignById" class="easyui-linkbutton funBtn_finish"
+            iconCls="icon-save" plain="true">委托完成</a>
+          <a href="#" style="display:none" data-funCode="consignCommonPrint" class="easyui-linkbutton funBtn_print"
+            iconCls="icon-print" plain="true">打印</a>
+          <a href="#" style="display:none" data-funCode="consignCopy" class="easyui-linkbutton funBtn_copy"
+            iconCls="icon-save" plain="true">复制委托</a>
+        </span>
+        <span id="isHideSpan" style="display:none">
+          <a href="#" style="display:none" data-funCode="delAndRecoverConsign"
+            class="easyui-linkbutton funBtn_deleteOrRecovery" iconCls="icon-cancel" plain="true">作废/恢复委托</a>
+        </span>
+        <button class="layui-btn layui-btn-sm funBtn_8 show"><i class="layui-icon">&#xe633;</i></button>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          InitObj.initDataGrid(InitObj.columnsFun())
+        });
+        laydate.render({
+          elem: '#consignDates'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+      })
+      InitObj.init();
+    })
+    var InitObj = {
+      defaultUrl: 'consignController.do?datagridNew', //默认获取数据url
+      getSampleAcceptorsUrl: 'userController.do?getCurrentCompanySampleAcceptorsSelect',   // 获取收样人员列表
+      goConsignPrint: 'consignController.do?goConsignPrint',   // 跳转打印页面
+      goConsignDelete: 'consignController.do?goConsignDelete',    // 跳转作废/恢复委托页面
+      stateMsg: 'consignController.do?recoveryConsign', // 状态提示信息
+      addConsign: $('#functionButton .funBtn_add'),
+      finishConsign: $('#functionButton .funBtn_finish'),
+      print: $('#functionButton .funBtn_print'),
+      copyConsign: $('#functionButton .funBtn_copy'),
+      deleteOrRecovery: $('#functionButton .funBtn_deleteOrRecovery'),
+      preConsign: $('#functionButton .funBtn_preConsign'),
+      isShow: $('#functionButton .funBtn_8'),  // 是否显示其他按钮 
+      functionButton: $('#functionButton'),
+      isHide: true,
+      searchType: 1,    // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      isHideSpan: $('#isHideSpan'),
+      searchShow: true, // 高级搜索隐藏 
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      business: true, // 是否显示报告重打修改需要审批
+      init: function () {
+        this.initDataGrid(this.columnsFun())
+        this.commonQryKeyDown()
+        this.styleLayout();
+        this.btnFun(this.addConsign, 'consignController.do?goEdit', '新增委托')
+        this.btnFun(this.finishConsign, 'consignController.do?doCompleteById', '完成委托')
+        this.btnFun(this.print, this.goConsignPrint, '打印')
+        this.btnFun(this.copyConsign, 'consignController.do?doCopy', '复制委托')
+        this.btnFun(this.deleteOrRecovery, '', '作废/恢复委托')
+        this.btnFun(this.preConsign, '', '预委托')
+
+        // 初始化收样人员列表
+        ajaxRequest(this.getSampleAcceptorsUrl, {}, this.initSampleAcceptors);
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        funCode()
+      },
+      //  查询业务参数：报告重打修改是否需要审批
+      businessCallback: function (res) {
+        console.log('res', res)
+        var that = InitObj;
+        if ('Y' === res.obj) {
+          that.business = true;
+        } else {
+          that.business = false;
+        }
+      },
+      sendReceiveNoticeCallBack: function (res) {
+        if (res.success) {
+          layer.msg("通知成功", { icon: 6 });
+        } else {
+          layer.msg("通知失败", { icon: 5 });
+        }
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var tipIndex;
+        btnName.on('click', function () {
+
+          var that = InitObj, self = this, row = $('#dataGrid').datagrid('getSelections');
+          var consignIds = "";
+          if ('新增委托' === openName) {
+            openTabs('addConsignInfo', '新增委托', openUrl);
+            return;
+          }
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span class="layui-color-white">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            var isfinishConsign = false, temp, isTemp = false;
+            for (var i = 0; i < row.length; i++) {
+              if (i == 0) {
+                consignIds += row[i].id;
+                temp = row[i].isDeleted;
+              } else {
+                consignIds += "," + row[i].id;
+                if (temp != row[i].isDeleted) {
+                  isTemp = true;
+                }
+              }
+              if ('20' === row[i].status) { //委托填写完成
+                isfinishConsign = true;
+              }
+            }
+
+            if ('完成委托' === openName) {
+              if (isfinishConsign) {
+                layer.msg("当前所选委托中，包含已完成委托，请重新选择！", { icon: 5 });
+              } else {
+                layer.confirm('确认完成委托？', { icon: 3, title: '提示' }, function (index) {
+
+                  var res = ajaxRequestSync2(openUrl, { id: consignIds });
+                  if (res.success == true) {
+                    layer.msg("操作成功", { icon: 6 });
+                  } else {
+                    layer.msg("操作失败", { icon: 5 });
+                  }
+                  that.reloadDataGrid();
+                  layer.close(index);
+                });
+              }
+            } else if ('打印' === openName) {
+              layerOpenFun(openUrl + "&consignIds=" + consignIds, "打印检测收费通知单", ['240px', '300px'], ['确定', '取消']);
+            } else if ('报告重打修改申请' === openName) {
+              layerOpenFun(openUrl, openName, ['90%', '90%'])
+            } else if ('复制委托' === openName) {
+              $.ajax({
+                url: 'consignController.do?doBatchCopy&ids=' + consignIds,
+                method: 'GET',
+                title: '提示',
+                content: '确认复制委托？',
+                icon: 3,
+                success: function (data) {
+                  console.log("复制委托1 ", data);
+                  that.reloadDataGrid();
+                  // if (true === data.success) {
+                  //   // layer.msg(data.msg, { icon: 5 });
+                  //   that.reloadDataGrid();
+                  // } else {
+                  //   // parent.layer.msg(data.msg, { icon: 6 });
+                  // }
+                }
+              });
+            } else if ('作废/恢复委托' === openName) {
+              if (isTemp) {
+                layer.msg("请选择均作废或均未作废的委托！", { icon: 5 });
+              } else {
+
+                if (temp == '0') {  // 状态为未删除，执行作废操作
+                  goDelete(consignIds);
+                } else if (temp == '1') {   // 状态为已删除，执行恢复操作
+                  goRecovery(consignIds);
+                }
+              }
+            } else {
+              console.log(openName)
+            }
+          }
+          return;
+        })
+        btnName.mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      //点击状态弹出框
+      delHsCode: function (index, value, event) {
+        layui.stope(event)
+        if (value == 40) {
+          this.stateMsg = '<span style="color:#fff">任务回退</span>';
+        } else if (value == 50) {
+          this.stateMsg = '<span style="color:#fff">通知修改委托</span>';
+        }
+        var tipIndex = layer.tips(this.stateMsg, '.delHsCode' + index, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+        $('.delHsCode' + index).mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 高级查询
+      seniorQuickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        var consignStatus = ''
+        for (var key in queryParams.status) {
+          consignStatus += key + ','
+        }
+        queryParams.consignStatus = consignStatus.slice(0, -1)
+        delete queryParams['queryCondition'];
+        delete queryParams['status'];
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var condition = $("input[name='queryCondition']").val();
+        var queryParams = { 'quickQuery': condition };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+
+        console.log('queryParams', queryParams)
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [];
+        columns.push({
+          title: "id",
+          field: "id",
+          checkbox: true
+        });
+        columns.push({
+          title: "标记",
+          field: "mark",
+          width: 40,
+          formatter: function (value, row, index) {
+            var display = "";
+            var status = row.status;
+            if (status === '40') {
+              display = '<div style="text-align:center"><span class="delHsCode' + index + ' span-round" onmouseenter="InitObj.delHsCode(' + index + ',' + status + ',event)" style="color:red">退</span></div>';
+            } else if (status === '50') {
+              display = '<div style="text-align:center"><span class="delHsCode' + index + ' span-round" onmouseenter="InitObj.delHsCode(' + index + ',' + status + ',event)" style="color:green">通</span></div>';
+            }
+            return display;
+          }
+        });
+        columns.push({ title: "委托编号", field: "consignCode", width: 110 });
+        columns.push({
+          title: "委托日期", field: "consignDate", width: 80, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({ title: "收样人", field: "sampleAcceptor", width: 80 });
+        columns.push({ title: "委托单位", field: "consignUnitName", width: 110 });
+        columns.push({
+          title: "工程项目", field: "projectTenderName", width: 110,
+          formatter: function (value) {
+            if (value == null) {
+              return '';
+            }
+            return value;
+          }
+        });
+        columns.push({ title: "样品名称", field: "sampleName", width: 160 });
+        columns.push({ title: "委托金额", field: "manualFeeTotal", width: 80 });
+        columns.push({
+          title: "委托状态", field: "status", width: 100
+          , formatter: function (value, row, index) {
+
+            var consignStatus = '';
+            if (row.isDeleted == '1') {
+              consignStatus = '委托作废';
+            } else if (value == '10') {
+              consignStatus = '委托填写中';
+            } else if (value == '20') {
+              consignStatus = '委托填写完成';
+            } else if (value == '40') {
+              consignStatus = '退回修改中';
+            } else if (value == '50') {
+              consignStatus = '通知修改中';
+            }
+            return consignStatus;
+          }
+        });
+        columns.push({
+          title: "缴费状态", field: "feeStatus", width: 80
+          , formatter: function (value) {
+            var feeStatus = '';
+            if (value == '1') {
+              feeStatus = '完成收费';
+            } else if (value == '2') {
+              feeStatus = '部分收费';
+            } else if (value == '3') {
+              feeStatus = '未收费';
+            }
+            return feeStatus;
+          }
+        });
+        columns.push({
+          title: "操作",
+          field: "opt",
+          width: 120,
+          formatter: function (value, row, index) {
+            var btns = '<button title="查看详情" style="display:none"  data-funCode="goConsignInfoPage" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,&quot;' + row.consignCode +
+              '&quot;,true)" ><i class="layui-icon">&#xe705;</i></button>';
+            if ('10' === row.status || '40' === row.status || '50' === row.status) {
+              btns += '<button title="编辑" style="display:none"  data-funCode="goConsignInfoPage" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,&quot;' + row.consignCode +
+                '&quot;,false)" ><i class="layui-icon">&#xe9aa;</i></button>';
+            }
+            btns += '<button title="查看日志" onclick="showLogs(\'0\',\'' + row.id + '\',true)" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe6b2;</i></button>';
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'createDate', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          view: detailview,
+          detailFormatter: function (rowIndex, rowData) {
+            // return InitObj.createDetailView(rowIndex, rowData);
+            return '<div style="padding:3px 17px 3px 0;; min-height:50px""><table class="ddv' + rowIndex + '  detail-table" ></table></div>'
+          },
+          onExpandRow: function (index, row) {
+            ajaxRequest('consignController.do?getConsignMetaData', { "consignId": row.id }, InitObj.createDetailView, false, false, index);
+          },
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            funCode()
+          },
+          onSelect: function (rowIndex, rowData) {
+            var rows = $("#dataGrid").datagrid("getSelections");
+            if (rows.length > 0) {// 多选时需做判断
+              var fristUnit, fristProject;
+              for (var i = 0; i < rows.length; i++) {
+                // 委托单位不一致，不允许多选
+                if (i == 0) {
+                  fristUnit = rows[i].consignUnit;
+                  fristProject = rows[i].projectName;
+                } else {
+                  var temp = rows[i].consignUnit;
+                  var temp2 = rows[i].projectName;
+                  if (fristUnit !== temp || fristProject !== temp2) {
+                    $("#dataGrid").datagrid("unselectRow", rowIndex);
+                    layer.msg('请选择相同委托单位与工程项目的报告！', { icon: 2 });
+                    break;
+                  }
+                }
+
+              }
+            }
+
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+      // 页面样品详情
+      createDetailView: function (rowData, rowIndex) {
+        // var ddv = $(this).datagrid('getRowDetail', rowIndex).find('table.ddv');
+        var htm = '';
+        // htm += '<div style="padding: 3px 17px 3px 0;">';
+        // htm += '<table id="detailView-' + rowIndex + '" class="detail-table">';
+        htm += '<tr>';
+        htm += '<th>样品名称</th>';
+        htm += '<th>样品编号</th>';
+        htm += '<th>规格型号</th>';
+        htm += '<th>工程部位/用途</th>';
+        htm += '<th>试验参数</th>';
+        htm += '<th>备注</th>';
+        htm += '</tr>';
+        var metaData = rowData.obj;
+        if (metaData) {
+          var metaDataArray = metaData;
+          for (var i = 0; i < metaDataArray.length; i++) {
+            var testObject = metaDataArray[i];
+            var testObjCode = '';   // 样品编码
+            if (testObject.testObjectCode) { testObjCode = testObject.testObjectCode };
+
+            htm += '<tr>';
+            htm += '<td>' + testObject.testSampleDisplayName + "（" + testObject.testSampleName + '）</td>';
+            htm += '<td>' + testObjCode + '</td>';
+            htm += '<td>' + testObject.standard + '</td>';    // 规格型号
+
+            htm += '<td>' + testObject.projectPartAndUse + '</td>';    // 工程部位用途
+            var ctr;
+            var testObjectParamHtm = '';
+            var testObjectParams = testObject.testParams;
+            var testObjectParam = {};
+            for (ctr = 0; ctr < testObjectParams.length; ctr++) {
+              testObjectParam = testObjectParams[ctr];
+              testObjectParamHtm += (testObjectParam.testParamDisplayName + '（' + testObjectParam.count + '）' + '<br>');
+            }
+            htm += '<td>' + testObjectParamHtm + '</td>'; // 参数
+            htm += '<td>' + (testObject.remark ? testObject.remark : '') + '</td>';
+            htm += '</tr>';
+          }
+        }
+        // htm += '</table>';
+        // htm += '</div>';
+        $('.ddv' + rowIndex).html(htm)
+        var heightTd = $("#datagrid-row-r2-2-" + rowIndex).next().find('.datagrid-row-detail').height()
+        $("#datagrid-row-r2-1-" + rowIndex).next().css('height', (heightTd + 1))
+      },
+      // 高级查询收起按钮
+      retractFun: function () {
+        if ($('.retract').is(':hidden')) {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i> ')
+        } else {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-down"></i> ')
+
+        }
+        $('.retract').toggle();
+        getTableHeight()
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        this.isShow.click(function (e) {
+          var that = InitObj;
+          if (that.isHide) {
+            that.isHideSpan.show();
+            that.isHide = !that.isHide;
+            $(this).removeClass("show"); //移除
+          } else {
+            that.isHideSpan.hide();
+            that.isHide = !that.isHide;
+            $(this).addClass("show"); // 追加样式
+          }
+        })
+        this.searchSwitch.click(function () {
+          var that = InitObj;
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+          }
+          getTableHeight()
+        })
+
+      },
+      // 查看详情与编辑
+      goDetail: function (id, consignCode, isDetail) {
+        console.log(isDetail, typeof isDetail)
+        var url = 'consignController.do?goEdit&id=' + id, openName = '';
+        if (isDetail) {
+          url += '&detail=detailPage';
+          openName = '查看委托详情';
+        } else {
+          url = url;
+          openName = '修改委托';
+        }
+        $.ajax({
+          url: 'consignController.do?doPermissionCheck',
+          data: {
+            id: id
+          },
+          dataType: 'json',
+          success: function (data) {
+            if (!data.success) {
+              layer.msg(data.msg, { icon: 5 });
+            } else {
+              openTabs("updateConsignInfo", openName + '&nbsp;' + consignCode, url);
+            }
+          }
+        });
+      },
+      initSampleAcceptors: function (res) {
+        if (res.success) {
+          var data = res.obj;
+          for (var index in data) {
+            $('#sampleAcceptorId').append(new Option(data[index].realname, data[index].id));
+          }
+          layui.use(['form'], function () {
+            var f = layui.form;
+            f.render('select');
+          })
+        } else {
+          layer.msg("获取收样人员查询列表失败", { icon: 5 });
+        }
+      },
+      printConsignOrder: function () {    // 打印委托单
+        var rows = this.dataGrid.datagrid('getSelections');
+        var consignIds = '';
+        for (var index = 0; index < rows.length; index++) {
+          if (index == 0) {
+            consignIds += rows[index].id;
+          } else {
+            consignIds += ',' + rows[index].id;
+          }
+        }
+        $.ajax({    // 打印委托单以前自动生成委托编号
+          url: 'consignController.do?useSnImmediately',
+          async: false,
+          data: { consignId: consignIds },
+          dataType: 'json',
+          success: function (data) {
+            if (data.success == true) {
+              InitObj.printUdr('printConsign');
+            }
+          }
+        });
+
+      },
+      printSampleLabel: function () {     // 打印样品标签
+        this.printUdr('sampleLable');
+      },
+      printRemainedSampleLabel: function () { // 打印留样标签
+        this.printUdr('RemainedSampleLable');
+      },
+      printConsignFeeList: function () {     // 打印委托费用清单
+        this.printUdr('feeDetailTable');
+      },
+      printTestFeeNotice: function () {     // 打印检测费用通知单
+        var rows = this.dataGrid.datagrid('getSelections');
+        var consignIds = '';
+        for (var index = 0; index < rows.length; index++) {
+          if (index == 0) {
+            consignIds = rows[index].id;
+          } else {
+            consignIds += "," + rows[index].id;
+          }
+        }
+        printUdrCommonTemplate(consignIds, 'TestPaymentNotice');
+      },
+      printUdr: function (templateType) {
+        var rows = this.dataGrid.datagrid('getSelections');
+        for (var index = 0; index < rows.length; index++) {
+          // 样品标签打印，自动跳过 “现场试验” consignType
+          if ('sampleLable' == templateType && rows[index].consignType == 1) {
+            continue;
+          }
+          printUdrCommonTemplate(rows[index].id, templateType);
+        }
+      }
+    }
+
+    // 跳转作废页面
+    function goDelete(consignIds) {
+      var url = InitObj.goConsignDelete;
+      layerOpenFun(url + "&flag=1&consignIds=" + consignIds, '作废委托', ['50%', '40%'], ['确定', '取消']);
+    }
+    // 跳转恢复委托页面
+    function goRecovery(consignIds) {
+      var url = InitObj.goConsignDelete;
+      layerOpenFun(url + "&flag=2&consignIds=" + consignIds, '恢复委托', ['50%', '40%'], ['确定', '取消']);
+    }
+
+    // 作废委托
+    function doDelete(consignIds, layerIndex) {
+      $.ajax({
+        url: 'consignController.do?batchDelete',
+        data: { ids: consignIds },
+        dataType: 'json',
+        success: function (data) {
+          if (data.success == true) {
+            InitObj.reloadDataGrid();
+            parent.layer.msg("作废成功", { icon: 6 });
+            layer.close(layerIndex)
+          } else {
+            parent.layer.msg(data.msg, { icon: 5 });
+          }
+        }
+      })
+    }
+
+    function openTabs(id, name, url) {
+      window.parent.addTabs({ "id": id, "title": name, "close": false, "url": url });
+    }
+
+  </script>
+</body>
+
+</html>

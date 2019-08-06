@@ -1,0 +1,656 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>资质管理</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" type="text/css" href="../../assets/css/list.css" />
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>资质管理</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <style>
+    .detailInfo-box input {
+      border-color: transparent;
+      margin-top: 3px;
+      padding-left: 5px;
+    }
+
+    .bottom-btn {
+      position: absolute;
+      bottom: 0;
+      background: #fff;
+      right: 0;
+      z-index: 10;
+    }
+
+    .detailInfo-box .upload-box img {
+      vertical-align: bottom;
+      width: 100%;
+      height: 100%;
+    }
+
+    #attachmentIdsDiv {
+      margin-bottom: 10px;
+    }
+
+    .detailInfo-box .upload-box .layui-color-blue {
+      display: inline-block;
+      width: 150px;
+      height: 90px;
+      margin-right: 10px;
+    }
+
+    .upload-box-img {
+      min-height: 30px;
+      /* line-height: 40px; */
+      padding: 5px 0;
+    }
+
+    .upload-box-img a {
+      position: absolute;
+      bottom: 5px;
+      /* bottom: 0px; */
+    }
+
+    .detailInfo-box {
+      background: #eee;
+    }
+
+    .detailInfo-box .layui-form>div>.layui-row:first-child {
+      background: #fff;
+    }
+
+    .detailInfo-box .layui-form>div>.layui-row {
+      min-height: 30px;
+      line-height: 30px;
+    }
+
+    .detailInfo-box .col-left {
+      padding-right: 10px;
+      text-align: right;
+    }
+
+    .panel-body {
+      background: #eee;
+    }
+
+    .layout-body {
+      border: none;
+    }
+
+    .detailInfo-box>.layui-form {
+      border: 1px solid #eee;
+      /* padding-bottom: 10px; */
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <div id="cc" class="easyui-layout " style="width:100%;height:100%;overflow: hidden;">
+      <div data-options="region:'west',split:true" style="width:300px;">
+        <table class="layui-hide" id="qualificationTable" lay-filter="qualificationTable"></table>
+        <script type="text/html" id="radioTpl">
+          <input type="radio" name="isDefault"  value="{{d.id}}" title="默认" lay-filter="defaultDemo"
+           {{ d.isDefault == 1 ? 'checked' : '' }} {{ d.isDeleted == 0 ? '' : 'disabled' }}>
+        </script>
+
+        <script type="text/html" id="checkboxTpl">
+          <!-- 这里的 checked 的状态只是演示 -->
+          <input type="checkbox" name="lock" value="{{d.systemId}}" title="拥有" lay-filter="lockDemo" {{ d.isDeleted == 0 ? 'checked' : '' }}>
+        </script>
+      </div>
+      <div data-options="region:'center'" style="padding:5px;background:#eee;">
+        <div class="easyui-layout" style="width:100%;height: 100%" data-options="fit: true" class="header-box">
+          <div data-options="region:'north',split:true" style="height:40px;">
+            <span class="north-box">
+              <a class="easyui-linkbutton btn-4-add" onclick="InitObj.addFun()" plain="true" icon="icon-add">添加</a>
+              <a class="easyui-linkbutton btn-4-edit" onclick="InitObj.editFun()" plain="true" icon="icon-edit">编辑</a>
+            </span>
+          </div>
+          <div data-options="region:'center'" style="background:#eee;overflow:hidden;">
+            <table class="layui-hide" id="test" lay-filter="test"></table>
+          </div>
+          <div data-options="region:'south',split:true" style="height:300px;" class="detailInfo-box">
+            <form class="layui-form">
+              <div id="detailInfo"></div>
+              <div class="upload-box" id="upload-box" style="display:none">
+                <div class="layui-row" id="attachmentIdsDiv">
+                  <div class="layui-col-xs2 col-left">
+                    资质章：
+                  </div>
+                  <div class="layui-col-xs10 upload-box-img">
+                    <span class="layui-color-blue choiceShow" style="display: none">
+                      <img src="">
+                    </span>
+                    <a id="uploadA" class="layui-btn layui-bg-blue layui-btn-xs" style="display: none">上传</a>
+                  </div>
+                </div>
+                <div class="layui-row" id="qualificationIdsDiv">
+                  <div class="layui-col-xs2 col-left">
+                    资质证书：
+                  </div>
+                  <div class="layui-col-xs10 upload-box-img">
+                    <span class="layui-color-blue choiceShow" style="display: none">
+                      <img src="">
+                    </span>
+                    <a id="uploadQualification" class="layui-btn layui-bg-blue layui-btn-xs"
+                      style="display: none">上传</a>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div id="bottom-btn" class="bottom-btn" style="display:none">
+          <button class="layui-btn submit-cancel" onclick="InitObj.submitFun()">保存</button>
+          <button class="layui-btn submit-cancel cancel" onclick="InitObj.cancelFun()">取消</button>
+        </div>
+      </div>
+    </div>
+    <!-- </div> -->
+
+  </div>
+  <script>
+    layui.use(['table', 'form', 'laydate'], function () {
+      var table = layui.table
+        , form = layui.form
+        , laydate = layui.laydate;
+      InitObj.init(table, form, laydate);
+
+    });
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': [],
+      'fileSize': '',
+      'numbers': 1,
+      'accepts': 'images',
+      'filesChapter': [],
+      'filesQualification': [],
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      if (filesObj.files.length > 0) {
+        filesObj.files = filesObj.files.concat(res);
+        InitObj.addToForm(filesObj.files)
+      } else {
+        filesObj.files = res;
+        InitObj.addToForm(res);
+      }
+    }
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      if (filesObj.filesChapter.length > 0 && filesObj.filesChapter[0].id === accessoryId) {
+        filesObj.files = [];
+        filesObj.filesChapter = [];
+        uploadCallBack([])
+        return;
+      }
+      if (filesObj.filesQualification.length > 0 && filesObj.filesQualification[0].id === accessoryId) {
+        filesObj.files = [];
+        filesObj.filesQualification = [];
+        uploadCallBack([])
+        return;
+      }
+
+
+    }
+    var InitObj = {
+      tableLayerM: null,
+      formLayerM: null,
+      laydateLayerM: null,
+      tableIns: null,
+      tableData: null,
+      tableChildIns: null,
+      tableChildData: null,
+      submitUrl: 'qualificationVersionController.do?save',
+      childUrl: 'qualificationVersionController.do?datagrid',
+      detailInfo: $('#detailInfo'),
+      bottomBtn: $('#bottom-btn'),
+      uploadBox: $('#upload-box'),
+      editId: '',
+      isAdd: false, // 是否点击了添加
+      attachmentIdsHtml: $('#attachmentIdsDiv .choiceShow'), // dom 报告文件集合,这里传commonAttachmentId
+      qualificationIdsHtml: $('#qualificationIdsDiv .choiceShow'), // dom 报告文件集合,这里传commonAttachmentId
+      attachmentIds: [], // 资质章id 集合
+      qualificationIds: [], // 资质证书id 集合
+      isChapter: true, // 是否是资质章
+      detailData: null, // 选中右侧资质的数据
+      init: function (table, form, laydate) {
+        var that = this;
+        this.tableLayerM = table;
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.tableEvent();
+        ajaxRequest('qualificationController.do?getUnitQualifications', {}, this.successCallback, true, true)
+        $('#uploadA').bind('click', function () {
+          // fileUpload.js中的方法
+          that.isChapter = true;
+          filesObj.files = filesObj.filesChapter;
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+        $('#uploadQualification').bind('click', function () {
+          // fileUpload.js中的方法
+          that.isChapter = false;
+          filesObj.files = filesObj.filesQualification;
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+
+      },
+
+      tableEvent: function () {
+        //监听默认操作
+        var that = InitObj;
+        this.formLayerM.on('radio(defaultDemo)', function (data) {
+          ajaxRequest('qualificationController.do?defaultQualification', { id: this.value }, that.defaultCallback, false, true, this.value)
+
+        });
+        //监听拥有资质操作
+        this.formLayerM.on('checkbox(lockDemo)', function (obj) {
+          var trEle = $(obj.othis).parent().parent().parent();
+          for (var i = 0; i < that.tableData.length; i++) {
+            if (this.value === that.tableData[i].systemId) {
+              var paramObj = { isRadio: true, tableDataId: that.tableData[i].id, tableDataIndex: i }
+              if (obj.elem.checked) { // 拥有资质
+                trEle.find('[name=isDefault]').attr('disabled', false)
+                ajaxRequest('qualificationController.do?obtainQualification', that.tableData[i], that.qualificationCallback, false, true, paramObj)
+              } else { // 取消拥有资质
+                paramObj.isRadio = false;
+                trEle.find('[name=isDefault]').attr('disabled', true).attr('checked', false)
+                ajaxRequest('qualificationController.do?cancelQualification', { id: that.tableData[i].id }, that.qualificationCallback, false, true, paramObj)
+              }
+              break;
+            }
+          }
+        });
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArrs) {
+        var filesArr = filesArrs.slice(-filesObj.numbers);
+        filesObj.files = filesArr;
+        if (InitObj.isChapter) {
+          filesObj.filesChapter = filesObj.files;
+        } else {
+          filesObj.filesQualification = filesObj.files;
+        }
+        var html = '', ids = [], idsHtml = null;
+        if (this.isChapter) {
+          this.attachmentIds = ids;
+          idsHtml = this.attachmentIdsHtml;
+        } else {
+          this.qualificationIds = ids;
+          idsHtml = this.qualificationIdsHtml;
+        }
+        if (filesArr.length > 0) {
+          for (var i = 0; i < filesArr.length; i++) {
+            ids.push({ realpath: filesArr[i].realpath, id: filesArr[i].id })
+            html += ' <u><a class="attachmentA layui-color-blue" target="_blank">' + filesArr[i].attachmenttitle + '</a> </u>'
+          }
+          idsHtml.css('display', 'inline-block').find('img').attr('src', ids[0].realpath);
+        } else {
+          idsHtml.css('display', 'none');
+        }
+      },
+      defaultCallback: function (res) {
+        // console.log('138默认', res)
+      },
+      qualificationCallback: function (res, paramObj) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          if (res.obj) {
+            that.tableData[paramObj.tableDataIndex].id = res.obj;
+            ajaxRequest(that.childUrl, { qualificationTypeId: res.obj }, that.tableChildCallback, false, true, false)
+          }
+          that.formLayerM.render('radio');
+          return;
+        }
+      },
+      successCallback: function (res) {
+        var that = InitObj;
+        that.tableData = res.obj;
+        that.tableRender(that.tableData);
+      },
+      addFun: function () {
+        if (this.isAdd) {
+          layerAlertFun('请先保存数据', 5, [])
+        } else {
+          this.bottomBtn.show();
+          this.editId = '';
+          if (this.tableChildData.length > 0) {
+            var len = this.tableChildData.length - 1;
+            var tableDataNew = JSON.parse(JSON.stringify(this.tableChildData[len]))
+            this.tableChildData.push(tableDataNew);
+            var len2 = this.tableChildData.length - 1;
+            this.tableChildData[len2].id = '';
+          } else {
+            var trEle = $('#qualificationTable').siblings('.layui-table-view').find('.layui-table-click');
+            var name = trEle.find('td[data-field="name"]').find('div').html();
+            var qualificationTypeId = trEle.find('td[data-field="id"]').find('div').html();
+            this.tableChildData.push({ "id": "", "name": name, "qualificationTypeId": qualificationTypeId })
+          }
+          this.isAdd = !this.isAdd;
+          this.tableChildRender(this.tableChildData, true);
+          this.detailInfo.find('input').attr('disabled', false).css('border-color', '#ccc');
+          this.uploadBox.find('a').css('display', 'inline-block');
+        }
+      },
+      cancelFun: function () {
+        this.bottomBtn.hide();
+        if (this.isAdd) {
+          this.isAdd = !this.isAdd;
+          this.tableChildData.splice(this.tableChildData.length - 1, 1)
+          this.tableChildRender(this.tableChildData, true);
+        } else {
+          this.detailHtml(this.detailData);
+        }
+      },
+      editFun: function () {
+        if (this.tableChildData.length > 0) {
+          this.bottomBtn.show();
+          this.detailInfo.find('input').attr('disabled', false).css('border-color', '#ccc');
+          this.uploadBox.find('a').css('display', 'inline-block');
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          if ('保存失败:生效时间段冲突' === res.msg) {
+            layerAlertFun('资质版本的使用时间段不能有交叉，请重新输入', 5, []);
+          } else {
+            layerAlertFun(res.msg, 5, []);
+          }
+          return;
+        } else {
+          that.bottomBtn.hide();
+          that.detailInfo.find('input').attr('disabled', true).css('border-color', 'transparent');
+          that.uploadBox.find('a').css('display', 'none');
+          layerAlertFun(res.msg, 6, []);
+          var leftTr = $('#qualificationTable').parent().find('.layui-table-click');
+          leftTr.click();
+
+          // var qualificationTypeId = leftTr.find('td[data-field="id"] div').html();
+          // console.log('saveAjaxCallback', qualificationTypeId)
+          // ajaxRequest(that.childUrl, { qualificationTypeId: qualificationTypeId }, that.tableChildCallback, false, true, 'noRender')
+          return;
+        }
+      },
+      submitFun: function () {
+        var saveParam = this.saveData()
+        if (saveParam) {
+          var dataJson = saveParam;
+          if (this.isAdd) {
+            delete dataJson.id
+          } else {
+            dataJson.id = this.editId
+          }
+          ajaxRequest(this.submitUrl, dataJson, this.saveAjaxCallback, true, true)
+        }
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('form').serializeJSON();
+        if (this.attachmentIds.length > 0) {
+          formdata.qualStamp = this.attachmentIds[0].realpath;// 资质章url
+          formdata.qualStampFileId = this.attachmentIds[0].id;// 资质章url
+        }
+        if (this.qualificationIds.length > 0) {
+          formdata.qualCertificate = this.qualificationIds[0].realpath;// 资质证书url
+          formdata.qualCertificateFileId = this.qualificationIds[0].id;// 资质证书url
+        }
+        if (this.dataRequired(formdata)) {
+          // 保存数据
+          var trEle = $('#test').siblings('.layui-table-view').find('.layui-table-click');
+          trEle.find('td[data-field="startDate"]').find('div').html(formdata.startDate);
+          trEle.find('td[data-field="endDate"]').find('div').html(formdata.endDate);
+          trEle.find('td[data-field="remark"]').find('div').html(formdata.remark);
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+        return false;
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.startDate) {
+          queryParams.msg = '启用日期不能为空'
+          queryParams.element = $('input[name="startDate"]')
+          return false;
+        }
+        if (!queryParams.endDate) {
+          queryParams.msg = '结束日期不能为空'
+          queryParams.element = $('input[name="endDate"]')
+          return false;
+        }
+        var startDate = new Date(queryParams.startDate);
+        var endDate = new Date(queryParams.endDate);
+        if (startDate.getTime() > endDate.getTime()) {
+          queryParams.msg = '启用日期不能大于结束日期';
+          queryParams.element = $('input[name="startDate"]');
+          return false;
+        }
+        return true;
+      },
+      detailHtml: function (row) {
+        this.detailData = row;
+        if (!this.isAdd) {
+          this.bottomBtn.hide();
+        }
+        var html = '';
+        html += '<div class="layui-row "> <div class="layui-col-xs2 col-left">启用日期：</div>'
+        html += '<div class="layui-col-xs10"> <div class="layui-row"> <div class="layui-col-xs5">'
+        html += '<input type="text" name="startDate" class="layui-input" id="startDate" disabled>'
+        html += '</div>  <div class="layui-col-xs2 col-left">截止日期：</div>'
+        html += '<div class="layui-col-xs5">'
+        html += '<input type="text" name="endDate" class="layui-input" id="endDate" disabled>'
+        html += '</div> </div> </div> </div>'
+        html += ' <div class="layui-row">  <div class="layui-col-xs2 col-left"> 备注： </div>'
+        html += ' <div class="layui-col-xs10">'
+        var remarks = (row.remark ? row.remark : '');
+
+        html += ' <input type="text" class="layui-input" name="remark" value="' + remarks + '" autocomplete="off"  disabled>'
+        html += ' </div> '
+        html += ' <input type="hidden"  name="qualificationTypeId" value="' + row.qualificationTypeId + '"> '
+        if (row.qualStamp) {
+          this.attachmentIdsHtml.css('display', 'inline-block').find('img').attr('src', row.qualStamp);
+          this.attachmentIdsHtml.siblings('a').hide();
+          filesObj.filesChapter = [{ id: row.qualStampFileId, realpath: row.qualStamp }];
+        } else {
+          this.attachmentIdsHtml.hide().siblings('a').hide();
+          filesObj.filesChapter = [];
+        }
+        if (row.qualCertificate) {
+          this.qualificationIdsHtml.css('display', 'inline-block').find('img').attr('src', row.qualCertificate);
+          this.qualificationIdsHtml.siblings('a').hide();
+          filesObj.filesQualification = [{ id: row.qualCertificateFileId, realpath: row.qualCertificate }];
+        } else {
+          filesObj.filesQualification = [];
+          this.qualificationIdsHtml.hide().siblings('a').hide();
+        }
+        this.detailInfo.html(html);
+        this.laydateLayerM.render({
+          elem: '#startDate'
+          , trigger: 'click'
+          , value: row.startDate ? new Date(row.startDate).Format("yyyy-MM-dd") : '' //必须遵循format参数设定的格式
+        });
+        this.laydateLayerM.render({
+          elem: '#endDate'
+          , trigger: 'click'
+          , value: row.endDate ? new Date(row.endDate).Format("yyyy-MM-dd") : '' //必须遵循format参数设定的格式
+        });
+      },
+      tableChildCallback: function (res, param) {
+        console.log('tableChildCallback', param)
+        var that = InitObj;
+        if (res.rows && res.rows.length > -1) {
+          that.tableChildData = res.rows;
+          // if ('noRender' !== param) {
+          // that.tableChildRender(that.tableChildData, false);
+          that.tableChildRender(res.rows, false, param);
+          // }
+        } else {
+          layerAlertFun(res.msg, 5, []);
+        }
+
+      },
+      tableChildRender: function (tableChildData, isAdd, isRender) {
+        console.log('tableChildRender', tableChildData)
+        var that = InitObj;
+        this.tableChildIns = this.tableLayerM.render({
+          elem: '#test'
+          , height: 'full-300'
+          , limit: Number.MAX_VALUE
+          , data: tableChildData
+          , cols: [[
+            {
+              field: 'id', title: 'id', hide: true, templet: function (row) {
+                return ' <input type="text" name="id" value="' + row.id + '">'
+                // return row.id
+              }
+            }
+            , { field: 'name', title: '资质名称' }
+            , {
+              field: 'startDate', title: '启用日期', unresize: false, templet: function (row) {
+                return row.startDate ? new Date(row.startDate).Format("yyyy-MM-dd") : '';
+              }
+            }
+            , {
+              field: 'endDate', title: '截止日期', unresize: false, templet: function (row) {
+                return row.endDate ? new Date(row.endDate).Format("yyyy-MM-dd") : '';
+              }
+            }
+            , { field: 'remark', title: '备注' }
+          ]]
+          , page: false
+          , done: function (data) {
+            if (data.count === 0) {
+              $('.detailInfo-box').hide();
+              $('.header-box').hide();
+              that.uploadBox.hide();
+            } else {
+              $('.detailInfo-box').show().find('.layui-form').css('border-color', '#5baaeb');
+              $('.header-box').show();
+              that.uploadBox.show();
+            }
+          }
+        });
+
+        //监听行单击事件
+        that.tableLayerM.on('row(test)', function (obj) {
+          console.log('obj test',obj)
+          obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+          if (that.isAdd) {
+            if (obj.data.id) {
+              that.editId = obj.data.id
+              that.detailHtml(obj.data);
+              that.cancelFun();
+            } else {
+              that.detailHtml(obj.data);
+            }
+          } else {
+            that.editId = obj.data.id;
+            that.detailHtml(obj.data);
+          }
+        });
+        if (this.tableChildData.length > 0) {
+          console.log('if', this.tableChildData)
+          if (isAdd) {
+            if (this.editId) {
+              var trEle = $('td[data-content="' + this.editId + '"]').parent();
+            } else {
+              var trEle = $('td[data-content="' + this.tableChildData[this.tableChildData.length - 1].id + '"]').parent();
+            }
+            trEle.click();
+          } else {
+            console.log('if else', this.tableChildData)
+            if ('noRender' !== isRender) {
+              var trEle = $('td[data-content="' + this.tableChildData[0].id + '"]').parent();
+              trEle.click();
+            }
+          }
+        }
+      },
+      tableRender: function (tableData) {
+        var that = InitObj;
+        this.tableIns = this.tableLayerM.render({
+          elem: '#qualificationTable'
+          , height: 'full'
+          , limit: Number.MAX_VALUE
+          , data: tableData
+          , cols: [[
+            { field: 'id', title: 'id', hide: true }
+            , {
+              field: 'name', title: '资质名称', templet: function (row) {
+                return row.name;
+              }
+            }
+            , { field: 'isDeleted', title: '是否拥有资质', templet: '#checkboxTpl' }
+            , { field: 'isDefault', title: '是否默认', templet: '#radioTpl', unresize: false }
+          ]]
+          , page: false
+          , done: function (data) {
+          }
+        });
+        //监听行单击事件
+        that.tableLayerM.on('row(qualificationTable)', function (obj) {
+          // console.log(obj.tr) //得到当前行元素对象
+          // console.log(obj.data) //得到当前行数据
+          that.isAdd = false;
+          obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+          if (!obj.data.id) {
+            that.tableChildData = [];
+            that.tableChildRender(that.tableChildData, false);
+            layerAlertFun('您还未拥有过此资质', 5, []);
+          } else {
+            ajaxRequest(that.childUrl, { qualificationTypeId: obj.data.id }, that.tableChildCallback, false, true)
+          }
+
+        });
+        $('[name=isDefault]:checked').click();
+      }
+    }
+
+  </script>
+</body>
+
+
+
+</html>

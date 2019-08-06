@@ -1,0 +1,128 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>挂账额度设置</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    .layui-input-block p {
+      height: 24px;
+      line-height: 24px;
+      padding-left: 10px;
+    }
+
+    .layui-form-mid {
+      padding: 0px !important;
+      line-height: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <form id="commonQueryForm" class="layui-form" action="" lay-filter="example">
+    <div class="layui-row row-margin">
+      <div class="layui-form-item">
+        <label class="layui-form-label">登记人：</label>
+        <div class="layui-input-block">
+          <p>
+            ${LOCAL_CLINET_USER.realName }
+          </p>
+        </div>
+      </div>
+      <div class="layui-form-item" style="display:none" id="currentQuotaBox">
+        <label class="layui-form-label">当前挂账额度：</label>
+        <div class="layui-input-block">
+          <p>30000 </p>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">变更后额度：</label>
+        <div class="layui-input-inline">
+          <input type="text" name="creditLine"  autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid">(元)</div>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['laydate', 'layer'], function () {
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        InitObj.init()
+      });
+    })
+
+
+    var InitObj = {
+      saveCreditLineUrl: ' creditController.do?setCreditLine',
+      unitIds: GetQueryString("unitIds"), // 获取父页面传递过来的id
+      currentQuota: GetQueryString("currentQuota"), // 获取父页面传递过来的id
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      currentQuotaBox: $('#currentQuotaBox'),
+      fristConfirm: true, //是否第一次点击提交
+      init: function () {   // 页面初始化
+        if (this.currentQuota) {
+          var values = formatMoney(getFloatStr(this.currentQuota), 2, '￥ ');
+          this.currentQuotaBox.show().find('p').html(values + ' ');
+        }
+      },
+      openCallback: function () { // 点击确定按钮，返回值给上级页面
+        var saveParam = this.saveData()
+        if (saveParam) {
+          var dataJson = { "unitIds": this.unitIds, "creditLine": saveParam.creditLine }
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(this.saveCreditLineUrl, dataJson, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          parentThat.reloadDataGrid(false);
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          // 保存数据
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+        return false;
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.creditLine) {
+          queryParams.msg = '挂账额度不能为空'
+          queryParams.element = $('input[name="creditLine"]')
+          return false;
+        }
+        return true;
+      },
+    }
+  </script>
+</body>
+
+</html>

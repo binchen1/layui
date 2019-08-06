@@ -1,0 +1,393 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>检校确认</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+</head>
+
+<body id="repairBody">
+  <div id="tableBox" class="height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-form">
+        <form id="commonQueryForm" class="layui-form">
+          <div class="layui-row">
+            <div class="layui-col-xs8 ordinary">
+              <div class="layui-input-inline" style="width:80%">
+                <input type="text" name="quickQryParam" class="layui-input" placeholder="请输入设备名称、编号后回车即可查询"
+                  title="请输入设备名称、编号后回车即可查询" autocomplete="off">
+              </div>
+              <div class="layui-input-inline">
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.quickSearch()">查询</a>
+              </div>
+            </div>
+            <div class="layui-col-xs8 senior seniorText" style="display:none">
+              高级查询
+              <span id="retractIcon" onclick="InitObj.retractFun()">
+                <i class="layui-icon layui-icon-up"></i>
+              </span>
+            </div>
+            <div class="layui-col-xs4">
+              <span id="searchSwitch">
+                <a href="###" class="easyui-linkbutton" iconCls="iconfont icon-refresh" plain="true">切换到高级查询</a>
+              </span>
+            </div>
+          </div>
+          <div class="senior retract" style="display:none">
+            <div class="layui-form-item">
+              <label class="layui-form-label">计划检校时间：</label>
+              <div class="layui-input-block">
+                <input type="text" class="layui-input" name="planCheckDate" id="planCheckDate" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">实际检校时间：</label>
+              <div class="layui-input-block">
+                <input type="text" class="layui-input" name="checkDate" id="checkDate" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">检校确认时间：</label>
+              <div class="layui-input-block">
+                <input type="text" class="layui-input" name="confirmTime" id="confirmTime" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">设备编号：</label>
+              <div class="layui-input-block">
+                <input type="text" name="eqSn" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">设备名称：</label>
+              <div class="layui-input-block">
+                <input type="text" name="eqName" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">设备科室：</label>
+              <div class="layui-input-block">
+                <input type="text" name="eqDepartName" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">设备使用人：</label>
+              <div class="layui-input-block">
+                <input type="text" name="userName" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+
+            <div class="layui-form-item">
+              <label class="layui-form-label">检校单位：</label>
+              <div class="layui-input-block">
+                <input type="text" name="checkUnit" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">检校确认人：</label>
+              <div class="layui-input-block">
+                <input type="text" name="confirmerName" class="layui-input" autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">检校状态：</label>
+              <div class="layui-input-block" id="eqStatusDiv"></div>
+            </div>
+
+            <div>
+              <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                onclick="InitObj.seniorQuickSearch()">查询</a>
+              <button class="easyui-linkbutton" type="reset" iconCls="iconfont icon-refresh" plain="true">重置</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" style="display:inline-block" data-funCode="" class="easyui-linkbutton funBtn_addPlan"
+            iconCls="iconfont icon-add" plain="true" onclick="InitObj.goAdd()">新增检校录入</a>
+        </span>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['form', 'element', 'laydate', 'layer'], function () {
+        var form = layui.form;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          InitObj.initDataGrid(InitObj.columnsFun())
+        });
+        laydate.render({ elem: '#planCheckDate', range: '~', format: 'yyyy-MM-dd', trigger: 'click' })
+        laydate.render({ elem: '#checkDate', range: '~', format: 'yyyy-MM-dd', trigger: 'click' })
+        laydate.render({ elem: '#confirmTime', range: '~', format: 'yyyy-MM-dd', trigger: 'click' })
+        InitObj.init(form);
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      defaultUrl: 'checkController.do?datagrid', //默认获取数据url
+      searchType: 1, // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      searchShow: true, // 高级搜索隐藏 
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      business: true, // 是否显示报告重打修改需要审批
+      chcekStatusObj: null, // 检校状态
+      init: function (form) {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.formLayerM = form;
+        this.commonQryKeyDown();
+        this.styleLayout();
+        ajaxRequest('eqCommonController.do?getChcekStatus', {}, this.chcekStatusCall, false, true);
+      },
+      // 获取检校状态
+      chcekStatusCall: function (res) {
+        var that = InitObj, html = '';
+        if (res.obj) {
+          that.initDataGrid(that.columnsFun());
+          that.chcekStatusObj = res.obj;
+          for (var key in that.chcekStatusObj) {
+            html += '<input class="layui-bg-blue" type="radio" name="eqStatus" value="' + key + '" title="' + that.chcekStatusObj[key] + '">'
+          }
+          $('#eqStatusDiv').html(html);
+          that.formLayerM.render();
+        }
+      },
+      // 新增检校
+      goAdd: function (did, event) {
+        console.log('点击了检校录入', did)
+        layui.stope(event);
+        var openUrl = 'checkController.do?goCheckEdit', openName = '新增检校录入';
+        layerOpenFun(openUrl + '&equipmentId=' + did, openName, ['90%', '90%'], ['确认', '取消']);
+      },
+      // 编辑检校录入
+      goEdit: function (did, equipmentId, event) {
+        console.log('点击了检校录入', did)
+        layui.stope(event);
+        var openUrl = 'checkController.do?goCheckEdit', openName = '编辑检校录入';
+        // layerOpenFun(openUrl + '&equipmentId=' + did, openName, ['90%', '90%'], ['确认', '取消']);
+        layerOpenFun(openUrl + '&editId=' + did + '&equipmentId=' + equipmentId, openName, ['90%', '90%'], ['确认', '取消']);
+      },
+      // 编辑
+      goSubmit: function (did, eqName, isDetail, isCompleteTip) {
+        console.log('点击了提交(补)')
+        // var openUrl = 'checkController.do?goCheckEdit', openName = '检校录入';
+        // layerOpenFun(openUrl + '&editId=' + did, openName, ['90%', '90%'], ['确认', '取消']);
+      },
+      // 详情
+      goDetail: function (did, equipmentId, event) {
+        layui.stope(event)
+        var openUrl = 'checkController.do?goCheckEdit' + '&detail=detailPage', openName = '检校详情';
+        layerOpenFun(openUrl + '&editId=' + did + '&equipmentId=' + equipmentId, openName, ['90%', '90%']);
+      },
+      // 时间处理函数
+      dateStartEnd: function (queryParams, dataString) {
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams[dataString + 'Begin'] = DateArr[0];
+          queryParams[dataString + 'End'] = DateArr[1];
+        } else {
+          queryParams[dataString + 'Begin'] = '';
+          queryParams[dataString + 'End'] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        delete queryParams['quickQryParam'];
+        if (!isDateStartEnd(queryParams['planCheckDate'])) {
+          $('#planCheckDate').val('');
+          queryParams['planCheckDate'] = '';
+        }
+        if (!isDateStartEnd(queryParams['checkDate'])) {
+          $('#checkDate').val('');
+          queryParams['checkDate'] = '';
+        }
+        if (!isDateStartEnd(queryParams['confirmTime'])) {
+          $('#confirmTime').val('');
+          queryParams['confirmTime'] = '';
+        }
+        queryParams = this.dateStartEnd(queryParams, 'planCheckDate');
+        queryParams = this.dateStartEnd(queryParams, 'checkDate');
+        queryParams = this.dateStartEnd(queryParams, 'confirmTime');
+        delete queryParams['planCheckDate'];
+        delete queryParams['checkDate'];
+        delete queryParams['confirmTime'];
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var queryParams = {
+          'quickQryParam': $("input[name='quickQryParam']").val()
+        };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        console.log('queryParams', queryParams)
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [], that = this;
+        columns.push({ title: "id", field: "id", hidden: true });
+        columns.push({ title: "设备编号", field: "equipmentSn", width: 80 });
+        columns.push({ title: "设备名称", field: "name", width: 80 });
+        columns.push({
+          title: "设备科室", field: "departname", width: 110
+        });
+        columns.push({
+          title: "前次检校时间", field: "preCheckDate", width: 80,
+          formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "下次检校时间", field: "nextCheckDate", width: 80,
+          formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "实际检校时间", field: "checkTime", width: 100,
+          formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({ title: "证书编号", field: "certificateSn", width: 100 });
+        columns.push({
+          title: "有效期", field: "validityDate", width: 110,
+          formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({ title: "确认人", field: "confirmerName", width: 110 });
+        columns.push({
+          title: "确认时间", field: "confirmTime", width: 80,
+          formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "检校状态", field: "status", width: 80,
+          formatter: function (value) {
+            var statusObj = that.chcekStatusObj;
+            console.log('检校状态', statusObj)
+            return statusObj[value] || '';
+          }
+        });
+        columns.push({
+          title: "操作", field: "opt", width: 100,
+          formatter: function (value, row, index) {
+            var btns =
+              '<button title="编辑检校录入" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' +
+              row.id + '&quot;,&quot;' + row.equipmentId + '&quot;,event)" ><i class="iconfont icon-edit"></i></button>';
+            btns += '<button title="提交确认(补)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goSubmit(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-submit"></i></button>';
+            btns += '<button title="检校详情" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' +
+              row.id + '&quot;,&quot;' + row.equipmentId + '&quot;,event)" ><i class="iconfont icon-detail"></i></button>';
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'createDate', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            // funCode();
+            getTableHeight();
+          }
+        });
+      },
+      // 高级查询收起按钮
+      retractFun: function () {
+        if ($('.retract').is(':hidden')) {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i> ');
+        } else {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-down"></i> ');
+        }
+        $('.retract').toggle();
+        getTableHeight()
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        this.searchSwitch.click(function () {
+          var that = InitObj;
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+            $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i>')
+          }
+          getTableHeight()
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

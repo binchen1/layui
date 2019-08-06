@@ -1,0 +1,176 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>关联检测任务</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+</head>
+
+<body>
+  <div class="height-full">
+    <div id="tb" class="layui-form-box">
+      <div>
+        <form id="commonQueryForm">
+          <div class="layui-input-inline" style="width:40%">
+            <input type="text" name="quickQryParam" class="layui-input" placeholder="输入编号/委托单位/工程项目后回车即可查询"
+              autocomplete="off">
+          </div>
+          <div class="layui-input-inline">
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+              onclick="InitObj.quickSearch()">查询</a>
+          </div>
+        </form>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+      })
+      InitObj.init();
+    })
+    // 初始化页面
+    var InitObj = {
+      defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      defaultUrl: 'reportCreateController.do?getTaskWithUnitAndProject', //默认获取数据url
+      datagrid: null, // table返回对象
+      testTaskIdsData: parent.InitObj.testTaskIdsData, // 获取传递的人员列表
+      init: function () {
+        this.initDataGrid(this.columnsFun())
+        this.commonQryKeyDown()
+      },
+      // 页面打开回调函数
+      openCallback: function () {
+        var selectedData = $("#dataGrid").datagrid("getChecked");
+        // return this.testTaskIdsData.concat(selectedData);
+        return selectedData;
+      },
+      //快速查询
+      quickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, queryParams);
+      },
+      //快速查询input框绑定的回车事件
+      commonQryKeyDown: function () {
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      /**重载datagrid*/
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        return [[
+          { title: "id", field: "id", checkbox: true, width: 50 },
+          { title: "任务编号", field: "testTaskCode", width: 50 },
+          { title: "记录编号", field: "testRecordCode", width: 50 },
+          {
+            title: "检测时间", field: "testDate", width: 50, formatter: function (value, row, index) {
+              var dateHtml = '';
+              if (row.testDate) {
+                dateHtml += '<span>' + row.testDate + '</span>';
+              }
+              if (row.testDate && row.testEndDate) {
+                dateHtml += '~';
+              }
+              if (row.testEndDate) {
+                dateHtml += '<span>' + row.testEndDate + '</span>';
+              }
+              return dateHtml
+            }
+          },
+          { title: "委托单位", field: "unitName", width: 50 },
+          { title: "工程项目", field: "projectName", width: 50 },
+        ]]
+      },
+      // // 关联检测任务 table
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          method: 'get',
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          idField: 'id',
+          fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          fitColumns: true,
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            if (data.rows.length === 0) {
+              var htmls = '<p class="text-center" style="line-height:68px;font-size:18px">没有可关联的检测任务</p>'
+              $('.height-full').html(htmls)
+            } else {
+              var hiddenRowIds = [];
+              var deleteRows = [];
+              var hiddenRows = that.testTaskIdsData;
+
+              if (hiddenRows && hiddenRows.length > 0) {
+                $.each(hiddenRows, function (i, v) {
+                  hiddenRowIds.push(hiddenRows[i].id);
+                })
+              }
+              for (var i in data.rows) {
+                if ($.inArray(data.rows[i].id, hiddenRowIds) >= 0) {
+                  deleteRows.push(data.rows[i]);
+                }
+              }
+              $.each(deleteRows, function (i, v) {
+                that.dataGrid.datagrid('selectRow', that.dataGrid.datagrid('getRowIndex', v));
+              })
+
+            }
+          },
+          onSelect: function (rowIndex, rowData) {
+            // var arr = that.testTaskIdsData
+            // if (arr.length !== 0) {
+            //   for (var i = 0; i < arr.length; i++) {
+            //     if (rowData.id === arr[i].id) {
+            //       // layer.msg('此任务已经选择过了', { icon: 2 });
+            //       console.log('此任务已经选择过了')
+            //       $('#dataGrid').treegrid("unselectRow", rowIndex);
+            //       return;
+            //     }
+            //   }
+            // }
+          }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>
+

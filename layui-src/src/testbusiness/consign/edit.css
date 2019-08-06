@@ -1,0 +1,203 @@
+table th {
+  text-align: center;
+  height: 32px;
+}
+
+input {
+  width: 100%;
+  border: none !important;
+}
+
+.inputWithBtn {
+  width: calc(100% - 80px);  
+  border: none !important;
+}
+
+select {
+  width: 100% !important;
+  border: none;
+}
+.tb-box-btn{
+	background:#eee;
+	margin:0px;
+	padding:3px 5px;
+}
+.divArea{
+border:1px;	
+background:white;	
+  border-color:#ddd;
+  border-style: solid;	
+}
+.divArea .divTitle{
+  color: #8f0911;
+  line-height: 28px;
+  padding:4px;
+  font-weight:bold;
+  background-image:-webkit-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
+}
+.divArea .divContent{
+	overflow-y: auto;
+  overflow-x:hidden;
+}
+.divArea .divContent input,select,span {
+  line-height: 28px;
+  
+}
+.divArea .divContent input,select {
+  min-height: 28px;
+}
+.divArea .divContent table {
+  border-collapse:separate;
+  display:table;
+  border-color:grey;
+}
+.divArea .divContent table .required{
+	font-weight:bold;
+	color:#F00000;
+  vertical-align: middle;
+}
+.divArea .divContent table .required label:before{
+	content:"*";
+	color:#F00000;
+}
+.divArea .divContent table  .hasbtn{
+	padding:0;
+}
+.divArea .divContent table  .value{
+	padding:0;	
+  vertical-align: bottom;
+}
+.divArea .divContent table  .Wdate{
+	height:unset;
+	}
+.divArea .divContent table tr{
+	min-height:40px;
+}
+.td-label {
+  text-align: right;
+  max-width: 15%;
+}
+
+.icon-rotate{
+	transform:rotate(180deg);
+}
+
+#feeTotal {
+  height: 20px;
+  width: 92px;
+  border: 1px solid #000 !important;
+  border-radius: 0;
+}
+
+.fee-box {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  background: #f5f5f5;
+  min-height: 30px;
+  line-height: 30px;
+  color: #8f0911;
+  padding: 0px 5px;
+}
+
+.fee-box > div {
+  display: inline-block;
+}
+
+.fee-box .fee-box-middle {
+  margin: 0px 10px;
+}
+
+.fee-box .fee-box-middle u {
+  color: #1e9fff;
+  margin-right: 10px;
+}
+
+.fee-box .fee-box-middle a {
+  background: #f6f6f6;
+  color: #8f0911;
+  padding: 0px 10px;
+  border: 1px solid #ccc;
+  height: 20px;
+  line-height: 20px;
+}
+
+.fee-box input[type="radio"] + span {
+  border: 1px solid #1e9fff;
+}
+
+.fee-box input[type="radio"]:checked + span {
+  border: 1px solid #1e9fff;
+}
+
+.fee-box input[type="radio"]:checked + span::after {
+  background: #1e9fff;
+}
+
+.fee-box .fee-box-right {
+  float: right;
+  margin-right: 15px;
+}
+
+.fee-box .fee-box-right strong {
+  color: red;
+  margin-right: 20px;
+}
+
+#accessoryManageDiv {
+  display: inline-block;
+}
+
+input:disabled {
+  background-color: #fff;
+}
+
+#receiveTestObjects {
+  margin-bottom: 30px;
+}
+
+.Wdate {
+  -ms-background-position-x: 94%;
+}
+
+
+.modal {
+  opacity: 0.2;
+  position: absolute;
+  background: red;
+  top: 0;
+  left: 0;
+  right: 20px;
+  bottom: 0;
+  height: auto;
+  z-index: 1;
+}
+
+#walkthrough-content {
+  display: none;
+}
+
+#jpWalkthrough #jpwTooltip #tooltipInner {
+  font-size: 18px;
+}
+
+.blind-sample {
+  color: red;
+  margin: 5px 0;
+  line-height: 22px;
+}
+
+.blind-sample img {
+  vertical-align: bottom;
+}
+
+.blind-sample .blind-sample-btn {
+  color: #6699ff;
+  padding-left: 5px;
+}
+
+/**寮瑰嚭灞傛牱寮忎慨鏀� */
+.mylayui-layer-molv .layui-layer-title {
+  background: #247abb;
+  color: #fff;
+}

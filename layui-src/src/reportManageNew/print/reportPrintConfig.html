@@ -1,0 +1,160 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>打印设置</title>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<script type="text/javascript" src="plug-in/base64/base64.js"></script>
+
+
+</head>
+
+<body>
+  <form class="layui-form" id="commonQueryForm">
+    <div class="layui-row row-margin">
+      <div class="layui-col-xs5 layui-col-left">检测报告打印份数：</div>
+      <div class="layui-col-xs5">
+      <input type="number" min="0" class="layui-input" value="0" autocomplete="off" name="reportPrintNum" id="reportPrintNum" placeholder="请输入数字"></div>
+    </div>
+    <div class="layui-row row-margin">
+      <div class="layui-col-xs5 layui-col-left">原始记录打印份数：</div>
+      <div class="layui-col-xs5">
+      <input type="number" min="0" class="layui-input" value="0" autocomplete="off" name="recordPrintNum" id="recordPrintNum" placeholder="请输入数字"></div>
+    </div>
+    <div class="layui-row row-margin">
+      <div class="layui-col-xs5 layui-col-left">委托单打印份数：</div>
+      <div class="layui-col-xs5">
+        <input type="number" min="0" class="layui-input" value="0" autocomplete="off" name="consignPrintNum" id="consignPrintNum" placeholder="请输入数字">
+      </div>
+    </div>
+    <div class="layui-row row-margin">
+      <div class="layui-col-xs5 layui-col-left">任务分配单打印份数：</div>
+      <div class="layui-col-xs5">
+        <input type="number" min="0" class="layui-input" value="0" autocomplete="off" name="assignedListPrintNum" id="assignedListPrintNum" placeholder="请输入数字">
+      </div>
+    </div>
+  </form>
+    <!-- <a id="invokeLocal" style="display:none;" href="userLocal://参数"></a>
+    <a id="printConsign" style="display:none;" href="userLocal://参数"></a>
+    <a id="printAssignedList" style="display:none;" href="userLocal://参数"></a> -->
+    
+    <iframe id="reportAndRecord" name="reportAndRecord" width="0" height="0" frameborder="none" src=""></iframe>
+    <iframe id="consignIframe" name="consignIframe" width="0" height="0" frameborder="none" src=""></iframe>
+    <iframe id="assignedListIframe" name="assignedListIframe" width="0" height="0" frameborder="none" src=""></iframe>
+  <script>
+    
+    $(function(){
+	    layui.use(['layer', 'element'], function () {
+	        var layer = layui.layer;
+	        var element = layui.element;
+	        //选完文件后不自动上传
+	      })
+        InitObj.init();
+    });
+    
+    var InitObj = {
+      consignIds: GetQueryString("consignIds"), // 委托ID
+      reportIds: GetQueryString("reportIds"),   // 报告ID
+      business: GetQueryString("business"),   // 业务控制参数
+      // 提交数据 
+      openCallback: function () {   // 点击确定按钮调用该方法
+        var reportPrintNum = $("#reportPrintNum").val();
+        var recordPrintNum = $("#recordPrintNum").val();
+        var consignPrintNum = $("#consignPrintNum").val();
+        var assignedListPrintNum = $("#assignedListPrintNum").val();
+                        
+        var printUrl = basePath;    // 后台隐式打开页面执行相关操作
+            printUrl += '/udrController.do?goUdrPrintPage';
+            printUrl += '&reportIds=' + this.reportIds;
+            //printUrl += '&consignIds=' + this.consignIds;
+            printUrl += '&reportPrintNum=' + reportPrintNum;
+            printUrl += '&recordPrintNum=' + recordPrintNum;
+            printUrl += '&consignPrintNum=' + consignPrintNum;
+            printUrl += '&assignedListPrintNum=' + assignedListPrintNum;
+        
+        var base64 = new Base64();
+        
+        // 打印报告、 原始记录
+        if(parseInt(reportPrintNum) > 0 || parseInt(recordPrintNum) > 0) {
+	        var printHref = "hitek-udr://" + base64.encode("open-ie\n" + printUrl);
+	        window.open(printHref,'reportAndRecord'); 
+        }
+        
+        
+        var consignIdArr = this.consignIds.split(",");
+        //alert(consignIdArr);
+        // 打印委托单
+        if(parseInt(consignPrintNum) > 0) {
+           for(var consignIndex = 0; consignIndex < consignIdArr.length; consignIndex++ ){
+              var printConsignUrl = basePath;
+                  printConsignUrl+= '/udrController.do?openUdrCommonTemplate&objectId='+ consignIdArr[consignIndex];
+                  printConsignUrl+= '&type=printConsign&printNum='+consignPrintNum; 
+              var printConsignHref = "hitek-udr://" + base64.encode("open-ie\n" + printConsignUrl);
+		      window.open(printConsignHref, 'consignIframe'); 
+           }
+        }
+        
+        // 打印任务分配清单
+        if(parseInt(assignedListPrintNum) > 0) {
+           for(var consignIndex = 0; consignIndex < consignIdArr.length; consignIndex++ ){
+              var printAssignedListUrl = basePath;
+                  printAssignedListUrl+= '/udrController.do?openUdrCommonTemplate&objectId='+ consignIdArr[consignIndex];
+                  printAssignedListUrl+= '&type=taskDistribution&printNum='+assignedListPrintNum;
+              var printAssignedListHref = "hitek-udr://" + base64.encode("open-ie\n" + printAssignedListUrl); 
+              window.open(printAssignedListHref, 'assignedListIframe'); 
+           }
+        }
+        
+        // 更新报告状态为已打印
+        var updateUrl = "reportPrintController.do?updatePrintedStatus";
+        var res = ajaxRequestSync2(updateUrl, {reportIds: this.reportIds});
+        if(res.success){
+            parent.layer.msg(res.msg, {icon: 6});
+        }
+        
+        //请求后台记录报告打印记录
+        var url = "tSLogProcessController.do?addProcessLog";
+        var reportIdArr = this.reportIds.split(",");
+        for(var i=0; i<reportIdArr.length; i++){
+	        var data = {content:"报告打印完成", opinion:"/", objectType:"3", objectId:reportIdArr[i], sourceClass:"webPage", sourceMethod:"webPage", actionType:"90"};
+            ajaxRequest(url, data, succFunc, true)
+        }
+        
+        return "";
+      },
+      init: function () {
+        this.reportIds = GetQueryString("reportIds");
+        this.consignIds = GetQueryString("consignIds");
+        if('true'===this.business){
+          $('input[name="reportPrintNum"]').attr('readonly',true).val(0)
+        }
+      }
+    }
+    
+    function succFunc(res){
+    	console.log('res',res)
+    	if(res.success){
+    		// parent.layer.close(parent.layer.getFrameIndex(window.name)); //再执行关闭 
+            // parent.InitObj.reloadDataGrid(false)
+    	}else{
+    		layer.msg(res.msg,{icon:5})
+    	}
+    	parent.layer.close(parent.layer.getFrameIndex(window.name)); //再执行关闭 
+        parent.InitObj.reloadDataGrid(false)
+         
+    }
+    
+  
+  </script>
+</body>
+
+</html>

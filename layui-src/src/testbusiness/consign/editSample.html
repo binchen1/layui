@@ -1,0 +1,379 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<t:base type="tools,DatePicker" />
+<html lang="en">
+
+<head>
+  <script>
+    var storeTool;
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/assets/js/common.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/assets/js/hitektool.js'><\/script>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/consign/editSample_Attribute.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/consign/editSample.js'><\/script>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/webpage/com/hitek/testbusiness/consign/editSample.css'>");
+
+  </script>
+</head>
+
+<body>
+  <div class="divArea">
+    <div class="body-box divTitle">
+      <button type="button" class="btn-4-submit" style="display: none;"></button>
+      <span>样品/参数名称:<span id="testSampleName">xxx</span></span>
+      <a class="easyui-linkbutton btn-4-select-sample" icon="iconfont icon-search">选择样品</a>
+    </div>
+    <div class="divTitle">
+      <!-- 主数据区域 -->
+      <a class="easyui-linkbutton btn-4-add-standard" icon="iconfont icon-standard">选择规程</a>
+      <a class="easyui-linkbutton btn-4-add-group" icon="iconfont icon-combination">自定义参数打包</a>
+      <div style="float:right">打包参数收取：
+        <select id="groups">
+          <option value="">--请选择打包参数--</option>
+        </select>
+      </div>
+    </div>
+    <table class="formtable" id="params" cellpadding="0" cellspacing="1">
+      <thead>
+        <tr>
+          <th style="width: 35px;"><input type="checkbox" class="checkAllParam"></th>
+          <th>检测参数</th>
+          <th>参数备注</th>
+          <th>检测依据</th>
+          <th>评定标准</th>
+          <th>单价（元）</th>
+          <th>计价数量</th>
+          <th style="width: 35px;">小计</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="divContent">
+      <div class="divL">
+        <!-- 右侧下方 右侧 收样要求 -->
+        <div class="divTitle">
+          <span> 取样信息 <i></i> </span>
+        </div>
+        <div class="divContent">
+          <table id="testObjectAttributesB" class="  formtable " cellpadding="0" cellspacing="1">
+            <tr>
+              <td class="td-label">
+                <label for="samplingPlace">取样地点：</label>
+              </td>
+              <td class="value">
+                <input id="samplingPlace" name="samplingPlace">
+              </td>
+            </tr>
+            <tr>
+              <td class="td-label">
+                <label for="samplingDate">取样时间：</label>
+              </td>
+              <td class="value">
+                <input id="samplingDate" name="samplingDate" class="Wdate"
+                  onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})">
+              </td>
+            </tr>
+            <tr>
+              <td class="td-label">
+                <label for="samplingCompany">取样单位：</label>
+              </td>
+              <td class="value">
+                <input id="samplingCompany" name="samplingCompany">
+              </td>
+            </tr>
+            <tr>
+              <td class="td-label">
+                <label for="samplePerson">取样人：</label>
+              </td>
+              <td class="value">
+                <input id="samplePerson" name="samplePerson">
+              </td>
+            </tr>
+            <tr>
+              <td class="td-label">
+                <label for="samplePersonNumber">取样人证号：</label>
+              </td>
+              <td class="value">
+                <input id="samplePersonNumber" name="samplePersonNumber">
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="divR">
+        <div class="divTitle">
+          <span>收样要求</span>
+        </div>
+        <div class="divContent">
+          <table class="formtable" id="requirements">
+            <thead>
+              <tr>
+                <th>要求项次</th>
+                <th>要求内容</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <div class="divTitle">
+      <span>样品信息</span>
+    </div>
+    <!-- 辅助信  息 -->
+    <div class="divContent">
+      <table id="testObjectAttributesL" class="formtable tableL" cellpadding="0" cellspacing="1">
+        <tr style="display: none;">
+          <td><input name="mark"></td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="testSampleDisplayName">样品名称：</label>
+          </td>
+          <td class="value">
+            <input id="testSampleDisplayName" name="testSampleDisplayName">
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label"><label for="standard">规格型号：</label></td>
+          <td class="value" style="position: relative;">
+            <input id="standard" name="standard">
+            <input id="standard-model" name="model" type="hidden">
+            <input id="standard-specification" name="specification" type="hidden">
+            <input id="standard-grade" name="grade" type="hidden">
+            <input id="standard-label" name="label" type="hidden">
+            <a class="easyui-linkbutton l-btn  rightbtn" id="choose-attr">选择</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="part">检测部位：</label>
+          </td>
+          <td class="value" style="position: relative;">
+            <input id="part" readonly unselectable="on" name="part" onfocus="$('#part-attr').click();">
+            <a id="part-attr" class="easyui-linkbutton l-btn rightbtn">....</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="projectPartAndUse">工程部位/用途：</label>
+          </td>
+          <td class="value">
+            <input id="projectPartAndUse" name="projectPartAndUse">
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="description">样品描述：</label>
+          </td>
+          <td class="value">
+            <input id="description" list="testSampleIds" name="description">
+            <datalist id="testSampleIds"></datalist>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="sampleNum">样品数量：</label>
+          </td>
+          <td class="value">
+            <input id="sampleNum" name="sampleNum">
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="delegatesNum">代表数量：</label>
+          </td>
+          <td class="value">
+            <input id="delegatesNum" name="delegatesNum">
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">
+            <label for="remark">备注：</label>
+          </td>
+          <td class="value">
+            <input id="remark" name="remark">
+          </td>
+        </tr>
+      </table>
+      <table id="testObjectAttributesR" class="formtable tableR" cellpadding="0" cellspacing="1"></table>
+    </div>
+
+    <div class="divTitle">
+      <span>附加费用</span>
+      <a class="easyui-linkbutton btn-4-add-additionalFee " icon="iconfont icon-add" plain="true">添加</a>
+      <a class="easyui-linkbutton btn-4-delete-additionalFee " icon="iconfont icon-remove" plain="true">删除</a>
+    </div>
+    <table id="additionalFees" class="formtable divContent" cellpadding="0" cellspacing="1">
+      <thead>
+        <tr>
+          <th style="width: 35px;"></th>
+          <th>附加费用名称</th>
+          <th>单价（元）</th>
+          <th>单位</th>
+          <th style="width: 80px;">数量</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    <div class="divTitle">
+      <span>关联检测样品</span>
+      <a class="easyui-linkbutton btn-4-record-material " icon="iconfont icon-add" plain="true">录入</a>
+      <a class="easyui-linkbutton btn-4-quote-material " icon="iconfont icon-put" plain="true">引用已委托原材料</a>
+      <a class="easyui-linkbutton btn-4-delete-material " icon="iconfont icon-remove" plain="true">删除</a>
+    </div>
+    <table class="formtable divContent" id="referConsignedSampleDataDataGrid">
+      <thead>
+        <tr>
+          <th style="width:35px;"><input type="checkbox" id="referCheckAll"></th>
+          <th>样品名称</th>
+          <th>规格型号</th>
+          <th>样品相关属性</th>
+          <th>推荐掺量</th>
+          <th>用量</th>
+          <th>单位比</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+
+    <div class="divTitle">
+      <span>龄期信息</span>
+      <a class="easyui-linkbutton btn-4-add-period " icon="iconfont icon-add" plain="true">添加</a>
+      <a class="easyui-linkbutton btn-4-delete-period " icon="iconfont icon-remove" plain="true">删除</a>
+    </div>
+    <table class="formtable divContent" id="periods" cellpadding="0" cellspacing="1">
+      <thead>
+        <tr>
+          <th style="width: 35px;">
+            <input type="checkbox" style="width: 35px;display: none;">
+          </th>
+          <th>样品编号</th>
+          <th>成型日期</th>
+          <th>龄期（天）</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+  <!--选择检测参数的行模板-->
+  <script id="testParamGridTr" type="text/html">
+    {{each items}}
+  <tr class="group{{$value.groupIndex}} {{$value.shareclass}}">
+    <td name="paramId" class="value">      
+        <input type="hidden" name="testItemId"  value="{{$value.testItemId}}">
+        <input type="hidden" name="isBuildSampleCode"  value="{{$value.isBuildSampleCode}}">
+        <input type="hidden" name="isLocaleItem"  value="{{$value.isLocaleItem}}">
+        <input type="hidden" name="paramQualification"  value="{{$value.supports}}">
+        <input type="hidden" name="basisIds" value="{{$value.basisIds}}">
+        <input type="hidden" name="standardIds" value="{{$value.standardIds}}">
+        <input type="checkbox" class="paramSelect" data-id="{{$value.id}}" data-group="{{$value.groupIndex}}"  {{$value.checked}}/>
+    </td>
+    <td name="paramName" class="value paramName">{{$value.displayName}}</td>
+    <td name="paramRemark" class="value paramRemark">{{$value.remark}}</td>
+    <td name="paramBasis" class="value paramBasis">{{#$value.displayBasis}}</td>
+    <td name="paramStandard" class="value paramStandard">{{#$value.displayStandards}}</td>
+    <td name="paramPrice" class="value paramPrice" >{{#$value.paramPriceComponents}}</td>
+    <td name="paramAmount" class="value paramAmount">
+      <input  class="countNumber" data-id="{{$value.id}}" value="{{$value.count}}"/>
+    </td>
+    <td name="paramSubtotal" class="value paramAmount">{{$value.paramAmount}}</td>
+  </tr>
+  {{/each}}
+  </script>
+
+  <!--龄期行模板-->
+  <script id="periodsDataGridRowTemplate" type="text/html">
+    {{each items}}
+    <tr id="periodTR{{$index}}">
+    <td><input type="checkbox" id="{{$value.id}}">
+      <input type="hidden"  value="{{$value.mark}}"></td>    
+    <td class="value"><input   class="periodCode" value ="{{$value.periodCode}}"></td>
+    <td class="value"><input   class="formingDate Wdate" value ="{{$value.formingDate}}"    onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})"></td>
+    <td class="value"><input   class="days" value ="{{$value.days}}"></td>  
+    </tr>
+    {{/each}}
+  </script>
+  <!--附加费用行模板-->
+  <script id="addtionFeeDataGridRowTemplate" type="text/html">
+    {{each items}}
+    <tr id="feeTR{{$index}}" dataID='{{$value.id}}'>
+    <td><input type="checkbox" id="{{$value.id}}" checked="{{$value.checked}}"></td>
+    <td class="td-label name" style="width:150px;">{{$value.name}}</td>
+    <td class="td-label price" style="width:150px;">{{$value.price}}</td>
+    <td class="td-label priceUnit" style="width:150px;">{{$value.priceUnit}}</td>
+    <td class="value" style="width:150px;"><input   class="count" value ="{{$value.count}}"></td>
+    <td class="value" style="width:150px;"><input   class="remark" value ="{{$value.remark}}"></td>    
+    </tr>
+    {{/each}}
+  </script>
+  <!--其它材料的行模板-->
+  <script id="materialDataGridRowTemplate" type="text/html">
+    {{each items}}
+    <tr id="materialTR{{$index}}" dataid="{{$value.id}}">
+    <td><input type="checkbox"></td>
+    <td style="width:150px;"><div class="divYP">{{$value.testSampleDisplayName}}<br/>({{$value.testObjectCode}})</div></td>
+    <td style="width:150px;">{{$value.standard}}</td>
+    <td style="width:400px;">
+      <div class="divL">委托编号：{{$value.consignCode}}<br/>
+      报告编号：{{$value.reportCode}}<br/>    
+      取样地点：{{$value.samplingPlace}}<br/>
+      试样数量：{{$value.representNum}}<br/>
+      代表数量：{{$value.representNum}}</div>
+      <div class="divR">生产厂家：{{$value.manufacturer}}<br/>
+      生产产地：{{$value.manufactureLocation}}<br/>
+      生产日期：{{$value.manufactureDate}}<br/>
+      出厂日期：{{$value.ccrq}}<br/>
+      批号：{{$value.batchNumber}}
+      </div></td>
+    <td style="width:150px;" class="value"><input   class="recommendedDosage" value ="{{$value.recommendedDosage}}"></td>
+    <td style="width:150px;" class="value"><input   class="dosage" value ="{{$value.dosage}}"></td>
+    <td style="width:150px;" class="value"><input   class="unitRatio" value ="{{$value.unitRatio}}"></td>
+    <td style="width:150px;" class="value"><input   class="remark" value ="{{$value.remark}}"></td>
+    </tr>
+    {{/each}}
+</script>
+
+  <script type="text/javascript">
+    function samplingInfo(str) {
+      console.log('点击取样信息按钮，修改显示')
+      var node = $('#' + str)
+      if (node.is(':hidden')) { //如果node是隐藏的则显示node元素，否则隐藏
+        node.show();
+        $('#testObjectBox').animate({
+          scrollTop: 300
+        }, 1000); //100为滚动条的位置，1000为滚动的时延         
+      } else {
+        node.hide();
+      }
+    }
+  </script>
+</body>
+
+</html>

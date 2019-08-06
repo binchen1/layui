@@ -1,0 +1,510 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
+
+<!-- <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"> -->
+<!DOCTYPE html>
+
+<head>
+  <title>任务分配-按样品分配</title>
+
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="expires" content="0">
+  <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+  <meta http-equiv="description" content="This is my page">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <script type="text/javascript">
+    //获得根目录
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var path = prePath;
+    var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+    var basePath = prePath + postPath;
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+		// document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/taskassigned/taskassigned-unassigned.js'><\/script>");
+  </script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <style type="text/css">
+    .td-label {
+      width: 20%;
+    }
+
+    #sampleInfoDiv p {
+      margin: 0;
+    }
+    #sampleInfoDiv {
+      padding: 5px 20px;
+    }
+    .sampleInfoTitle {
+      margin: 5px auto;
+    }
+    .tree-title {
+	  line-height: 34px;
+	}
+  </style>
+  
+  <!--[if  IE 9]>
+    <link rel="stylesheet" type="text/css" href="plug-in/assets/css/commonIE9.css" />
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+<body class="easyui-layout">
+  <div data-options="region:'north',title:'样品信息',split:true,collapsible:true" style="height:100px;">
+    <!-- <div style="width:88px;height:100%;float:left;">
+      <p class="sampleInfoTitle">&emsp;&nbsp;<strong>样品信息：</strong></p>
+    </div> -->
+    <div style="float:left;" id="sampleInfoDiv">
+      <!-- <p>热轧带肋钢筋（YP-2018-GJJ-0002）（桥梁，路基，隧道工程） </p> -->
+    </div>
+
+  </div>
+  <div data-options="region:'center',title:'分配结果'" style="padding:5px;">
+    <div style="width:90%;margin-left:5%;margin-top:5px;height:30px;">
+      <p>
+        <strong>已选人员信息：</strong>
+        <a href="unAssignedTaskController.do?goAllotByParamPage" id="buttonToParamAssign"
+          style="float:right;display:none;" data-funCode="taskAssignByParam">>>任务拆分</a>
+      </p>
+    </div>
+    <table class="formtable" style="width:90%;margin-left:5%;margin-top:1px;height:200px;">
+      <tbody style="text-align:right">
+        <tr class="tr-lable">
+          <td class="td-label">检测:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="testPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("testPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr class="tr-lable">
+          <td class="td-label">报告编写:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="reportPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("reportPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr class="tr-lable">
+          <td class="td-label">复核:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="recheckPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("recheckPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr class="tr-lable">
+          <td class="td-label">审核:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="auditPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("auditPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">批准:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="approverSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("approver")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+
+    </table>
+  </div>
+  <div data-options="region:'east',title:'人员选择',split:true,collapsible:false" style="width:320px;overflow:hidden;">
+    <div style="height:10%;width:100%;">
+      <p>
+        <input type="text" id="userNameLike" oninput="doFilter();" name="userNameLike" style="width:100%"
+          placeholder="请输入用户/部门">
+      </p>
+    </div>
+    <!-- <div style="height:86%;width:100%;">
+      <table style="padding:5px; min-height:50px" id="treeGridOfUsers"></table>
+    </div> -->
+    <div style="height:86%;width:100%;">
+      <table id="treeGridOfUsers"></table>
+    </div>
+  </div>
+
+</body>
+<script type="text/javascript">
+
+  //本页面加载的样品id字符串
+  var sampleIds = "";
+
+  //检测,报告,复核,审核,批准五个工作分别的人员id字符串
+  var testPersonIds = "";
+  var reportPersonIds = "";
+  var recheckPersonIds = "";
+  var auditPersonIds = "";
+  var approverIds = "";
+  var testTaskId = "";
+  var fristConfirm = true; // 是否第一次点击提交按钮
+
+  //提交分配结果.这个方法是在父页面中调用的,在点击弹窗的[确定]按钮时,调用该方法提交数据,
+  //提交完成后,调用父页面的关闭弹窗方法关闭弹窗
+  function submitAssign() {
+    sampleIds = removeEndComma(sampleIds);
+    testPersonIds = removeEndComma(testPersonIds);
+    reportPersonIds = removeEndComma(reportPersonIds);
+    recheckPersonIds = removeEndComma(recheckPersonIds);
+    auditPersonIds = removeEndComma(auditPersonIds);
+    approverIds = removeEndComma(approverIds);
+    //判断
+    if (testPersonIds.length < 1) {
+      layer.msg("需要分配至少一个试验检测人员", { icon: 5 });
+      return;
+    }
+    //提交数据
+    if (fristConfirm) {
+      fristConfirm = !fristConfirm;
+      var index = '';
+      $.ajax({
+        type: "POST",
+        async: true,
+        url: "unAssignedTaskController.do?assignTaskWithObject",
+        data: {
+          'sampleIds': sampleIds,
+          'testPersonIds': testPersonIds,
+          'reportPersonIds': reportPersonIds,
+          'recheckPersonIds': recheckPersonIds,
+          'auditPersonIds': auditPersonIds,
+          'approverIds': approverIds,
+          'testTaskId': testTaskId
+        },
+        dataType: "json",
+        beforeSend: function () {
+          index = layer.msg('加载中......', { icon: 16, shade: [0.5, '#f5f5f5'], scrollbar: false, offset: '50%', time: 100000 });
+        },
+        success: function (data) {
+          layer.close(index)
+          if (data.success) {
+            var testTaskIdArr = data.obj;
+            //分配成功,关闭窗口
+            layer.msg("操作成功", { icon: 6 });
+            parent.closeAssignWindow();
+            parent.InitObj.printTaskDistribution(testTaskIdArr);// 打印任务分配清单 
+            parent.layer.close(parent.layer.getFrameIndex(window.name));
+          } else {
+            fristConfirm = !fristConfirm;
+            layer.msg(data.msg, { icon: 5 })
+          }
+        }
+      });
+    }
+  }
+
+  //用于标识右边人员数里选中的人员加入到左边的哪个工作中
+  var whereFrom = "testPerson";
+
+  //初始化数据
+  $(document).ready(function () {
+    initTreeGridOfUsers();
+    initSampleInfo();
+    initOldAssignInfo();
+    //进入页面时默认不展示人员选择板块
+    $(".easyui-layout").layout('collapse', 'east');
+    // common.js里的此函数是获取按钮或功能权限的 勿删
+    funCode('taskAssignByParam','', funCodeCallback)
+
+  })
+
+  //判定是否显示跳转按参数分配的页面超链接
+  function funCodeCallback(res, objParam) {
+    console.log(res, objParam)
+    if (res.obj && res.obj.length > 0) {
+      $.each(res.obj, function (i, v) {
+        if (objParam.codes === v.functioncode) {
+          $('[data-funCode="' + v.functioncode + '"]').show();
+        }
+      })
+    }
+    if (!($("#buttonToParamAssign").is(':hidden'))) {
+      var selectedSample = parent.getSelectRows();
+      if (selectedSample.length > 1) {
+        $("#buttonToParamAssign").hide();
+      } else {
+        $("#buttonToParamAssign").show();
+      }
+    }
+
+  }
+
+  //置空所有已勾选人员,并将whereFrom变量更新为当前的
+  function toChooseUser(where) {
+    whereFrom = where;
+    treegrid.treegrid('uncheckAll');
+    treegrid.treegrid('unselectAll');
+    treegrid.treegrid('clearChecked');
+    treegrid.treegrid('clearSelections');
+    if ('approver' === where) {
+      treegrid.treegrid({ 'singleSelect': true });
+    } else {
+      treegrid.treegrid({ 'singleSelect': false });
+    }
+    $(".easyui-layout").layout('expand', 'east');
+  }
+  //调用时获取全部选中人员,根据whereFrom变量决定将这些人员写入哪里
+  function chooseUser() {
+    var checked = $('#treeGridOfUsers').datagrid('getSelections');
+    switch (whereFrom) {
+      case 'testPerson':
+        $("#testPersonSpan").html("");
+        testPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            $("#testPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            testPersonIds += value.id + ",";
+          }
+        });
+        break;
+      case 'reportPerson':
+        $("#reportPersonSpan").html("");
+        reportPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            $("#reportPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            reportPersonIds += value.id + ",";
+          }
+        });
+        break;
+      case 'recheckPerson':
+        $("#recheckPersonSpan").html("");
+        recheckPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            $("#recheckPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            recheckPersonIds += value.id + ",";
+          }
+        });
+        break;
+      case 'auditPerson':
+        $("#auditPersonSpan").html("");
+        auditPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            $("#auditPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            auditPersonIds += value.id + ",";
+          }
+        });
+        break;
+      case 'approver':
+        $("#approverSpan").html("");
+        approverIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            $("#approverSpan").append('&emsp;<span>' + value.name + '</span>');
+            approverIds += value.id + ",";
+          }
+        });
+        break;
+      default: break;
+    }
+  }
+
+  //初始化样品信息
+  function initSampleInfo() {
+    $("#sampleInfoDiv").html("");
+    var asample = "";
+    var selectedRows = parent.getSelectRows();
+    $.each(selectedRows, function (index, value) {
+      asample = value.test_sample_display_name;
+      console.log(asample);
+      if (value.test_object_code && value.test_object_code.length > 0) {
+        asample += "(" + value.test_object_code + ")";
+        console.log(asample);
+      }
+      if (value.partAndUse && value.partAndUse.length > 0) {
+        asample += "(" + value.partAndUse + ")";
+        console.log(asample);
+      }
+      $("#sampleInfoDiv").append('<p>' + asample + '</p>');
+      sampleIds += value.sampleId + ',';
+    });
+  }
+
+  //加载之前的分配信息
+  function initOldAssignInfo() {
+    var selectedRows = parent.getSelectRows();
+    if (selectedRows.length == 1) {
+      var testObjectId = selectedRows[0].sampleId;
+      $.ajax({
+        type: "POST",
+        async: true,
+        url: "assignedTaskController.do?getObjectTasks",
+        data: "testObjectId=" + testObjectId,
+        dataType: "json",
+        success: function (data) {
+          if (data.success) {
+            if (data.obj.length > 0) {
+              var task = data.obj[0];
+              //初始化传回后台的参数
+              if (task.testPersonIds) {
+                testPersonIds = task.testPersonIds;
+              }
+              if (task.reportPersonIds) {
+                reportPersonIds = task.reportPersonIds;
+              }
+              if (task.recheckPersonIds) {
+                recheckPersonIds = task.recheckPersonIds;
+              }
+              if (task.auditPersonIds) {
+                auditPersonIds = task.auditPersonIds;
+              }
+              if (task.approverIds) {
+                approverIds = task.approverIds;
+              }
+              if (task.testTaskId) {
+                testTaskId = task.testTaskId;
+              }
+
+              //初始化人员选择展示的内容
+              if (task.testPersonNames) {
+                $("#testPersonSpan").append('&emsp;<span>' + task.testPersonNames + '</span>');
+              }
+              if (task.reportPersonNames) {
+                $("#reportPersonSpan").append('&emsp;<span>' + task.reportPersonNames + '</span>');
+              }
+              if (task.recheckPersonNames) {
+                $("#recheckPersonSpan").append('&emsp;<span>' + task.recheckPersonNames + '</span>');
+              }
+              if (task.auditPersonNames) {
+                $("#auditPersonSpan").append('&emsp;<span>' + task.auditPersonNames + '</span>');
+              }
+              if (task.approverNames) {
+                $("#approverSpan").append('&emsp;<span>' + task.approverNames + '</span>');
+              }
+            }
+          } else {
+            layer.msg(data.msg, { icon: 6 });
+          }
+        }
+      });
+    }
+  }
+
+  //初始化人员选择的treegrid
+  var allData = new Array();
+  var treegrid;
+  function initTreeGridOfUsers() {
+    var bFound = true;//标识首次加载
+    var selectedRows = parent.getSelectRows();
+    var consignId = "";
+    $.each(selectedRows, function (i, n) {
+      consignId += n["consignId"] + ",";
+    });
+    consignId = consignId.substr(0, consignId.length - 1);
+    var queryParams = {};
+    queryParams["consignId"] = consignId;
+    treegrid = $('#treeGridOfUsers').treegrid({
+      url: basePath + '/taskAssignedController.do?usersInfo',
+      idField: 'id',
+      treeField: 'name',
+      queryParams: queryParams,
+      fit: true,
+      loadMsg: loadMsgDatagrid,
+      rownumbers: false,
+      checkOnSelect: true,
+      selectOnCheck: true,
+      singleSelect: false,
+      fitColumns: true,
+      scrollbarSize: 18,
+      striped: true,
+      loadFilter: function (data) {
+        if (bFound) {
+          allData = data;
+          bFound = false;
+        }
+        return data;
+      },
+      columns: [[
+        { title: 'ID', field: 'id', checkbox: true },
+        { title: '类型', field: 'type', hidden: true },
+        { title: '部门/人员', field: 'name', width: 50 },
+        { title: '当前任务量', field: 'taskCount', width: 20 }
+      ]],
+      onSelect: function (row) {
+        t = $(this);
+        opts = t.treegrid("options");
+        var idField = opts.idField, id = row[idField];
+        //如果当前节点被勾选,那么勾选该节点的子节点
+        $.each(t.treegrid("getChildren", id), function (i, n) {
+          t.treegrid("select", n[idField]);
+        });
+        //检查目前选中的全部人员,并更新左边的人员表
+        chooseUser();
+      },
+      onUnselect: function (row) {
+        t = $(this);
+        opts = t.treegrid("options");
+        var idField = opts.idField, id = row[idField];
+        $.each(t.treegrid("getChildren", id), function (i, n) {
+          t.treegrid("unselect", n[idField]);
+        });
+        //检查目前选中的全部人员,并更新左边的人员表
+        chooseUser();
+      }
+    });
+  }
+
+  //人员选择框本地搜索功能
+  function doFilter() {
+    //装筛选结果的数组
+    var newData = new Array();
+    var filter = $("#userNameLike").val();
+    if (allData.length == 0) {
+      return false;
+    }
+    var dataRows = allData.rows;
+    for (var i = 0; i < dataRows.length; i++) {
+      if (dataRows[i].name.indexOf(filter) >= 0) {
+        //先匹配的是部门名字,如果部门匹配上了,直接全部门放到newData里面
+        newData.push(dataRows[i]);
+      } else {
+        //如果部门没有匹配上,继续处理部门下的人员
+        var persons = dataRows[i].children;
+        if (persons.length > 0) {
+          for (var j = 0; j < persons.length; j++) {
+            //匹配人名
+            if (persons[j].name.indexOf(filter) >= 0) {
+              newData.push(persons[j]);
+            }
+          }
+        }
+      }
+    }
+    if (filter == "") {
+      $('#treeGridOfUsers').treegrid('loadData', allData);
+    } else {
+      $('#treeGridOfUsers').treegrid('loadData', newData);
+    }
+  }
+
+  // ------------------ 工具类 -----------------
+  //获取地址栏参数的方法
+  function GetQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+  }
+  function removeEndComma(str) {
+    if (str.charAt(str.length - 1) == ',') {
+      return str.substring(0, str.length - 1);
+    }
+    return str;
+  }
+</script>
+
+</html>

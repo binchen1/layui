@@ -1,0 +1,264 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@page import="org.jeecgframework.core.util.SysThemesUtil,org.jeecgframework.core.enums.SysThemesEnum"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta charset="utf-8" />
+  <title>试验检测管理信息系统</title>
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <link href="plug-in/assets/css/asidenav.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/bootstrap-3.3.7-dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/menuStrap.css" />
+  <script type="text/javascript" src="plug-in/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="plug-in/hplus/hplus-tab.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script src="plug-in/jquery-plugs/storage/jquery.storageapi.min.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/asidenav.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>试验检测管理信息系统</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../bootstrap-3.3.7/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/menuStrap.css">
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script type="text/javascript" src="../../bootstrap-3.3.7/js/bootstrap.min.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+</head>
+
+<body>
+  <div class="navbar navbar-duomi navbar-static-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/Admin/index.html" id="logo">配置管理系统（流量包月）111
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <ul id="accordion" class="nav nav-left" role="navigation">
+      <li class="active panel-heading panel">
+        <a href="consignUnitController.do?goAdd">
+          <i class="glyphicon glyphicon-th-large"></i>
+          首页
+        </a>
+      </li>
+      <li class="panel-heading panel">
+        <a href="#systemSetting" class="collapsed" data-toggle="collapse" data-parent="#accordion">
+          <i class="glyphicon glyphicon-cog"></i>
+          系统管理
+          <span class="pull-right glyphicon glyphicon-chevron-down"></span>
+        </a>
+        <ul id="systemSetting" class="nav panel-collapse collapse item-body">
+          <li class="panel-heading panel"><a href="#" class="collapsed"><i
+                class="glyphicon glyphicon-user"></i>用户管理1</a></li>
+          <li class="panel-heading panel"><a href="#" class="collapsed"><i
+                class="glyphicon glyphicon-th-list"></i>菜单管理1</a></li>
+          <li class="panel-heading panel"><a href="#" class="collapsed"><i
+                class="glyphicon glyphicon-asterisk"></i>角色管理1</a></li>
+          <li class="panel-heading panel"><a href="#" class="collapsed"><i
+                class="glyphicon glyphicon-edit"></i>修改密码1</a></li>
+          <li class="panel-heading panel"><a href="#" class="collapsed"><i
+                class="glyphicon glyphicon-eye-open"></i>日志查看1</a></li>
+        </ul>
+      </li>
+      <li class="panel-heading panel">
+        <a href="#systemSetting1" class="collapsed" data-toggle="collapse" data-parent="#accordion">
+          <i class="glyphicon glyphicon-credit-card"></i>
+          物料管理
+          <span class="pull-right glyphicon glyphicon-chevron-down"></span>
+        </a>
+        <ul id="systemSetting1" class="nav panel-collapse collapse item-body">
+          <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-user"></i>用户管理2</a></li>
+          <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-th-list"></i>菜单管理2</a></li>
+          <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-asterisk"></i>角色管理2</a></li>
+          <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-edit"></i>修改密码2</a></li>
+          <li class="panel-heading panel"><a href="#systemSetting2" class="collapsed" data-toggle="collapse"
+              data-parent="#systemSetting1">
+              <i class="glyphicon glyphicon-credit-card"></i>
+              物料管理2
+              <span class="pull-right glyphicon glyphicon-chevron-down"></span>
+            </a>
+            <ul id="systemSetting2" class="nav panel-collapse collapse item-body ">
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-user"></i>用户管理</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-th-list"></i>菜单管理</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-asterisk"></i>角色管理</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-edit"></i>修改密码</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-eye-open"></i>日志查看</a></li>
+            </ul>
+          </li>
+          <li class="panel-heading panel"> <a href="#systemSetting3" class="collapsed" data-toggle="collapse"
+              data-parent="#systemSetting1">
+              <i class="glyphicon glyphicon-credit-card"></i>
+              物料管理3
+              <span class="pull-right glyphicon glyphicon-chevron-down"></span>
+            </a>
+            <ul id="systemSetting3" class="nav panel-collapse collapse item-body ">
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-user"></i>用户管理</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-th-list"></i>菜单管理</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-asterisk"></i>角色管理</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-edit"></i>修改密码</a></li>
+              <li class="panel-heading panel"><a href="#"><i class="glyphicon glyphicon-eye-open"></i>日志查看</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li class="panel-heading panel">
+        <a href="../../reportManageNew/approve/reportApproveList.html">
+          <i class="glyphicon glyphicon-globe"></i>
+          分发配置
+          <span class="label label-warning pull-right">5</span>
+        </a>
+      </li>
+      <li class="panel-heading panel">
+        <a href="../../reportManageNew/archive/reportArchiveAddress.html">
+          <i class="glyphicon glyphicon-calendar"></i>
+          图表统计
+        </a>
+      </li>
+      <li class="panel-heading panel">
+        <a href="../../reportManageNew/create/reportCreateList.html">
+          <i class="glyphicon glyphicon-fire"></i>
+          关于系统
+        </a>
+      </li>
+    </ul>
+    <div class="middle-box">
+      <div class="row content-tabs">
+        <button class="roll-nav roll-left J_tabLeft"><i class="fa fa-backward"></i>
+        </button>
+        <nav class="page-tabs J_menuTabs">
+          <div class="page-tabs-content">
+            <a href="javascript:;" class="active J_menuTab" data-id="homePageController.do?goHomePage">首页</a>
+          </div>
+          <button class="roll-nav roll-right J_tabRight" style="right: 90px;">
+            <i class="fa fa-forward"></i>
+          </button>
+          <div class="btn-group roll-nav roll-right">
+            <button class="dropdown J_tabClose" data-toggle="dropdown" style="right:20px;">
+              关闭操作<span class="caret"></span>
+            </button>
+            <ul role="menu" class="dropdown-menu dropdown-menu-right">
+              <li class="J_tabShowActive"><a>定位当前选项卡</a></li>
+              <li class="J_tabCloseAll"><a>关闭全部选项卡</a></li>
+              <li class="J_tabCloseOther"><a>关闭其他选项卡</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+      <div class="row J_mainContent" id="content-main" style="margin-left:-13px;">
+        <iframe class="J_iframe" name="iframe0" width="100%" height="100%" src="homePageController.do?goHomePage"
+          frameborder="0" data-id="homePageController.do?goHomePage" seamless></iframe>
+      </div>
+    </div>
+  </div>
+  <div id="asidenav-box"></div>
+
+
+  <script>
+
+    $(function () {
+      $(".collapsed").click(function (e) {
+        /*切换折叠指示图标*/
+        $(this).find("span").toggleClass("glyphicon-chevron-down");
+        $(this).find("span").toggleClass("glyphicon-chevron-up");
+        // var obj = $("#collapseListGroup1");
+        // obj.toggleClass("panel-collapse collapse");
+        // obj.toggleClass("panel-collapse collapse in");
+        console.log('$(this)', $(this))
+      });
+      $("#accordion").on("click", "a", function (e) {
+        var url = $(this).attr('href');
+        var name = $(this).text();
+        console.log(url, name)
+        console.log('$(this)a', $(this))
+        jumpPage(url, name)
+      });
+    });
+    function jumpPage(url, name) {
+      var id = "1";
+      console.log(window)
+      window.parent.addTabs({ "id": id, "title": name, "close": false, "url": url });
+    }
+    //新增iframe中绑定click事件回调父级函数
+    function bindFrameClick() {
+      $(".J_iframe").contents().find("body").attr("onclick", "parent.frameBodyClick()");
+    }
+
+    function closeCurrentWin() {
+      //$("i[class='fa fa-times-circle']",window.parent.document).trigger("click");
+      //关闭当前tab
+      var tab = $(".J_menuTab.active");
+      $(tab).find("i[class='fa fa-times-circle']").trigger("click"); //触发小红×的点击事件
+    }
+    function refreshMainTab() {
+      var loading = layer.load();
+      var tab = $(".J_menuTab.active");
+      //切换到第一个tab，并刷新，即是首页
+      var firstA = $(tab).parent().find("a").get(0);
+      var target = $('.J_iframe[data-id="' + $(firstA).data('id') + '"]');
+      if (target == undefined) {
+        target = $('.J_iframe[data-id="' + $(this).parent().data('id') + '"]');
+      }
+      var url = target.attr('src');
+      //显示loading提示
+
+
+      //调用首页标签刷新表格函数，
+      target.get(0).contentWindow.reloadTable();
+
+      $(tab).find("i[class='fa fa-times-circle']").trigger("click"); //触发小红×的点击事件
+
+      layer.close(loading);
+    }
+    // $('.collapse').collapse('toggle');//反转折叠区域
+    $(function () {
+      $("#nav-test").on("click", "li", function () {      //只需要找到你点击的是哪个ul里面的就行
+        $("#nav-test img").each(function () {
+          var imgSrcAll = $(this).attr('src');
+          if (imgSrcAll.indexOf('main_menu_white') > -1) {
+            var imgSrcAll2 = imgSrcAll.replace('main_menu_white', 'main_menu')
+            $(this).attr('src', imgSrcAll2)
+          }
+        });
+        $(this).addClass('active').siblings().removeClass('active');
+        var imgSrc = $(this).find('img').attr('src');
+        if (imgSrc.indexOf('main_menu_white') > -1) { } else {
+          var imgSrc2 = imgSrc.replace('main_menu', 'main_menu_white')
+          $(this).find('img').attr('src', imgSrc2)
+        }
+        var thisHtml = $(this).find('p').html();
+        $('#content').html(thisHtml);
+        if ('首页' === thisHtml) {
+          $('#side-div').show();
+          $('#side-nav').hide();
+        } else {
+          $('#side-div').hide();
+          $('#side-nav').show();
+        }
+      });
+
+    })
+  </script>
+</body>
+
+</html>

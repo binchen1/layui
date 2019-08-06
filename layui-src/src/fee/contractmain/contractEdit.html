@@ -1,0 +1,1093 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增编辑合同</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+
+  <style>
+    body.body-box {
+      position: relative;
+    }
+    .layui-form-checkbox[lay-skin=primary] {
+      margin-top: 4px;
+    }
+
+    .ownerSelect {
+      position: absolute;
+      right: 1px;
+      top: 1px;
+      line-height: 22px;
+      width: 36px;
+      text-align: center;
+      background: #eee;
+    }
+  </style>
+</head>
+
+<body class="body-box">
+  <form id="commonQueryForm" class="layui-form">
+    <div id="contractInfo">
+      <div class="layui-row">
+        <div class="layui-col-xs6">
+          <label class="layui-form-label"> <span class="layui-color-red">*</span> 合同收支类别：</label>
+          <div class="layui-input-block">
+            <input type="radio" name="feeType" value="1" lay-filter="feeType" title="收款合同" checked>
+            <input type="radio" name="feeType" value="2" lay-filter="feeType" title="付款合同">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label"> <span class="layui-color-red">*</span> 合同类别：</label>
+          <div class="layui-input-block">
+            <input type="radio" name="contractType" value="1" lay-filter="gis" title="检测合同" checked>
+            <input type="radio" name="contractType" value="2" lay-filter="gis" title="非检测合同">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label"> <span class="layui-color-red">*</span> 合同名称：</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label"> <span class="layui-color-red">*</span> 合同编号：</label>
+          <div class="layui-input-block">
+            <input type="text" name="no" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label"> <span class="layui-color-red">*</span> 合同方：</label>
+          <div class="layui-input-block" id="collect-box" style="display:none">
+            <input type="text" list="projectNameIds" onblur="InitObj.projectNameBlur()" name="unitNameInput"
+              autocomplete="off" class="layui-input">
+            <datalist id="projectNameIds"></datalist>
+            <input type="hidden" name="unitIdInput">
+          </div>
+          <div class="layui-input-block" id="pay-box">
+            <select id="unitIdSel" lay-filter="unitSelected">
+              <option value="1" selected="">全包合同</option>
+              <option value="2">折扣合同</option>
+              <option value="3">部分包干合同</option>
+              <option value="4">参数指定合同</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">签字日期：</label>
+          <div class="layui-input-block">
+            <input type="text" name="signingDate" class="layui-input" id="signingDate" autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">生效日期：</label>
+          <div class="layui-input-block">
+            <input type="text" name="availabilityDate" class="layui-input" id="availabilityDate" autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">失效日期：</label>
+          <div class="layui-input-block">
+            <input type="text" name="expiryDate" class="layui-input" id="expiryDate" autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">合同金额：</label>
+          <div class="layui-input-block">
+            <input type="text" name="totalFee" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">是否用于收费：</label>
+          <div class="layui-input-block">
+            <input type="checkbox" lay-skin="primary" name="scope" title="勾选后，可在收费时选择本合同进行支付">
+          </div>
+        </div>
+        <div class="layui-col-xs6" id="implement-select">
+          <label class="layui-form-label">费用执行方式：</label>
+          <div class="layui-input-block">
+            <select name="type" lay-filter="aihao">
+              <option value="1" selected="">全包合同</option>
+              <option value="2">折扣合同</option>
+              <option value="3">部分包干合同</option>
+              <option value="4">参数指定合同</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-col-xs6" id="implement-depositRate" style="display:none;">
+          <label class="layui-form-label">折扣率：</label>
+          <div class="layui-input-block">
+            <input type="number" name="depositRate" onkeyup="InitObj.depositRateChange(event)" class="layui-input"
+              autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">联系电话：</label>
+          <div class="layui-input-block">
+            <input type="text" name="phone" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">负责人：</label>
+          <div class="layui-input-block">
+            <input type="text" readonly unselectable="on" name="ownerName" onclick="InitObj.ownerSelectFun()"
+              class="layui-input" autocomplete="off">
+            <input type="hidden" name="owner">
+            <a class="ownerSelect" onclick="InitObj.ownerSelectFun()">选择</a>
+          </div>
+        </div>
+        <div class="layui-col-xs6">
+          <label class="layui-form-label">备注：</label>
+          <div class="layui-input-block">
+            <input type="text" name="remarks" class="layui-input" autocomplete="off">
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layui-collapse" lay-filter="collapse-content">
+      <div class="layui-colla-item" id="dataGridContentBox" style="display:none">
+        <h2 class="layui-colla-title">合同内容</h2>
+        <div class="layui-colla-content layui-show" style="height:150px;padding-bottom: 40px">
+          <table class="easyui-datagrid" id="dataGridContent"></table>
+          <div>
+            <a class="layui-btn layui-btn-sm border-none" onclick="InitObj.addContent()">
+              <i class="layui-icon">&#xe61f;</i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-colla-item">
+        <h2 class="layui-colla-title">合同附件</h2>
+        <div class="layui-colla-content layui-show">
+          <table class="easyui-datagrid" id="dataGridEnclosure" style="height:150px"></table>
+          <div>
+            <a class="layui-btn layui-btn-sm border-none" onclick="InitObj.addEnclosure()">
+              <i class="layui-icon">&#xe61f;</i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-colla-item">
+        <h2 class="layui-colla-title">适用项目</h2>
+        <div class="layui-colla-content layui-show">
+          <table class="easyui-datagrid" id="dataGridProject" style="height:150px"></table>
+          <div>
+            <a class="layui-btn layui-btn-sm border-none" onclick="InitObj.addProject()">
+              <i class="layui-icon">&#xe61f;</i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-colla-item">
+        <h2 class="layui-colla-title">回款计划</h2>
+        <div class="layui-colla-content layui-show">
+          <table class="easyui-datagrid" id="dataGridPlan" style="height:150px"></table>
+          <div>
+            <a class="layui-btn layui-btn-sm border-none" onclick="InitObj.addPlan()">
+              <i class="layui-icon">&#xe61f;</i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="userName" value="${LOCAL_CLINET_USER.realName}">
+
+  </form>
+  <script>
+    $(function () {
+      layui.use(['laydate', 'layer', 'element', 'form'], function () {
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        var element = layui.element;
+        var form = layui.form;
+        form.render();
+        //监听折叠
+        element.on('collapse(collapse-content)', function (data) {
+          // console.log('data', data)
+        });
+        InitObj.init(laydate, form);
+        laydate.render({
+          elem: '#availabilityDate',
+          trigger: 'click'
+        });
+        laydate.render({
+          elem: '#expiryDate',
+          trigger: 'click'
+        });
+        laydate.render({
+          elem: '#signingDate',
+          trigger: 'click'
+        });
+      });
+    })
+
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': [],
+      'fileSize': '',
+      'numbers': 1,
+      // 'accepts': 'images',
+      'filesChapter': [],
+      'filesQualification': [],
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      if (filesObj.files.length > 0) {
+        filesObj.files = filesObj.files.concat(res);
+        InitObj.addToForm(filesObj.files)
+      } else {
+        filesObj.files = res;
+        InitObj.addToForm(res);
+      }
+    }
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      if (filesObj.filesChapter.length > 0 && filesObj.filesChapter[0].id === accessoryId) {
+        filesObj.files = [];
+        filesObj.filesChapter = [];
+        uploadCallBack([])
+        return;
+      }
+      if (filesObj.filesQualification.length > 0 && filesObj.filesQualification[0].id === accessoryId) {
+        filesObj.files = [];
+        filesObj.filesQualification = [];
+        uploadCallBack([])
+        return;
+      }
+    }
+
+
+    var InitObj = {
+      laydateLayerM: null,
+      formLayerM: null,
+      saveContractUrl: 'contractController.do?saveContractInfo',
+      detailUrl: 'contractController.do?getContractInfo',
+      getConsignUnit: 'consignUnitController.do?getConsignUnitCombobox',
+      contractId: GetQueryString("contractId"), // 获取父页面传递过来的id 
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      contentData: [],
+      enclosureData: [],
+      projectData: [],
+      planData: [],
+      dataGridContent: null,
+      dataGridEnclosure: null,
+      dataGridProject: null,
+      dataGridPlan: null,
+      uploadAIndex: '',  // 点击上传
+      unitIndex: '',  // 点击单位
+      projectIndex: '', // 点击项目
+      userName: $('#userName').val(),
+      implementSelect: $('#implement-select'), // 费用执行方式
+      dataGridContentBox: $('#dataGridContentBox'), // 合同内容
+      feeTypes: $('input[name="feeType"]'),
+      btnNum: '', // 完成登记，保存，取消 按钮
+      init: function (laydate, form) {   // 页面初始化
+        var that = InitObj;
+        this.laydateLayerM = laydate;
+        this.formLayerM = form;
+        this.formLayerM.on('radio(feeType)', function (data) {
+          if ('2' === data.value) {
+            $('#collect-box').show();
+            $('#pay-box').hide();
+          } else {
+            $('#collect-box').hide();
+            $('#pay-box').show();
+          }
+        });
+        this.formLayerM.on('radio(gis)', function (data) {
+          if ('2' === data.value) {
+            that.implementSelect.hide();
+            that.dataGridContentBox.hide();
+          } else {
+            that.implementSelect.show();
+          }
+        });
+        this.formLayerM.on('select(aihao)', function (data) {
+          if ('2' === data.value) {
+            $('#implement-depositRate').show();
+          } else {
+            $('#implement-depositRate').hide();
+          }
+          if ('1' === data.value || '2' === data.value) {
+            that.dataGridContentBox.hide();
+          } else {
+            that.dataGridContentBox.show();
+            that.initDataGridContent(that.columnsContent());
+          }
+        });
+        this.formLayerM.on('select(unitSelected)', function (data) {
+          var names = $(data.elem).find("[value='" + data.value + "']").html();
+          if (that.isAddProject(data.value)) {
+            that.addProject(data.value, names)
+          }
+        });
+        ajaxRequest(this.getConsignUnit, {}, this.getConsignUnitAjaxCall, true, true);
+        if (this.contractId) {
+          this.detailEdit();
+        } else {
+          this.detailEditCallback()
+        }
+      },
+      // 查看报告详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, {
+          "id": this.contractId
+        }, this.detailEditCallback, false, true)
+      },
+      isAddProject: function (ids) {
+        var projectObjs = this.dataGridProject.datagrid('getData');
+        for (var i = 0; i < projectObjs.rows.length; i++) {
+          if (ids === projectObjs.rows[i].unitId) {
+            return false;
+          }
+        }
+        return true;
+      },
+      // 选择合同负责人
+      ownerSelectFun: function () {
+        layerOpenFun('userController.do?goUserSelect', '选择负责人', ['70%', '90%'], ['确定', '取消'], InitObj.ownerSelectCall);
+      },
+      ownerSelectCall: function (res, index) {
+        index ? layer.close(index) : '';
+        $('input[name="ownerName"]').val(res[0].realName);
+        $('input[name="owner"]').val(res[0].id);
+      },
+      // 获取合同方回调
+      getConsignUnitAjaxCall: function (res) {
+        var that = InitObj;
+        if (res.length > 0) {
+          var htm = '', html2 = '';
+          $.each(res, function (i, v) {
+            htm += '<option data-index="' + i + '" data-id="' + v.id + '" value = "' + v.text + '" />'
+            html2 += '<option value = "' + v.id + '" >' + v.text + '</option>'
+          })
+          $('#projectNameIds').html(htm);
+          $('#pay-box select').html(html2);
+          if ('1' === that.feeTypes.val() && !that.contractId) {
+            that.addProject(res[0].id, res[0].text)
+          }
+        }
+        that.formLayerM.render();
+      },
+      // 光标离开后获取 合同方
+      projectNameBlur: function () {
+        var names = $('input[name="unitNameInput"]').val();
+        var ids = $('option[value="' + names + '"]').attr('data-id');
+        if (ids) {
+          $('input[name="unitIdInput"]').val(ids);
+          if (that.isAddProject(ids)) {
+            this.addProject(ids, names)
+          }
+        } else {
+          $('input[name="unitIdInput"]').val('');
+        }
+      },
+      detailEditData: function (contractInfo) {
+        $('input[name="feeType"][value="' + contractInfo.feeType + '"]').attr('checked', true).siblings().attr('checked', false);
+        if ('1' === contractInfo.feeType) { // 合同收支类型 收款合同
+          $('select#unitIdSel').val(contractInfo.unitId);
+        } else {
+          $('#collect-box').show();
+          $('#pay-box').hide();
+          $('input[name="unitNameInput"]').val(contractInfo.unitName);
+          contractInfo.unitId ? $('input[name="unitIdInput"]').val(contractInfo.unitId) : '';
+        }
+        $('input[name="contractType"][value="' + contractInfo.contractType + '"]').attr('checked', true).siblings().attr('checked', false);
+        if ('1' === contractInfo.contractType) { // 合同类型
+          this.implementSelect.show();
+          $('select[name="type"]').val(contractInfo.type);
+          if ('2' === contractInfo.type) {
+            $('#implement-depositRate').show();
+            contractInfo.depositRate ? $('input[name="depositRate"]').val(contractInfo.depositRate) : '';
+          }
+        } else {
+          this.implementSelect.hide();
+        }
+        $('input[name="name"]').val(contractInfo.name);
+        $('input[name="no"]').val(contractInfo.no);
+
+
+        var signingDate = contractInfo.signingDate ? new Date(contractInfo.signingDate).Format("yyyy-MM-dd") : ''
+        $('input[name="signingDate"]').val(signingDate);
+        var availabilityDate = contractInfo.availabilityDate ? new Date(contractInfo.availabilityDate).Format("yyyy-MM-dd") : ''
+        $('input[name="availabilityDate"]').val(availabilityDate);
+        var expiryDate = contractInfo.expiryDate ? new Date(contractInfo.expiryDate).Format("yyyy-MM-dd") : ''
+        $('input[name="expiryDate"]').val(expiryDate);
+        contractInfo.totalFee ? $('input[name="totalFee"]').val(contractInfo.totalFee) : '';
+        contractInfo.phone ? $('input[name="phone"]').val(contractInfo.phone) : '';
+        '1' === contractInfo.scope ? $('input[name="scope"]').attr('checked', true) : "";
+        contractInfo.ownerName ? $('input[name="ownerName"]').val(contractInfo.ownerName) : '';
+        contractInfo.owner ? $('input[name="owner"]').val(contractInfo.owner) : '';
+        contractInfo.remarks ? $('input[name="remarks"]').val(contractInfo.remarks) : '';
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        // var selected = $('#implement-select option:selected').val();
+        var selected = this.implementSelect.find('option:selected').val();
+        if ('1' === selected || '2' === selected) {
+          this.dataGridContentBox.hide();
+        } else {
+          this.dataGridContentBox.show();
+        }
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务 
+          $('a:not(".attachmenttitle")').hide();
+          $("input").attr('readonly', true);
+          $("input[id='availabilityDate']").attr('disabled', true);
+          $("input[id='expiryDate']").attr('disabled', true);
+          $("input[id='signingDate']").attr('disabled', true);
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true);
+          $('select').attr('disabled', true);
+
+          this.formLayerM.render();
+        }
+
+      },
+      detailEditCallback: function (res) {
+        var that = InitObj;
+        if (res && res.success && res.obj) {
+          that.contentData = res.obj.contractContents || [];
+          that.enclosureData = res.obj.attachments || [];
+          that.projectData = res.obj.contractProjects || [];
+          that.planData = res.obj.repayments || [];
+          res.obj.contract ? that.detailEditData(res.obj.contract) : '';
+        }
+        that.initDataGridContent(that.columnsContent());
+        that.initDataGridEnclosure(that.columnsEnclosure());
+        that.initDataGridProject(that.columnsProject());
+        that.initDataGridPlan(that.columnsPlan());
+      },
+      openCallback: function (btnNum) { // 点击确定按钮，返回值给上级页面
+        this.btnNum = btnNum;
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            this.contractId ? saveParam.contractInfo.id = this.contractId : '';
+            var dataJson = {
+              "contractInfo": JSON.stringify(saveParam.contractInfo),
+              "attIds": saveParam.attIds,
+              "contractContent": JSON.stringify(saveParam.contractContent),
+              "repayment": JSON.stringify(saveParam.repayment),
+              "useProject": JSON.stringify(saveParam.useProject)
+            }
+            ajaxRequest(this.saveContractUrl, dataJson, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          var msg = res.msg || '操作失败';
+          layerAlertFun(msg, 5, []);
+          return;
+        } else {
+
+          if (that.btnNum) {
+            var relationObjId = res.obj;
+            var typeAudit = (that.contractId ? '6' : '5');
+            var urlParam = "&type=" + typeAudit + "&relationObjId=" + relationObjId;
+            layerOpenFun('contractController.do?goSubmitAudit' + urlParam, '提交审核', ['465px', '90%'], ['确定', '取消'])
+          } else {
+            parentThat.reloadDataGrid(false);
+            parent.layer.close(that.parentIndex); //再执行关闭 
+            parent.layerAlertFun(res.msg, 6, []);
+          }
+          return;
+        }
+      },
+      closeFun: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        parentThat.reloadDataGrid(false);
+        parent.layer.close(that.parentIndex); //再执行关闭 
+        parent.layerAlertFun(res, 6, []);
+      },
+      saveContent: function (queryParams) {
+        if (this.dataGridContent) {
+          var contentObjs = this.dataGridContent.datagrid('getData');
+          for (var key in queryParams) {
+            if (key.indexOf('price') > -1) {
+              queryParams[key] = getFloatStr(queryParams[key])
+              this.submitData(contentObjs.rows, key, queryParams[key], 'price')
+            }
+          }
+          return contentObjs.rows;
+        }
+      },
+
+      saveAttIds: function () {
+        if (this.dataGridEnclosure) {
+          var enclosureObjs = this.dataGridEnclosure.datagrid('getData'), attIds = '';
+          for (var i = 0; i < enclosureObjs.rows.length; i++) {
+            attIds += enclosureObjs.rows[i].id + ',';
+          }
+          return attIds.slice(0, -1);
+        }
+      },
+      savePlan: function (queryParams) {
+        if (this.dataGridPlan) {
+          var planObjs = this.dataGridPlan.datagrid('getData');
+          for (var key in queryParams) {
+            if (key.indexOf('appointBackDate') > -1) {
+              this.submitData(planObjs.rows, key, queryParams[key], 'appointBackDate')
+            }
+            if (key.indexOf('appointFee') > -1) {
+              queryParams[key] = getFloatStr(queryParams[key])
+              this.submitData(planObjs.rows, key, queryParams[key], 'appointFee')
+            }
+            if (key.indexOf('remark') > -1 && key !== "remarks") {
+              this.submitData(planObjs.rows, key, queryParams[key], 'remark')
+            }
+          }
+          return planObjs.rows;
+        }
+      },
+      saveProject: function (queryParams) {
+        if (this.dataGridProject) {
+          var projectObjs = this.dataGridProject.datagrid('getData');
+          return projectObjs.rows;
+        }
+      },
+      submitData: function (data, key, value, strKey) {
+        var keyArr = key.split(strKey);
+        data[keyArr[1]][strKey] = value;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if ('1' === this.feeTypes.val()) {
+          formdata.unitNameSel = $('select#unitIdSel option:selected').html();
+          formdata.unitIdSel = $('select#unitIdSel').val();
+        }
+        if (this.dataRequired(formdata)) {
+          // 保存数据
+          var saveParam = {
+            "contractInfo": {
+              "name": formdata.name, "feeType": formdata.feeType, "contractType": formdata.contractType,
+              "no": formdata.no, "unitId": formdata.unitId, "unitName": formdata.unitName, "signingDate": formdata.signingDate, "availabilityDate": formdata.availabilityDate,
+              "expiryDate": formdata.expiryDate, "totalFee": formdata.totalFee, "type": formdata.type, "phone": formdata.phone,
+              "ownerName": formdata.ownerName, "owner": formdata.owner, "remarks": formdata.remarks, "depositRate": formdata.depositRate,
+              "scope": formdata.scope ? "1" : "0"
+            },
+            "contractContent": this.saveContent(formdata),
+            "attIds": this.saveAttIds() || '',
+            "useProject": this.saveProject(formdata),
+            "repayment": this.savePlan(formdata)
+          }
+          if ('1' === formdata.feeType) {
+            saveParam.contractInfo.unitName = formdata.unitNameSel;
+            saveParam.contractInfo.unitId = formdata.unitIdSel;
+          } else {
+            saveParam.contractInfo.unitName = formdata.unitNameInput;
+            saveParam.contractInfo.unitId = formdata.unitIdInput;
+          }
+          return saveParam;
+        } else {
+          formTipFun(formdata.msg, formdata.element);
+          // 解决提示框显示位置与日期显示位置的冲突
+          setTimeout(function () {
+            $('body.body-box').css({ 'position': 'relative' });
+          }, 3000)
+        }
+        return false;
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.name) {
+          queryParams.msg = '合同名称不能为空'
+          queryParams.element = $('input[name="name"]')
+          return false;
+        }
+        if (!queryParams.no) {
+          queryParams.msg = '合同编号不能为空'
+          queryParams.element = $('input[name="no"]')
+          return false;
+        }
+        if ('2' === this.feeTypes.val()) {
+          if (!queryParams.unitNameInput) {
+            queryParams.msg = '合同方不能为空'
+            queryParams.element = $('input[name="unitNameInput"]')
+            return false;
+          }
+        }
+        if (queryParams.depositRate) {
+
+          // if (queryParams.depositRate <= 0 || queryParams.depositRate >= 1) {
+          //   queryParams.msg = '折扣率要在0与1之间'
+          //   queryParams.element = $('input[name="depositRate"]')
+          //   return false;
+          // } else {
+          queryParams.depositRate = parseFloat(queryParams.depositRate).toFixed(2)
+          // }
+        }
+        for (var key in queryParams) {
+          if (key.indexOf('appointFee') > -1) {
+            queryParams[key] = getFloatStr(queryParams[key])
+            if (parseFloat(queryParams[key]) <= 0) {
+              $('body.body-box').css({ 'position': 'static' });
+              queryParams.msg = '约定回款金额不能小于0';
+              queryParams.element = $('#dataGridPlan').siblings().find('input[name="' + key + '"]');
+              return false;
+            }
+          }
+        }
+        return true;
+      },
+      depositRateChange: function (event) {
+        var values = parseFloat($(event.target).val());
+        if (values) {
+          if (values <= 0 || values >= 1) {
+            formTipFun('折扣率要在0与1之间', $(event.target));
+            $(event.target).val('')
+          }
+        }
+      },
+      applyTitleAttribute: function (value, row, index, field) {
+        var values = value || '';
+        return '<input type="text"  name="' + field + index + '" class="layui-input"  value="' + values + '" autocomplete="off">';
+      },
+      // 添加合同
+      addContent: function () {
+        // var addurl = basePath + '/' + "feeContractMainController.do?paramsList=";
+        var addurl = basePath + '/' + "testParamController.do?list=";
+        contractLayer = layerOpenFun(addurl, '请选择参数', ['80%', '90%'], ['确定', '关闭'], this.qualificationLayerCallback, 'contractSelect');
+      },
+      // 选择资质类型回调 layer
+      qualificationLayerCallback: function (res, index) {
+        if (res) {
+          var that = InitObj;
+          layer.close(index);
+          var contentObjs = that.dataGridContent.datagrid('getData');
+          for (var i = 0; i < contentObjs.rows.length; i++) {
+            for (var j = 0; j < res.length; j++) {
+              if (contentObjs.rows[i].paramsId === res[j].paramsId) {
+                res.splice(j, 1);
+                // break;
+              }
+            }
+          }
+          contentObjs.total = contentObjs.total + res.length;
+          contentObjs.rows = contentObjs.rows.concat(res);
+          that.dataGridContent.datagrid('loadData', contentObjs);
+        }
+      },
+      deleteAjaxCall: function (res, param) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, [])
+        } else {
+          layerAlertFun(res.msg, 6, [])
+          // if ('deleteContent' === param.callName) {
+          //   that.deleteContent('', param.index)
+          // }
+          that[param.callName]('', param.index)
+        }
+      },
+      deleteContent: function (did, index) {
+        var that = InitObj;
+        if (did) { // 服务器删除
+          var param = { index: index, callName: 'deleteContent' }
+          ajaxRequest('contractController.do?delContractContent', { ids: did }, this.deleteAjaxCall, true, true, param);
+        } else {
+          var formdata = $('#commonQueryForm').serializeJSON(), contentObjs = {};
+          var data = this.saveContent(formdata);
+          data.splice(index, 1);
+          contentObjs.rows = JSON.parse(JSON.stringify(data));
+          contentObjs.total = data.length;
+          setTimeout(function () {
+            that.dataGridContent.datagrid('loadData', contentObjs);
+          }, 10);
+        }
+      },
+      // 添加附件
+      addEnclosure: function () {
+        var enclosureObjs = this.dataGridEnclosure.datagrid('getData');
+        if (enclosureObjs.total > 0) {
+          var lastName = enclosureObjs.rows[enclosureObjs.total - 1].name
+        }
+        enclosureObjs.total = enclosureObjs.total + 1;
+        var addObj = {
+          "id": "", "attachmenttitle": "", "tsuser": { realName: this.userName },
+          "createDate": new Date(new Date()).Format("yyyy-MM-dd")
+        };
+        enclosureObjs.rows.push(addObj);
+        this.dataGridEnclosure.datagrid('loadData', enclosureObjs);
+      },
+      // 删除附件
+      deleteEnclosure: function (did, index) {
+        var that = InitObj;
+        if (did) { // 服务器删除
+          var param = { index: index, callName: 'deleteEnclosure' }
+          ajaxRequest('contractController.do?delAttachment', { ids: did }, this.deleteAjaxCall, true, true, param);
+
+        } else {
+          var enclosureObjs = this.dataGridEnclosure.datagrid('getData');
+          enclosureObjs.rows = enclosureObjs.rows.slice(0, enclosureObjs.total - 1);
+          enclosureObjs.total = enclosureObjs.total - 1;
+          setTimeout(function () {
+            that.dataGridEnclosure.datagrid('loadData', enclosureObjs);
+          }, 10)
+
+        }
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArrs) {
+        var filesArr = filesArrs.slice(-filesObj.numbers);
+        filesObj.files = filesArr;
+        var enclosureObjs = this.dataGridEnclosure.datagrid('getData');
+        enclosureObjs.rows[this.uploadAIndex].attachmenttitle = filesArr[0].attachmenttitle;
+        enclosureObjs.rows[this.uploadAIndex].id = filesArr[0].id;
+
+        this.dataGridEnclosure.datagrid('loadData', enclosureObjs);
+      },
+      // 添加项目
+      addProject: function (ids, names) {
+
+        var projectObjs = this.dataGridProject.datagrid('getData');
+        projectObjs.total = projectObjs.total + 1;
+        var addObj = { "id": "", "unitId": ids || "", "unitName": names || "", "projectId": "", "projectName": "" };
+        projectObjs.rows.push(addObj);
+        this.dataGridProject.datagrid('loadData', projectObjs);
+      },
+      // 删除项目
+      deleteProject: function (did, index) {
+        var that = InitObj;
+        if (did) { // 服务器删除
+          var param = { index: index, callName: 'deleteProject' }
+          ajaxRequest('contractController.do?delUseProject', { ids: did }, this.deleteAjaxCall, true, true, param);
+
+        } else {
+          var projectObjs = this.dataGridProject.datagrid('getData');
+          projectObjs.rows = projectObjs.rows.slice(0, projectObjs.total - 1);
+          projectObjs.total = projectObjs.total - 1;
+          setTimeout(function () {
+            that.dataGridProject.datagrid('loadData', projectObjs);
+          }, 10);
+
+        }
+      },
+      // 回款计划
+      addPlan: function () {
+        var formdata = $('#commonQueryForm').serializeJSON(), existSubObjs = {};
+        var formdataObjs = this.savePlan(formdata);
+        existSubObjs.total = formdataObjs.length + 1;
+        existSubObjs.rows = formdataObjs;
+        // var planObjs = this.dataGridPlan.datagrid('getData');
+        // planObjs.total = planObjs.total + 1;
+        var addObj = {
+          "id": "", "appointBackDate": "", "appointFee": "", "remark": ""
+        };
+        existSubObjs.rows.push(addObj);
+        this.dataGridPlan.datagrid('loadData', existSubObjs);
+      },
+      // 删除回款计划
+      deletePlan: function (did, index) {
+        var that = InitObj;
+        if (did) { // 服务器删除
+          var param = { index: index, callName: 'deletePlan' }
+          ajaxRequest('contractController.do?delRepaymentPlan', { ids: did }, this.deleteAjaxCall, true, true, param);
+        } else {
+          var formdata = $('#commonQueryForm').serializeJSON(), planObjs = {};
+          var data = this.savePlan(formdata);
+          data.splice(index, 1);
+          planObjs.rows = data;
+          planObjs.total = data.length;
+          setTimeout(function () {
+            that.dataGridPlan.datagrid('loadData', planObjs);
+          }, 10)
+        }
+      },
+      columnsContent: function () {
+        var columns = []; that = this;
+        columns.push({ title: "ID", field: "id", hidden: true });
+        columns.push({ title: "资质类别", field: "qualificationTypeName", width: 30 });
+        columns.push({ title: "检测大类", field: "bigCategoryName", width: 20 });
+        columns.push({ title: "检测参数", field: "name", width: 30 });
+        columns.push({
+          title: "单价", field: "price", width: 30,
+          formatter: function (value, row, index) {
+            var values = formatMoney(getFloatStr(value), 2, '￥ ');
+            return that.applyTitleAttribute(values, row, index, 'price')
+          }
+        });
+        if (!this.detail) {
+          columns.push({
+            title: "", field: "opt", width: 10,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="删除" type="button" class="layui-btn layui-btn-sm layui-btn-edit" '
+              btns += 'onclick="InitObj.deleteContent(&quot;' + row.id + '&quot;,&quot;' + index + '&quot;)"><i class="layui-icon">&#xe640;</i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+      },
+      initDataGridContent: function (columns) {
+        var that = this;
+        this.dataGridContent = $('#dataGridContent').datagrid({
+          data: this.contentData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            that.detailDisplay()
+          }
+        });
+
+      },
+      uploadA: function (index) {
+        that.isChapter = true;
+        filesObj.files = filesObj.filesChapter;
+        this.uploadAIndex = index;
+        goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+      },
+      columnsEnclosure: function () {
+        var columns = []; that = this;
+        columns.push({
+          title: "ID", field: "id", hidden: true, formatter: function (value, row, index) {
+            return value;
+          }
+        })
+        columns.push({
+          title: "名称", field: "attachmenttitle", width: 30, formatter: function (value, row, index) {
+            if (value) {
+              var html = '<a style="display:block" target="_blank" class="attachmenttitle" href="' + row.realpath + '">' + value + ' </a>';
+              return html;
+            } else {
+              return '<button type="button" id="uploadA" onclick="InitObj.uploadA(' + index + ')" class="layui-btn layui-bg-blue layui-btn-xs">上传</button>'
+            }
+          }
+        })
+        columns.push({
+          title: "上传日期", field: "createDate", width: 20, formatter: function (value) {
+            if (value) {
+              var dateStr = value.replace(/-/g, "/");
+            }
+            return value ? new Date(dateStr).Format("yyyy-MM-dd") : '';
+          }
+        })
+        columns.push({
+          title: "上传人", field: "createName", width: 30, formatter: function (value, row, index) {
+
+            return row.tsuser.realName
+          }
+        });
+        if (!this.detail) {
+          columns.push({
+            title: "", field: "opt", width: 10,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="删除" type="button" class="layui-btn layui-btn-sm layui-btn-edit" '
+              btns += 'onclick="InitObj.deleteEnclosure(&quot;' + row.id + '&quot;,&quot;' + index + '&quot;)"><i class="layui-icon">&#xe640;</i></button>';
+              return btns;
+            }
+          })
+        }
+        return [columns];
+      },
+      initDataGridEnclosure: function (columns) {
+        var that = this;
+        this.dataGridEnclosure = $('#dataGridEnclosure').datagrid({
+          data: this.enclosureData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+          }
+        });
+      },
+      unitSelect: function (index) {
+        this.unitIndex = index;
+        layerOpenFun("contractController.do?goRelateUnit", "适用单位", ['90%', '100%'], ['确定', '取消'], this.unitLayerCallback);
+      },
+      // 选择单位回调 layer
+      unitLayerCallback: function (res, index) {
+        if (res) {
+          var that = InitObj;
+          layer.close(index)
+          var projectObjs = that.dataGridProject.datagrid('getData');
+          projectObjs.rows[that.unitIndex].unitId = res[0].id;
+          projectObjs.rows[that.unitIndex].unitName = res[0].name;
+          that.dataGridProject.datagrid('loadData', projectObjs);
+        }
+      },
+      projectSelect: function (index) {
+        this.projectIndex = index;
+        layerOpenFun("contractController.do?goRelateProject", "适用项目", ['90%', '100%'], ['确定', '取消'], this.projectLayerCallback);
+      },
+      // 选择项目回调 layer
+      projectLayerCallback: function (res, index) {
+        if (res) {
+          var that = InitObj;
+          layer.close(index)
+          var projectObjs = that.dataGridProject.datagrid('getData');
+          projectObjs.rows[that.projectIndex].projectId = res[0].id;
+          projectObjs.rows[that.projectIndex].projectName = res[0].name;
+          that.dataGridProject.datagrid('loadData', projectObjs);
+        }
+      },
+      columnsProject: function () {
+        var columns = []; that = this;
+        columns.push({ title: "ID", field: "id", hidden: true });
+        columns.push({
+          title: "委托单位", field: "unitName", width: 30, formatter: function (value, row, index) {
+            if (value) {
+              return value;
+            } else {
+              if (!this.detail) {
+                return '<a onclick="InitObj.unitSelect(' + index + ')" class="layui-btn layui-bg-blue layui-btn-xs rf">...</a>'
+              }
+            }
+          }
+        });
+        columns.push({
+          title: "工程项目", field: "projectName", width: 20, formatter: function (value, row, index) {
+            if (value) {
+              return value;
+            } else {
+              if (!this.detail) {
+                return '<a  onclick="InitObj.projectSelect(' + index + ')" class="layui-btn layui-bg-blue layui-btn-xs rf">...</a>'
+              }
+            }
+          }
+        });
+        if (!this.detail) {
+          columns.push({
+            title: "", field: "opt", width: 10,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="删除" type="button" class="layui-btn layui-btn-sm layui-btn-edit" '
+              btns += 'onclick="InitObj.deleteProject(&quot;' + row.id + '&quot;,&quot;' + index + '&quot;)"><i class="layui-icon">&#xe640;</i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+      },
+      initDataGridProject: function (columns) {
+        var that = this;
+        this.dataGridProject = $('#dataGridProject').datagrid({
+          data: this.projectData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            if (that.detail === 'detailPage') {
+              // 处理报告详情及检测任务 
+              $('a:not(".attachmenttitle")').hide();
+            }
+          }
+        });
+      },
+      columnsPlan: function () {
+        var columns = []; that = this;
+        columns.push({ title: "ID", field: "id", hidden: true });
+        columns.push({
+          title: "期号", field: "issuenumber", width: 10, formatter: function (value, row, index) {
+            return index + 1;
+          }
+        });
+        columns.push({
+          title: "约定回款日期", field: "appointBackDate", width: 20, formatter: function (value, row, index) {
+            var values = value || '', html = '';
+            html += '<input type="text" class="layui-input" name="appointBackDate' + index + '"'
+            html += ' id="appointBackDate' + index + '" value="' + values + '" autocomplete="off" >';
+            return html;
+          }
+        });
+        columns.push({
+          title: "约定回款金额", field: "appointFee", width: 30, formatter: function (value, row, index) {
+            var values = formatMoney(getFloatStr(value), 2, '￥ ');
+            return that.applyTitleAttribute(values, row, index, 'appointFee')
+          }
+        });
+        columns.push({
+          title: "备注", field: "remark", width: 30, formatter: function (value, row, index) {
+            return that.applyTitleAttribute(value, row, index, 'remark')
+          }
+        });
+        if (!this.detail) {
+          columns.push({
+            title: "", field: "opt", width: 10,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="删除" type="button" class="layui-btn layui-btn-sm layui-btn-edit"'
+              btns += 'onclick="InitObj.deletePlan(&quot;' + row.id + '&quot;,&quot;' + index + '&quot;)"><i class="layui-icon">&#xe640;</i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+      },
+      initDataGridPlan: function (columns) {
+        var that = this;
+        this.dataGridPlan = $('#dataGridPlan').datagrid({
+          data: this.planData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            that.dateEvents(data.rows);
+            if (that.detail === 'detailPage') {
+              // 处理报告详情及检测任务 
+              $('#dataGridPlan').parent().find('input').attr('disabled', true).css('border-color', 'transparent');
+            }
+          }
+        });
+      },
+      dateEvents: function (data) {
+        for (var i = 0; i < data.length; i++) {
+          that.laydateLayerM.render({
+            elem: '#appointBackDate' + i, //指定元素
+            trigger: 'click',
+            position: 'fixed'
+          });
+        }
+      },
+
+    }
+  </script>
+</body>
+
+</html>

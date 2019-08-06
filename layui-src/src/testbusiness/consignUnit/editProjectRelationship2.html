@@ -1,0 +1,183 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools"/>
+<script>
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+    .datagrid-btable .datagrid-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    input {
+        height: 24px;
+    }
+</style>
+<div class="easyui-layout" fit="true">
+    <div data-options="region: 'center', split: true" class="self-noscroll">
+        <div class="toolbar">
+
+            <div class="search-box">
+                <form class="formtable">
+                    <table>
+                        <tr>
+                            <td>送样人姓名：</td>
+                            <td>
+                                <input name="name" style="line-height:24px; border:1px solid #ccc">
+                            </td>
+                            <td>联系电话：</td>
+                            <td>
+                                <input name="contactPhone" style="line-height:24px; border:1px solid #ccc">
+                            </td>
+			                <span style="float:right; height: auto;">
+			                    <a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+			                    <a class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+			                </span>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+        <table id="dataGrid"></table>
+    </div>
+    <input type="hidden" id="btn_sub" class="btn-4-submit">
+</div>
+
+<%--suppress JSUnresolvedVariable, JSUnresolvedFunction --%>
+<script>
+
+    $(function () {
+
+        initDataGrid();
+
+        $('.btn-4-submit').click(function () {
+            var rows = dataGrid.datagrid('getSelections');
+            if (rows && rows.length > 0) {
+
+                var projectIds = [];
+                for (var i in rows) {
+                    projectIds.push(rows[i].id);
+                }
+
+                var consignUnitRow = parent.dataGrid.datagrid('getSelected');
+
+                ajaxSubmitResponseJSON({
+                    url: 'projectController.do?doAddUnitAndProjectsRelation',
+                    data: {
+                        consignUnitId: consignUnitRow.id,
+                        projectIds: projectIds.join(',')
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            parent.reloadDataGrid1(false, consignUnitRow);
+                        }
+                        /*关闭弹窗*/
+                        var index = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(index);
+                        parent.tip(data.msg);
+                    }
+                });
+
+            }else{
+            	parent.tip("请选择送样人员");
+            }
+        });
+
+        $('.btn-4-search').click(function () {
+            reloadDataGrid(true);
+        });
+
+        $('.btn-4-reset').click(function () {
+            $('.search-box form')[0].reset();
+            $('.btn-4-search').trigger('click');
+        });
+    });
+
+    var dataGrid;
+
+    function initDataGrid() {
+    	
+        dataGrid = $('#dataGrid').datagrid({
+            url: 'projectController.do?datagrid',
+            toolbar: '.toolbar',
+            singleSelect: false,
+            pagination: true,
+            fit: true,
+            fitColumns:true,
+            scrollbarSize:0,
+            columns: [[
+                {title: "ID", field: "id", checkbox: true},
+                {title: "工程项目名称", field: "name", width: 120, formatter: applyTitleAttribute},
+                {title: "建设单位名称", field: "buildUnitName", width: 120, formatter: applyTitleAttribute},
+                {title: "紧急联系人", field: "contactPerson", width: 80},
+                {title: "联系人电话", field: "contactPhone", width: 80},
+                {title: "联系人地址", field: "contactAddress", width: 120},
+                {
+                    title: "状态", field: "verifyStatus",
+                    formatter: function (value) {
+                        var valueCN = '审核通过';
+                        if (value == '10') {
+                            valueCN = '审核不通过';
+                        } else if (value == '20') {
+                            valueCN = '审核通过';
+                        }
+                        return valueCN;
+                    }
+                },
+                {title: "备注", field: "remark", width: 120, formatter: applyTitleAttribute},
+                {title: "创建时间", field: "createDate"}
+            ]],
+            onLoadSuccess: function (data) {
+            	//最后的data全都是未绑定的送样人员
+                var hiddenRowIds = [];
+                var deleteRows = [];
+                var hiddenRows = parent.dataGrid1.datagrid('getRows');
+                
+                //记录父容器中送样人员列表加载的已绑定的送样人员
+                if (hiddenRows && hiddenRows.length > 0) {
+                    for (var i in hiddenRows) {
+                        hiddenRowIds.push(hiddenRows[i].id);
+                    }
+                }
+                
+                //记录加载的数据中，已绑定的送样人员
+                for (var i in  data.rows) {
+                    if ($.inArray(data.rows[i].id, hiddenRowIds) >= 0) {
+                        deleteRows.push(data.rows[i]);
+                    }
+                }
+                
+                //此处dataGrid是送样人员弹窗页面的表格，这里只加载未绑定的送样人员
+                for (var i in deleteRows) {
+                    dataGrid.datagrid('deleteRow', dataGrid.datagrid('getRowIndex', deleteRows[i]));
+                }
+            }
+        });
+    }
+	
+    function reloadDataGrid(goFirstPage) {
+        var queryParams = $('.search-box form').serializeJSON();
+        if (goFirstPage) {
+            /*从第一页开始显示*/
+            dataGrid.datagrid('load', queryParams);
+        } else {
+            /*停留在当前页面*/
+            dataGrid.datagrid('reload', queryParams);
+        }
+    }
+    
+    function applyTitleAttribute(value) {
+        return '<span title="' + value + '">' + value + '</span>';
+    }
+</script>

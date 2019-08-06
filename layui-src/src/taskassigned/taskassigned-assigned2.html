@@ -1,0 +1,233 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,DatePicker"/>
+<script>
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/extends/datagrid-detailview.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/taskassigned/taskassigned-assigned.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/system/log/logProcess.js'><\/script>");
+</script>
+<script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+<style>
+    .detail-table {
+        width: 100%;
+        border-top: 1px solid #DDD;
+        border-bottom: 1px solid #DDD;
+        border-right: 1px solid #DDD;
+        border-spacing: 0;
+    }
+
+    .detail-table th {
+        text-align: center;
+        height: 30px;
+        border-top: 1px solid #DDD;
+        border-left: 1px solid #DDD;
+    }
+
+    .detail-table td {
+        padding: 5px;
+        border-top: 1px solid #DDD;
+        border-left: 1px solid #DDD;
+        border-bottom: 0;
+        border-right: 0;
+    }
+
+    input {
+        height: 24px;
+    }
+</style>
+<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+<!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+<div class="easyui-layout" fit="true">
+    <div class="dataGrid self-noscroll" data-options="region: 'center'">
+        <div class="toolbar">
+              	<div class="layui-row" id="commonQueryDiv">
+               		<form id="commonQueryForm">
+                		<input type="text" name="quickQryParam" placeholder="输入任务编号/样品名称/委托单位后回车即可查询" 
+                			class="layui-input" style="width:30%;float:left;">&nbsp;
+                		<!-- 当一个form中只有一个type='text'的input时,input会默认被绑定回车提交事件,所以呢,这里写个假的input耍下流氓 -->
+                		<input type="text" style="width:0px;heigth:0px;border:0px">
+                    	<a class="easyui-linkbutton btn-4-search-common" plain="true" icon="icon-search">查询</a>
+                    	<a class="easyui-linkbutton" onclick="openSuperQueryDiv();">打开高级查询>></a>
+                    </form>
+                </div>
+                <div class="layui-container" id="superQueryDiv" style="display:none">
+                	<form id="superQueryForm">
+                		<div class="layui-row" style="padding-top:5px;">
+                			任务编号：<input type="text" name="testTaskCode" class="layui-input" style="width:30%;"/>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			记录编号：<input type="text" name="recordCode" class="layui-input" style="width:30%;"/>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			委托编号：<input type="text" name="consignCode" class="layui-input" style="width:30%;"/>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			样品编号：<input type="text" name="testObjectCode" class="layui-input" style="width:30%;"/>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			样品名称：<input type="text" name="testObjectName" class="layui-input" style="width:30%;"/>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			委托单位：<input type="text" name="consignUnitName" class="layui-input" style="width:30%;"/>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			委托日期：
+                			<input id="ConsignDate" style="width: 14%;" name="minConsignDate" value="" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})">
+                			~
+                			<input id="ConsignDate2" style="width: 14%;" name="maxConsignDate" value="" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})">
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			任务状态：
+                			<input type="radio" name="status" value="" title="全部" checked>全部&emsp;
+							<input type="radio" name="status" value="20" title="试验检测中" >试验检测中&emsp;
+							<input type="radio" name="status" value="30" title="复核确认中" >复核确认中&emsp;
+							<input type="radio" name="status" value="40" title="已提交正式报告" >已提交正式报告
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                			检测人员：
+                			<span id="qryPerson">
+                				<!-- <span class="layui-badge layui-bg-gray" title="zs" onclick="removeThisPerson(this);">张三<i class="layui-icon">&#x1007;</i></span> -->
+                			</span>
+                			<span id="personIdHidden">
+                				<!-- <input type="hidden" id="zs" class="personId" value="zs"/> -->
+                			</span>
+                			<span><a class="easyui-linkbutton" id="addPersonButton" onclick="">>>></a></span>
+                		</div>
+                		<div class="layui-row" style="padding-top:5px;">
+                   			<a class="easyui-linkbutton btn-4-search-super" plain="true" icon="icon-search">查询</a>
+			                <a class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+                    		<a class="easyui-linkbutton" onclick="openCommonQueryDiv();"><<回到快速查询</a>
+                    	</div>
+                    </form>
+                </div>
+                <div class="layui-row datagrid-toolbar" id="commonQueryDiv">
+                	<a class="easyui-linkbutton" id="infoButton"><i class="layui-icon">&#xe705;</i> 查看详情</a>&emsp;&emsp;
+                    <!-- <a class="easyui-linkbutton btn-4-test-log" id="logButton"><i class="layui-icon">&#xe60e;</i> 查看日志</a>&emsp;&emsp; -->
+                    <a class="easyui-linkbutton" id="logButton"><i class="layui-icon">&#xe60e;</i> 查看日志</a>&emsp;&emsp;
+                    <a class="easyui-linkbutton" id="revokeButton"><i class="layui-icon">&#xe666;</i> 任务撤回</a>&emsp;&emsp;
+                    <a class="easyui-linkbutton" id="reAllotButton"><i class="layui-icon">&#xe63c;</i> 重新分配</a>
+                </div>
+        </div>
+        <table id="dataGrid"></table>
+    </div>
+    <script type="text/javascript">
+    	//layui初始化
+    	layui.use(['layer'], function(){
+    		 var jq = layui.$,
+    		 layer = layui.layer;
+    		 
+    		 //绑定点击事件
+			 jq('#addPersonButton').click(function () {
+		        openPersonSelector();
+		     });
+		     
+		     //高级查询人员选择弹窗
+    		 function openPersonSelector(){
+				var url = "assignedTaskController.do?goUserChoosePage";
+				var index = layer.open({
+					  type:2,
+					  title: '选择人员',
+					  offset:'auto',
+					  closeBtn: 1,
+					  skin: 'layui-layer-molv',
+					  content: url,
+					  area: ['28%', '80%'],
+					  btn: ['确定', '取消'],
+					  yes: function(index, layero){
+						 var body = layer.getChildFrame('body', index);
+						 $(body).find('#createUsersData').trigger('click');
+             var users = $(body).find('#selectedUsers').val();
+						 addPerson(users);
+					     layer.close(index);
+					  },
+					  btn2: function(index, layero){
+						 
+					  }
+				});
+			}
+			
+			//查看详情
+			jq('#infoButton').click(function () {
+				var rows = getSelectRows();
+				if(rows==null || rows.length<1){
+		    		layMsg("没有选中数据");
+		    		return;
+		    	}
+		    	if(rows.length>1){
+		    		layMsg("只能选择一条数据来查看详情");
+		    		return;
+		    	}
+				var taskId = rows[0].id;
+				goDetail(taskId);
+		        /* layMsg('正在建设中'); */
+		    });
+		    
+		    //查看日志
+            jq('#logButton').click(function () {
+                var rows = getSelectRows();
+                if(rows==null || rows.length<1){
+                    layMsg("没有选中数据");
+                    return;
+                }
+                if(rows.length>1){
+                    layMsg("只能选择一条数据来查看日志");
+                    return;
+                }
+                var taskId = rows[0].id;
+                showLogs('2',taskId,true);
+            });
+		    
+		    //撤回任务
+		    jq('#revokeButton').click(function () {
+				var rows = getSelectRows();
+				if(rows==null || rows.length<1){
+		    		layMsg("没有选中数据");
+		    		return;
+		    	}
+		    	if(rows.length>1){
+		    		layMsg("一次只能选择一条数据来撤回");
+		    		return;
+		    	}
+		    	if(rows[0].status != '20'){
+					layMsg("只能撤回试验检测中的任务");
+					return;
+				}
+				var taskId = rows[0].id;
+				showRollbackPage('testTask',taskId);
+		    });
+		    //重新分配reAllotButton
+		    jq('#reAllotButton').click(function () {
+		    	reAssignTask();
+		    });
+			//弹出提示消息通用
+			function layMsg(msg){
+				layer.msg(msg);
+			}
+			//自动计算最近一个月的日期起始点,写入input框里
+			calAmonth();
+			function calAmonth(){
+				var date = new Date();
+				var preMonth = new Date(new Date().setMonth(date.getMonth() - 1));
+				
+				var nowStr = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+				var preMonthStr = preMonth.getFullYear() + '-' + (preMonth.getMonth() + 1) + '-' + preMonth.getDate();
+				jq("#ConsignDate").val(preMonthStr);
+				jq("#ConsignDate2").val(nowStr);
+			}
+    	});//layui初始化结束
+    </script>
+</div>

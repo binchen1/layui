@@ -1,0 +1,193 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>工程项目/送样人员关联委托单位</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+
+  <script type="text/javascript" src="plug-in/serializejson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    .datagrid-btable .datagrid-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab-brief easyui-layout" fit="true">
+    <div class="height-full" data-options="region: 'center', split: true">
+      <div class="toolbar">
+        <div class="tb-box">
+          <div class="tb-box-form search-box">
+            <form class="layui-form" id="commonQueryForm">
+              <div class="layui-row">
+                <div class="layui-col-xs8">
+                  <div class="layui-input-inline" style="width:80%">
+                    <input type="text" name="quickQryParam" class="layui-input" placeholder="输入委托单位后回车即可查询" autocomplete="off">
+                  </div>
+                  <div class="layui-input-inline">
+                    <a href="#" class="easyui-linkbutton btn-4-search" iconCls="icon-search" plain="true">查询</a>
+                  </div>
+                </div>
+              </div>
+              <!-- <table>
+                <tr>
+                  <td>委托单位名称：</td>
+                  <td>
+                    <input name="name" style="line-height:24px; height: 24px; border:1px solid #ccc">
+                  </td>
+                  <span style="float:right; height: auto;">
+                    <a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+                    <a class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+                  </span>
+                </tr>
+              </table> -->
+            </form>
+          </div>
+        </div>
+      </div>
+      <table id="dataGrid" class="easyui-datagrid"></table>
+    </div>
+    <input type="hidden" id="btn_sub" class="btn-4-submit">
+  </div>
+
+
+  <script>
+
+    $(function () {
+      commonQryKeyDown()
+      initDataGrid();
+      $('.btn-4-search').click(function () {
+        reloadDataGrid(true);
+      });
+    });
+
+    var dataGrid;
+      // 快速查询input框绑定的回车事件
+      function commonQryKeyDown() {
+      $('#commonQueryForm input').bind('keypress', function (event) {
+        var theEvent = event || window.event;
+        var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+        if (code === 13) {
+          reloadDataGrid(true);
+          return false;//问题解决关键
+        }
+      });
+    }
+
+    function applyTitleAttribute(value) {
+      return '<span title="' + value + '">' + value + '</span>';
+    }
+
+    function initDataGrid() {
+      dataGrid = $('#dataGrid').datagrid({
+        url: 'consignUnitController.do?datagridNew',
+        singleSelect: false,
+        rownumbers: true,
+        toolbar: '.toolbar',
+        fit: true,
+        fitColumns: true,
+        columns: [[
+          { title: "ID", field: "id", checkbox: true },
+          { title: "委托单位", field: "name", width: 120, formatter: applyTitleAttribute },
+          { title: "缴费单位", field: "payUnitName", width: 120, formatter: applyTitleAttribute },
+          { title: "资质类型ID", field: "qualificationTypeId",hidden: true },
+          { title: "资质类型", field: "qualificationTypeName", width: 120, formatter: applyTitleAttribute },
+          { title: "联系地址", field: "contactAddress", width: 120 },
+          { title: "备注", field: "remark", width: 120, formatter: applyTitleAttribute }
+        ]],
+        onLoadSuccess: function (data) {
+          getPagerFun('#dataGrid')
+          var hiddenRowIds = [];
+          var deleteRows = [];
+          var hiddenRows = parent.dataGrid0.datagrid('getRows');
+
+          if (hiddenRows && hiddenRows.length > 0) {
+            $.each(hiddenRows, function (i, v) {
+              hiddenRowIds.push(hiddenRows[i].id);
+            })
+          }
+          for (var i in data.rows) {
+            if ($.inArray(data.rows[i].id, hiddenRowIds) >= 0) {
+              deleteRows.push(data.rows[i]);
+            }
+          }
+          $.each(deleteRows, function (i, v) {
+            dataGrid.datagrid('deleteRow', dataGrid.datagrid('getRowIndex', v));
+          })
+        }
+      });
+    }
+
+    function reloadDataGrid(goFirstPage) {
+      var queryParams = $('.search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid.datagrid('reload', queryParams);
+      }
+    }
+
+    
+
+    function submitFun() {
+      console.log('btn-4-submit')
+      var rows = dataGrid.datagrid('getSelections');
+      console.log('btn-4-submit', rows)
+      if (rows && rows.length > 0) {
+
+        var consignUnitIds = [];
+        for (var i in rows) {
+          consignUnitIds.push(rows[i].id);
+        }
+
+        var projectRow = parent.dataGrid.datagrid('getSelected');
+        var dataJson = {
+          consignUnitIds: consignUnitIds.join(',')
+        }, urls = '';
+        if ('project' === parent.moduleName) {
+          dataJson.projectId = projectRow.id
+          urls = 'projectController.do?doAddRelationship'
+        } else if ('sampleSender' === parent.moduleName) {
+          dataJson.sampleSenderId = projectRow.id
+          urls = 'sampleSenderController.do?addConsignUnitRelation'
+        }
+        console.log('dataJson', dataJson)
+        $.ajax({
+          url: urls,
+          data: dataJson,
+          dataType: 'json',
+          success: function (data) {
+            if (data.success) {
+              parent.reloadDataGrid0(false, projectRow);
+            }
+            /*关闭弹窗*/
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+            parent.layerAlertFun(data.msg, 1, []);
+          }
+        });
+      } else {
+        layer.msg('请选择委托单位',{icon:5})
+      }
+    }
+
+  </script>
+</body>
+
+</html>

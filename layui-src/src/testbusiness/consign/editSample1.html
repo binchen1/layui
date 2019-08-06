@@ -1,0 +1,599 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<t:base type="jquery,easyui,tools,DatePicker" />
+<html lang="en">
+
+<head>
+  <!-- <link rel="stylesheet" href="plug-in/layui/css/layui.css" media="all" /> -->
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script>
+    var storeTool;
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/consign/editSample.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/assets/js/common.js'><\/script>");
+  </script>
+  <link type="text/css" rel="stylesheet" href="plug-in/assets/css/jquery.pagewalkthrough.css" />
+  <script type="text/javascript" src="plug-in/assets/js/jquery.pagewalkthrough.min.js"></script>
+
+  <style>
+    table th {
+      text-align: center;
+      min-height: 32px;
+      height: 32px;
+    }
+
+    .tabs {
+      width: auto;
+    }
+
+    .value {
+      padding: 1px;
+    }
+
+    input {
+      width: 100%;
+      /* border: 1px solid #666; */
+    }
+
+    .td-label {
+      text-align: right;
+      width: 120px;
+    }
+
+    #standard-cont {
+      color: #000;
+    }
+
+    #choose-attr .l-btn-text {
+      padding: 0px 6px;
+    }
+
+    .Wdate {
+      border: none;
+    }
+
+    .sampling-info-header span {
+      display: inline-block;
+      width: 100%;
+      text-align: right;
+      color: blue;
+    }
+
+    .sampling-info-header i {
+      /* width:0;
+      height:0; */
+      border-width: 5px 5px 0;
+      border-style: solid;
+      border-color: blue transparent transparent;
+      /*灰 透明 透明 */
+      /* margin:40px auto; */
+      position: relative;
+      top: 10px;
+    }
+
+    .testObjectAttributesR-box {
+      width: 44%;
+      /* position: absolute;
+      top: 0;
+      right: 10px;
+      padding:10px;
+      margin-left:55%; */
+      float: right;
+    }
+
+    .body-box {
+      /* background: red; */
+      height: 100%;
+    }
+
+    .body-bottom {
+      /* background: blue; */
+      position: absolute;
+      width: 100%;
+      left: 0;
+      top: 36px;
+      bottom: 0;
+      height: auto !important;
+    }
+
+    .Wdate {
+      -ms-background-position-x: 88%;
+    }
+
+    .modal {
+      opacity: 0.2;
+      position: absolute;
+      /* background: red; */
+      top: 0;
+      left: 0;
+      right: 20px;
+      bottom: 0;
+      height: auto;
+      z-index: 1;
+    }
+
+    .modal.modalTop {
+      top: 30px;
+    }
+
+    .modal.modalBottom {
+      bottom: 21px;
+    }
+
+    .hide-ele {
+      padding: 5px 0px;
+
+    }
+
+    .modalBottom-table-box {
+      height: 80%;
+
+    }
+
+    #params td {
+      min-width: 30px;
+    }
+
+    #walkthrough-content {
+      display: none
+    }
+
+    #jpWalkthrough #jpwTooltip #tooltipInner {
+      font-size: 18px;
+    }
+    /**弹出层样式修改 */
+    .mylayui-layer-molv .layui-layer-title {
+      background: #247abb;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="body-box">
+    <button type="button" class="btn-4-submit" style="display: none;"></button>
+    <div style="width: 100%;line-height: 36px;height: 36px">
+      样品/参数名称:
+      <input id="searchCondition" class="easyui-textbox" data-options="prompt:'输入样品/参数名称...',iconCls:'icon-man'"
+        style="line-height:24px; border:1px solid #ccc;width:240px;height:24px">
+      <a href="#" id="searchByTestParamName" class="easyui-linkbutton hide-ele" icon="iconfont icon-search">查询</a>
+    </div>
+    <div class="easyui-layout body-bottom" data-options="fit: true">
+      <div id="bigCategory-box" data-options="region: 'west',split: true" style="width: 200px;">
+        <div class="easyui-layout" data-options="fit: true">
+
+          <div data-options="region: 'north',border: false" style="height: 68px;">
+            <table class="formtable" cellspacing="1" cellpadding="0">
+              <tr>
+                <th>选择分类</th>
+              </tr>
+              <tr>
+                <td>
+                  <select id="qualificationType" style="width: 100%;border: 0"></select>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div data-options="region: 'center',border: false">
+            <div style="display:none;" class="modal" id="modalDivBigCategory"></div>
+            <table id="bigCategory"></table>
+          </div>
+        </div>
+      </div>
+      <div data-options="region: 'center',border: false">
+        <div class="easyui-layout" data-options="fit: true">
+          <div data-options="region: 'center'">
+            <div class="easyui-layout" data-options="fit: true">
+              <div data-options="region: 'west',split: true" style="width: 300px;">
+                <div id="sample-box" class="easyui-layout" data-options="fit: true">
+                  <div data-options="region: 'north',border: false">
+                    <table class="formtable" cellspacing="1" cellpadding="0" border="0">
+                      <tr style="height: 28px;">
+                        <th>选择样品</th>
+                      </tr>
+                    </table>
+                  </div>
+                  <div data-options="region: 'center',border: false">
+                    <div style="display:none;" class="modal" id="modalDivSample"></div>
+                    <table id="sample"></table>
+                  </div>
+                </div>
+              </div>
+              <div data-options="region: 'center'">
+                <div id="tabs" class="easyui-tabs" data-options="fit:true">
+                  <!-- <div title="样品辅助信息" style="position: relative" id="testObjectBox"> -->
+                  <div title="样品辅助信息" id="testObjectBox">
+                    <div style="display:none;" class="modal modalTop" id="modalDivTestObjectBox"></div>
+                    <div style="width:50%;float: left;">
+                      <table id="testObjectAttributes" class="formtable" cellpadding="0" cellspacing="1">
+                        <tr style="display: none;">
+                          <td><input name="mark"></td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="testSampleDisplayName">样品名称：</label>
+                          </td>
+                          <td class="value">
+                            <input id="testSampleDisplayName" style="height: 28px;" name="testSampleDisplayName">
+                          </td>
+                        </tr>
+                        <!-- <tr>
+                          <td class="td-label"><label for="standard">规格型号1：</label></td>
+                          <td class="value" style="position: relative;">
+                            <input type="hidden" class="no-store" id="standard" style="height: 28px;" name="standard">
+                            <div id="standard-div" style="line-height:28px;height:28px;">
+                              <a style="position: absolute;right: 0;top: 0;" class="easyui-linkbutton l-btn l-btn-plain"
+                                plain="true" id="choose-attr">选择</a>
+                              <span id="standard-cont"></span>
+                            </div>
+                          </td>
+                        </tr> -->
+                        <tr>
+                          <td class="td-label"><label for="standard">规格型号：</label></td>
+                          <td class="value" style="position: relative;">
+                            <input id="standard" style="height: 28px;" name="standard">
+                            <input id="model" name="model" type="hidden">
+                            <input id="specification" name="specification" type="hidden">
+                            <input id="grade" name="grade" type="hidden">
+                            <input id="label" name="label" type="hidden">
+                            <a style="position: absolute;right: 0;top: 0;" class="easyui-linkbutton l-btn l-btn-plain"
+                              plain="true" id="choose-attr">选择</a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="part">检测部位：</label>
+                          </td>
+                          <td class="value" style="position: relative;">
+                            <input id="part" readonly unselectable="on" style="height: 28px;" name="part" onclick="partFun()">
+                            <a style="position: absolute;right: 0;top: 0;" id="part-attr" class="easyui-linkbutton"
+                              plain="true" onfocus="partFun()">....</a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="projectPartAndUse">工程部位/用途：</label>
+                          </td>
+                          <td class="value">
+                            <input id="projectPartAndUse" style="height: 28px;" name="projectPartAndUse">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="description">样品描述：</label>
+                          </td>
+                          <td class="value">
+                            <input id="description" list="testSampleIds" style="height: 28px;" name="description">
+                            <datalist id="testSampleIds"></datalist>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="sampleNum">样品数量：</label>
+                          </td>
+                          <td class="value">
+                            <input id="sampleNum" style="height: 28px;" name="sampleNum">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="delegatesNum">代表数量：</label>
+                          </td>
+                          <td class="value">
+                            <input id="delegatesNum" style="height: 28px;" name="delegatesNum">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="remark">备注：</label>
+                          </td>
+                          <td class="value">
+                            <input id="remark" name="remark" style="height: 28px;">
+                          </td>
+                        </tr>
+                      </table>
+                      <div class="sampling-info-header" onclick="samplingInfo('testObjectAttributesB')">
+                        <span> 取样信息 <i></i> </span> </div>
+                      <table id="testObjectAttributesB" class="formtable sampling-info" cellpadding="0" cellspacing="1">
+                        <tr>
+                          <td class="td-label">
+                            <label for="samplingPlace">取样地点：</label>
+                          </td>
+                          <td class="value">
+                            <input id="samplingPlace" name="samplingPlace" style="height: 28px;">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="samplingDate">取样时间：</label>
+                          </td>
+                          <td class="value">
+                            <input id="samplingDate" name="samplingDate" style="height: 28px;" class="Wdate"
+                              onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="samplingCompany">取样单位：</label>
+                          </td>
+                          <td class="value">
+                            <input id="samplingCompany" name="samplingCompany" style="height: 28px;">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="samplePerson">取样人：</label>
+                          </td>
+                          <td class="value">
+                            <input id="samplePerson" name="samplePerson" style="height: 28px;">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="td-label">
+                            <label for="samplePersonNumber">取样人证号：</label>
+                          </td>
+                          <td class="value">
+                            <input id="samplePersonNumber" name="samplePersonNumber" style="height: 28px;">
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                    <div class="testObjectAttributesR-box"><!-- 收样辅助信息 -->
+                      <table id="testObjectAttributesR" class=" formtable" cellpadding="0" cellspacing="1"></table>
+                    </div>
+                  </div>
+                  <div title="附加费用">
+                    <div class="hide-ele">
+                      <a class="easyui-linkbutton btn-4-add-additionalFee " icon="iconfont icon-add" plain="true">添加</a>
+                      <a class="easyui-linkbutton btn-4-delete-additionalFee " icon="iconfont icon-remove" plain="true">删除</a>
+                    </div>
+                    <div class="additionalFees-box" style="height:80%;">
+                      <table id="additionalFees" class="formtable" cellpadding="0" cellspacing="1">
+                        <thead>
+                          <tr>
+                            <th style="width: 35px;"></th>
+                            <th>附加费用名称</th>
+                            <th>单价（元）</th>
+                            <th>单位</th>
+                            <th style="width: 80px;">数量</th>
+                            <th>备注</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <div style="display:none;" class="modal modalTop" id="modalDivAdditionalFees"></div>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div title="关联检测样品" style="position:relative">
+                    <div class="hide-ele">
+                      <!-- <a class="easyui-linkbutton btn-4-add-material " icon="iconfont icon-add" plain="true">添加</a> -->
+                      <a class="easyui-linkbutton btn-4-record-material " icon="iconfont icon-add" plain="true">录入</a>
+                      <a class="easyui-linkbutton btn-4-quote-material " plain="true">引用已委托原材料</a>
+                      <a class="easyui-linkbutton btn-4-delete-material " icon="iconfont icon-remove" plain="true">删除</a>
+                    </div>
+                    <div class="modalBottom-table-box">
+                      <div style="display:none;" class="modal modalTop modalBottom"
+                        id="modalDivReferConsignedSampleDataDataGrid"></div>
+                      <table id="referConsignedSampleDataDataGrid"></table>
+                    </div>
+                  </div>
+                  <div title="龄期信息">
+                    <div class="hide-ele">
+                      <a class="easyui-linkbutton btn-4-add-period " icon="iconfont icon-add" plain="true">添加</a>
+                      <a class="easyui-linkbutton btn-4-delete-period " icon="iconfont icon-remove" plain="true">删除</a>
+                    </div>
+                    <div>
+                      <table id="periods" class="formtable" cellpadding="0" cellspacing="1">
+                        <div style="display:none;" class="modal modalTop" id="modalDivPeriods"></div>
+                        <thead>
+                          <tr>
+                            <th style="width: 35px;">
+                              <input type="checkbox" style="width: 35px;display: none;">
+                            </th>
+                            <th>样品编号</th>
+                            <th>成型日期</th>
+                            <th>龄期（天）</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div data-options="region: 'south',split: true,border: false" style="height: 300px;">
+            <div class="easyui-layout" data-options="fit: true">
+              <div data-options="region: 'center'">
+                <div class="easyui-layout" data-options="fit: true">
+                  <div data-options="region: 'north'" style="height: 68px">
+                    <div>
+                      <span style="float: right;">
+                        <a class="easyui-linkbutton btn-4-add-standard hide-ele" plain="true">选择规程</a>
+                        <a class="easyui-linkbutton btn-4-add-group hide-ele" plain="true">自定义参数打包</a>
+                        打包参数收取：
+                        <select id="groups">
+                          <option value="">--请选择打包参数--</option>
+                        </select>
+                      </span>
+                    </div>
+                    <div>
+                      <table class="formtable formtableParams" cellpadding="0" cellspacing="1">
+                        <thead>
+                          <tr>
+                            <th style="width: 35px;"><input type="checkbox" class="checkAll"></th>
+                            <th>检测参数</th>
+                            <th>参数备注</th>
+                            <th>检测依据</th>
+                            <th>评定标准</th>
+                            <th>单价（元）</th>
+                            <th>计价数量</th>
+                            <th>小计</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div id="params-box" data-options="region: 'center',border: false">
+                    <table id="params" class="formtable " cellpadding="0" cellspacing="1">
+                      <div style="display:none;" class="modal" id="modalDivParams"></div>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div data-options="region:'east',split: true" style="width: 300px;">
+                <table id="requirements"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="walkthrough-content">
+
+    <div id="walkthrough-2">
+      选择样品所属大类 1/5
+    </div>
+
+    <div id="walkthrough-3">
+      选择样品层级，可不选择到最后一级 2/5
+    </div>
+
+    <div id="walkthrough-4">
+      选择要检测的参数 3/5
+    </div>
+
+    <div id="walkthrough-5">
+      填写样品相关的辅助信息 4/5
+    </div>
+    <div id="walkthrough-6">
+      样品信息录入完毕，点击确认，添加到委托中 5/5
+    </div>
+  </div>
+  <script>
+    $(function () {
+      // 根据新增界面id 来区分是否为新增
+      var isUpdateConsign= GetQueryString('isUpdateConsign')
+      // 勿删 来源commom.js 在线体验第一次进入引导页
+      if (!isUpdateConsign) {
+        funCode('showGuideMaskLayer','', funCodeCallback);
+      }
+      function funCodeCallback(res, objParam) {
+        if (res.obj && res.obj.length > 0) {
+          $.each(res.obj, function (i, v) {
+            if (objParam.codes === v.functioncode) {
+              if (!renderContent('edit-sample-guide')) {
+                guideFun();
+                storeFunc('edit-sample-guide', 'edit-sample-guide');
+              }
+            }
+          })
+        }
+      }
+      function guideFun() {
+        $('body').pagewalkthrough({
+          name: 'introduction',
+          steps: [{
+            wrapper: '#bigCategory-box',
+            popup: {
+              content: '#walkthrough-2',
+              type: 'tooltip',
+              position: 'right'
+
+            }
+          }, {
+            wrapper: '#sample-box',
+            popup: {
+              content: '#walkthrough-3',
+              type: 'tooltip',
+              position: 'bottom',
+              // offsetVertical: -20,
+              // offsetHorizontal: 35
+            }
+          }, {
+            wrapper: '#params-box',
+            popup: {
+              content: '#walkthrough-4',
+              type: 'tooltip',
+              position: 'top',
+              // offsetVertical: 40
+            }
+          }
+            , {
+            wrapper: '#testObjectBox',
+            popup: {
+              content: '#walkthrough-5',
+              type: 'tooltip',
+              position: 'bottom'
+            }
+          }
+            , {
+            wrapper: '#requirements',
+            popup: {
+              content: '#walkthrough-6',
+              type: 'modal',
+              position: 'bottom'
+            }
+          }
+          ],
+          buttons: {
+            jpwClose: {
+              i18n: '点击此处关闭',
+              show: true
+            },
+            jpwNext: {
+              i18n: '下一步 &rarr;',
+            },
+            jpwPrevious: {
+              i18n: '&larr; 上一步',
+            },
+            jpwFinish: {
+              i18n: '完成 &#10004;',
+            }
+          }
+        });
+        $('body').pagewalkthrough('show');
+      }
+
+    });
+  </script>
+
+  <script type="text/javascript">
+    function samplingInfo(str) {
+      console.log('点击取样信息')
+      var node = $('#' + str)
+      if (node.is(':hidden')) { //如果node是隐藏的则显示node元素，否则隐藏
+        node.show();
+        $('#testObjectBox').animate({
+          scrollTop: 300
+        }, 1000); //100为滚动条的位置，1000为滚动的时延
+      } else {
+        node.hide();
+      }
+    }
+  </script>
+</body>
+
+</html>

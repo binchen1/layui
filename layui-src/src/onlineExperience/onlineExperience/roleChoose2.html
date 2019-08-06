@@ -1,0 +1,245 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>角色选择</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="plug-in/tools/curdtools_zh-cn.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>角色选择</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    h1 {
+      color: #363636;
+      font-size: 20px;
+      margin: 50px 0 20px;
+    }
+
+    .role-box p,
+    a,h3,h4,h5,
+    span {
+      font-size: 14px;
+    }
+
+    .layui-row {
+      margin: 40px auto 70px;
+      width: 800px;
+    }
+
+    .col-box .col-img { 
+      margin: 0 30px;
+      width: 100px;
+      height: 100px;
+    }
+    .col-box .col-img img{
+      width: 100%;
+      height: 100%;
+    }
+    .col-box {
+      display: inline-block;
+      border:1px solid #000;
+      padding: 10px;
+    }
+    .col-box h3 {
+      margin: 40px 0px 20px;
+    }
+    .col-box h3 strong {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+    .col-box h5{
+      margin: 40px 0px 20px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="role-box text-center">
+    <h1>您可以使用以下账户登录在线体验系统</h1>
+    <p>测试账户部分功能或操作受限，数据会定时重置</p>
+    <div class="layui-row">
+      <div class="layui-col-xs6">
+        <div class="col-box">
+          <div class="col-img">
+            <img src="plug-in/assets/images/role-img01.png">
+          </div>
+          <h3><strong>许志宏</strong>检测工程师</h3>
+          <h4>登录：<span id="tester"></span>次</h4>
+          <h5><a href="javascript:loginTester();" class="layui-color-blue">使用TA的身份登录</a></h5>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="col-box">
+          <div class="col-img">
+            <img src="plug-in/assets/images/role-img02.png">
+          </div>
+          <h3><strong>钱珮珊</strong>超级用户</h3>
+          <h4>登录：<span id="superuser"></span>次</h4>
+          <h5><a href="javascript:loginSuperuser();" class="layui-color-blue">使用TA的身份登录</a></h5>
+        </div>
+      </div>
+    </div>
+    <p><a href="#" onclick="goHitekInfoFun()" class="layui-color-blue">联系我们</a>，获取专属账号！</p>
+    <form style="display: none;" id="loinForm" class="form-horizontal"  check="loginController.do?checkuser"  role="form" action="loginController.do?login"  method="post">
+        <input type="text"  name="userName" class="form-control" placeholder="请输入用户名"  id="userName" value="" style="display: none;"/>
+        <input type="password" name="password" class="form-control" placeholder="请输入密码" id="password" value="" style="display: none;"/>
+        <input type="text" name="companyId" class="form-control" placeholder="请输入公司名称" id="companyId" value="" style="display: none;"/>
+        <input type="hidden" name="targetUrl" class="form-control" placeholder="目标菜单地址" id="targetUrl" value="" style="display: none;"/>
+    </form>
+  </div>
+  <script>
+  </script>
+</body>
+<<script type="text/javascript">
+ 	$(function () { 
+      layui.use(['laydate', 'layer'], function () {
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+      });
+
+    })
+    $(function(){
+        getLoginTimes('onlineExperienceController.do?getSuperuserLoginTimes', 'superuser');
+        getLoginTimes('onlineExperienceController.do?getTesterLoginTimes', 'tester');
+        var targetUrl = GetQueryString("targetUrl");
+        $("#targetUrl").val(targetUrl);
+    })
+    
+    function getLoginTimes(url, username){
+        var res = ajaxRequestSync2(url, {});
+        if(res.success){
+            $("#"+username).text(res.obj);
+        } else {
+            layer.msg('系统维护中，请联系管理员...', {icon:5});
+        }
+    }
+  // 联系我们
+  function goHitekInfoFun(){
+  	 layerOpenFun('onlineExperienceController.do?goHitekInfo', '关于我们', ['550px', '404px'], [], '', 'noOpenCallback');
+  }
+  function loginTester(){
+    $("#userName").val("tester");
+    $("#password").val("123456");
+    $("#companyId").val("tester");
+    checkUser();
+  }
+  
+  function loginSuperuser(){
+    $("#userName").val("superuser");
+    $("#password").val("111111");
+    $("#companyId").val("superuser");
+    checkUser();
+  }
+
+  function checkUser(){
+    //存储表单数据
+    storeTool.storeFunc('login-data',['value','checked'],['#userName','#password','#companyId','#randCode','#on_off','#langCode']);
+    newLogin();
+  }
+  
+  function newLogin() {
+    var actionurl=$('form').attr('action');//提交路径
+    var checkurl=$('form').attr('check');//验证路径
+    var formData = new Object();
+    var data=$(":input").each(function() {
+      formData[this.name] =$("#"+this.name ).val();
+    });
+    formData['orgId'] = "";
+    //语言
+    formData['langCode'] = "zh-cn";
+    $.ajax({
+      async : false,
+      cache : false,
+      type : 'POST',
+      url : checkurl,// 请求的action路径
+      data : formData,
+      error : function() {// 请求失败处理函数
+      },
+      success : function(data) {
+        var d = $.parseJSON(data);
+        if (d.success) {
+          if (d.attributes.orgNum > 1) {
+              //用户拥有多个部门，需选择部门进行登录
+              var title, okButton;
+              if($("#langCode").val() == 'en') {
+                title = "Please select Org";
+                okButton = "Ok";
+              } else {
+                title = "请选择组织机构";
+                okButton = "确定";
+              }
+            $.dialog({
+              id: 'LHG1976D',
+              title: title,
+              max: false,
+              min: false,
+              drag: false,
+              resize: false,
+              content: 'url:userController.do?userOrgSelect&userId=' + d.attributes.user.id + '&companyId='+formData['companyId'],
+              lock:true,
+              button : [ {
+                name : okButton,
+                focus : true,
+                callback : function() {
+                  iframe = this.iframe.contentWindow;
+                  var orgId = $('#orgId', iframe.document).val();
+
+                  formData['orgId'] = orgId ? orgId : "";
+                  $.ajax({
+                    async : false,
+                    cache : false,
+                    type : 'POST',
+                    url : 'loginController.do?changeDefaultOrg',// 请求的action路径
+                    data : formData,
+                    error : function() {// 请求失败处理函数
+                    },
+                    success : function(data) {
+                        window.location.href = actionurl;
+                    }
+                  });
+
+                  this.close();
+                  return false;
+                }
+              }],
+              close: function(){
+                setTimeout("window.location.href='"+actionurl+"'", 10);
+              }
+            });
+          } else {
+            window.location.href = actionurl;
+          }
+       } else {
+            layer.msg(d.msg, {icon:5});
+        }
+      }
+    });
+  }  
+  
+</script>
+
+</html>

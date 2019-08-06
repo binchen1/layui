@@ -1,0 +1,531 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<t:base type="DatePicker" />
+<!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<style>
+  .panel-body {
+    font-size: 12px;
+  }
+
+  .layui-form-radio {
+    font-size: 12px;
+  }
+
+  .layui-form-item {
+    margin-bottom: 0px;
+  }
+
+  .layui-input-block {
+    margin-left: 0px;
+  }
+
+  .layui-table-view .layui-table td {
+    padding: 0 0 0 0;
+  }
+
+  .layui-body {
+    overflow-y: scroll;
+  }
+
+  html,
+  body {
+    overflow: hidden;
+  }
+
+  body {
+    overflow-y: scroll;
+  }
+
+  .layui-table td,
+  .layui-table th {
+    padding: 2px 8px;
+  }
+
+  input {
+    width: 100%;
+    border: 0;
+
+  }
+
+  .td-label label {
+    display: inline-block;
+    width: 100%;
+    text-align: right;
+  }
+
+  .layui-table th {
+    padding: 5px 10px;
+    background-color: #f2f2f2;
+  }
+
+  .partA {
+    background: #eee;
+    border: 1px solid #cccccc;
+    position: absolute;
+    right: 4px;
+    top: 2px;
+    text-align: center;
+    padding: 1px 5px;
+    color: #8f0911;
+  }
+
+  .formtable {
+    width: 100%;
+    background-color: #ddd;
+  }
+
+  .formtable tr {
+    background-color: #f5f5f5;
+    line-height: 30px;
+    text-align: center;
+  }
+
+  input[name="partText"] {
+    padding-left: 10px;
+  }
+</style>
+<script>
+
+  var testObjects = eval('${testObjects}');	// 样品
+  var sampleDetailsMap = {};	// 样品属性列表：  样品ID - 样品属性
+  var sampleOtherInfoMap = {};	// 样品附加信息： 样品ID - 样品附加信息
+  var defaultSampleDetails = [];
+  var defaultSampleOtherInfo = [];
+
+  setSampleDetailsMap(sampleDetailsMap, sampleOtherInfoMap, testObjects);// key - value 
+  defaultSampleDetails = sampleDetailsMap[testObjects[0].id];
+  defaultSampleOtherInfo = sampleOtherInfoMap[testObjects[0].id];
+
+  layui.use(['element', 'laydate', 'form', 'table'], function () {
+    var $ = layui.$
+      , element = layui.element
+      , laydate = layui.laydate
+      , form = layui.form
+      , table = layui.table;
+    var fristConfirm = true;
+    // 提交修改
+    form.on('submit(submitBtn)', function (data) {
+
+      // TODO
+      /* console.info(defaultSampleDetails);
+      console.info(defaultSampleOtherInfo);
+      return; */
+      $('#sampleDetail').find('input').each(function (i, v) {
+        defaultSampleDetails[i].value = $(this).val()
+      })
+      $('#sampleOtherInfo').find('input').each(function (i, v) {
+        defaultSampleOtherInfo[i].value = $(this).val()
+      })
+      if (fristConfirm) {
+        fristConfirm = !fristConfirm;
+        var index;
+        $.ajax({
+          url: basePath + '/testObjectController.do?doUpdateTestObject',
+          data: {
+            id: testObjects[0].id,
+            testSampleId: currentSample.id,
+            model: $("#model").val(),
+            specification: $("#specification").val(),
+            label: $("#label").val(),
+            grade: $("#grade").val(),
+            // 这里有点坑，系统引用了hitek样品，库里存了层级ID，没有存层级名称
+            // 然后没有任何地方可以通过层级ID查询层级名，数据都在hitek数据中心，我也偷个懒，先这样吧 - weiheng 20180809
+            testSampleLevelName: currentSample.attributes.sampleLevelName,
+            testObjectDetailJson: JSON.stringify(defaultSampleDetails),
+            testObjectOtherInfoJson: JSON.stringify(defaultSampleOtherInfo)
+          },
+          dataType: "json",
+          type: "POST",
+          beforeSend: function () {
+            index = SHOW_LOAD_LAYER('正在处理...');
+          },
+          success: function (res) {
+            CLOSE_LOAD_LAYER(index);
+            if (res.success) {
+              var currentIndex = parent.layer.getFrameIndex(window.name); // 当前层
+              // 触发父页面刷新
+              parent.location.reload();
+              // 关闭当前页
+              parent.layer.close(currentIndex);
+            } else {
+              layer.alert(res.msg, {
+                title: '提示'
+              })
+              fristConfirm = !fristConfirm;
+            }
+          }
+        });
+      }
+    });
+
+    // 样品属性
+    tableRenderTestObjectDetail(table, 'sampleDetail', defaultSampleDetails);
+    // 样品附加信息
+    tableRenderTestObjectInfo(table, 'sampleOtherInfo', defaultSampleOtherInfo);
+
+    // 目前跳转到修改样品页面，testObjects.length 一定等于1
+    console.info("规格型号：", testObjects[0].model + ","
+      + testObjects[0].specification + "," + testObjects[0].label + "," + testObjects[0].grade);
+    $("#model").val(testObjects[0].model);
+    $("#specification").val(testObjects[0].specification);
+    $("#label").val(testObjects[0].label);
+    $("#grade").val(testObjects[0].grade);
+
+    initEvent();
+  });
+
+  function getTestObjectData(sampleDetails, testObject) {
+    sampleDetails.push({ "name": "样品名称", "value": testObject.testSampleDisplayName, "key": "testSampleDisplayName" });
+    sampleDetails.push({ "name": "规格型号", "value": testObject.standard, "key": "standard" });
+    sampleDetails.push({ "name": "检测部位", "value": testObject.part, "key": "part" });
+    sampleDetails.push({ "name": "工程部位/用途", "value": testObject.projectPartAndUse, "key": "projectPartAndUse" });
+    sampleDetails.push({ "name": "样品描述", "value": testObject.description, "key": "description" });
+    sampleDetails.push({ "name": "试样数量", "value": testObject.sampleNum, "key": "sampleNum" });
+    sampleDetails.push({ "name": "代表数量", "value": testObject.delegatesNum, "key": "delegatesNum" });
+    sampleDetails.push({ "name": "备注", "value": testObject.remark, "key": "remark" });
+  }
+
+	/**
+	 *	sampleDetailsMap ：  样品ID - 样品属性集合
+	 *	sampleOtherInfoMap : 样品ID - 附加信息集合
+	 */
+  function setSampleDetailsMap(sampleDetailsMap, sampleOtherInfoMap, testObjects) {
+    for (var i = 0; i < testObjects.length; i++) {
+      var sampleDetails = [];	// 样品属性列表
+      // 将样品属性填充到 sampleDetails 中
+      getTestObjectData(sampleDetails, testObjects[i]);
+      sampleDetailsMap[testObjects[i].id] = sampleDetails;
+
+      // 附加信息
+      var otherInfos = testObjects[i].testObjectOtherInfos;
+      for (var j = 0; j < otherInfos.length; j++) {
+        var otherInfo = [];
+        otherInfo.push({ "name": otherInfos[j].name, "value": otherInfos[j].value });
+      }
+      sampleOtherInfoMap[testObjects[i].id] = otherInfos;
+    }
+  }
+
+  // 表格渲染 左侧
+  function tableRenderTestObjectDetail(table, id, data) {
+    var htm = '<tr><th class="td-label"><label for=""></label></th><th></th></tr>';
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      htm += '<tr class="dy">';
+      htm += '<td class="td-label"><label for="' + row.id + '">' + row.name + '：</label></td>';
+      htm += '<td class="value">';
+      if ('检测部位' === row.name) {
+        htm += '<input id="part" readonly unselectable="on" onclick="partFun()"  value="' + (row.value ? row.value : '') + '" >';
+        htm += '<a class="partA"  onclick="partFun()" class="easyui-linkbutton" '
+        htm += 'onfocus="partFun()">....</a>'
+      } else if ('规格型号' === row.name) {
+        htm += '<input id="standard" readonly unselectable="on" onclick="chooseStandard()"  value="' + (row.value ? row.value : '') + '" >';
+        htm += '<a class="partA"  onclick="chooseStandard()" class="easyui-linkbutton" '
+        htm += 'onfocus="chooseStandard()">选择</a>'
+      } else {
+        htm += '<input  value="' + (row.value ? row.value : '') + '" >';
+      }
+      htm += '</td>';
+      htm += '</tr>';
+
+      $('#' + id).html(htm)
+    }
+  }
+  // 点击检测部位
+  function partFun() {
+    var partStr = $('#part').val();
+    var html = '<table class="formtable" cellpadding="0" cellspacing="1" border="1">'
+    html += '<tr>'
+    html += '<th>序号</th>'
+    html += '<th>检测部位</th>'
+    html += '</tr>'
+    html += '<tr>'
+    html += '<td>' + 1 + '</td>'
+    if (partStr) {
+      html += '<td><input type="text" name="partText" value="' + partStr + '" ></td>'
+    } else {
+      html += '<td><input type="text" name="partText" value=""></td>'
+    }
+    html += '</tr>'
+    html += '</table>'
+    partLayerCall(html)
+  }
+
+  /**
+  * 规格选择这块的js代码，从收样的样品选择页面抄袭来的
+  * 看前台的同学是否需要优化/提炼/合并一下了 - 20190530
+  */
+  var standardAttrs = '';
+  function chooseStandard() {
+    var url = 'webpage/com/hitek/testbusiness/consign/attrDiv.jsp';
+    var attrsStr = "";
+    if (!standardAttrs || standardAttrs == "[]") {
+      attrsStr = encodeURI(encodeURI('[{"name":"自定义规格","value":""}]'));
+    } else {
+      attrsStr = encodeURI(encodeURI(standardAttrs));
+    }
+
+    layer.open({
+      type: 2,
+      skin: 'mylayui-layer-molv',
+      title: '选择规格型号',
+      content: url + '?attrs=' + attrsStr,
+      btn: ['确定', '取消'],
+      area: ['300px', '60%'],
+      yes: function (index, layero) {
+        var dom = layer.getChildFrame('body', index);
+        var standardArr = [];
+        $(dom).find('.editable-select.es-input').each(function (index, ele) {
+
+          var name = $(ele).closest('td.value').prev('.td-label').text();
+          var systemFieldName = $(ele).closest('td.value').prev('.td-label').attr("systemFieldName");
+          name = name.substring(0, name.length - 1);   // 去掉冒号
+          if ($(ele).val() == "") {
+            layer.msg('请输入' + name, { icon: 5 });
+            standardArr = [];
+            //终止循环
+            return false;
+          }
+
+          var value = $(ele).val();
+          if (systemFieldName == '型号') {
+            standardArr.push({ 'name': 'model', 'value': value });
+          } else if (systemFieldName == '规格') {
+            standardArr.push({ 'name': 'specification', 'value': value });
+          } else if (systemFieldName == '等级') {
+            standardArr.push({ 'name': 'grade', 'value': value });
+          } else if (systemFieldName == '标号') {
+            standardArr.push({ 'name': 'label', 'value': value });
+          }
+
+          var select = $("#sampleOtherInfo").find('tbody tr.dy').find('input[data-sysname=' + systemFieldName + ']');
+          select.val(value);
+        });
+        //console.info("standardArr", standardArr);
+        if (standardArr.length > 0) {
+          var standard = '';
+          for (var i = 0; i < standardArr.length; i++) {
+            var id = standardArr[i].name;
+            var val = standardArr[i].value;
+            $("#" + id).val(val);
+            standard += val + " ";
+          }
+          standard = standard.substring(0, standard.length - 1);
+          $('#standard').val(standard);
+          $('#standard-cont').text(standard);
+          layer.close(index);
+        }
+      }
+    });
+  }
+
+  function partLayerCall(html) {
+    layer.open({
+      type: 1,
+      title: '设置检测部位',
+      skin: 'mylayui-layer-molv',
+      content: html,
+      area: ['30%', '60%'],
+      btn: ['确定', '取消'],
+      yes: function (index, layero) {
+        var partTextStr = '';
+        $(layero).find('input').each(function () {
+          partTextStr += $(this).val() + '; '
+        });
+        var partTextStr1 = partTextStr.slice(0, -2);
+        $('#part').val(partTextStr1);
+        var projectPartAndUseEle = $('#projectPartAndUse');
+        if (!(projectPartAndUseEle.val())) {
+          projectPartAndUseEle.val(partTextStr1);
+        }
+        layer.close(index)
+      }
+    });
+  }
+  // 表格渲染 右侧
+  function tableRenderTestObjectInfo(table, id, data) {
+    var htm = '<tr><th class="td-label"><label for=""></label></th><th></th></tr>';
+    if (data && data.length > 0) {
+      var rows = data;
+      for (var j = 0; j < rows.length; j++) {
+        // 跳过型号、规格、等级、标号，由页面规格型号字段统一输入
+        var sysField = rows[j].systemFieldName;
+        var hideFlag = false;
+        if (sysField == '型号' || sysField == '规格' || sysField == '等级' || sysField == '标号') {
+          hideFlag = true;
+        }
+        var row = rows[j];
+        htm += '<tr class="dy"' + (row.infoType == 2 || hideFlag ? 'style="display:none;"' : '') + '>';
+        htm += '<td class="td-label"><label for="' + row.id + '">' + row.name + '：</label></td>';
+
+        var value;
+        var dataType = row.dataType;
+        htm += '<td class="value">';
+        if (dataType == 2) { //时间类型
+          value = row.value;
+          htm += '<input id="' + row.id + '" class="Wdate" style=" border: 0" name="' + row.id + '" ';
+          htm += 'onclick="WdatePicker({dateFmt:\'yyyy-MM-dd\'})"';
+          htm += 'value="' + (value ? value : '') + '">';
+        } else { //输入框类型 infoList 
+          var infoListHtml = '';
+          value = row.value;
+          htm += '<input list="infoList' + j + '" id="' + row.id + '" name="' + row.id + '"';
+          htm += ' data-sysname="' + row.systemFieldName + '"';
+          htm += ' value="' + (value ? value : '') + '" >';
+          if (row.inputHistory) {
+            $.each(row.inputHistory, function (i, v) {
+              infoListHtml += '<option data-index="' + i + '" data-id="' + i + '" value = "' + v + '" />'
+            })
+          }
+          htm += '<datalist id="infoList' + j + '">' + infoListHtml + '</datalist>'
+        }
+        htm += '</td>';
+
+        htm += '</tr>';
+      }
+    }
+    $('#' + id).html(htm)
+  }
+
+  var currentSample;	// 当前属性节点选中的样品
+  var sampleTree;
+  var ECHO_SAMPLE_ID; // 需要回显的样品ID
+  // 事件初始化
+  function initEvent() {
+
+    // 取样品的测试参数（这个页面只有一个样品）
+    ECHO_SAMPLE_ID = testObjects[0].testSampleId;
+    var testParams = testObjects[0].testObjectParams;
+    var testParamIds = "";
+    for (var i = 0; i < testParams.length; i++) {
+      if (i == 0) {
+        testParamIds += testParams[i].testParamId;
+      } else {
+        testParamIds += "," + testParams[i].testParamId;
+      }
+    }
+
+    var url = "testSampleController.do?getSampleComboTreeByTestParams";
+    url += "&testParamIds=" + testParamIds;
+    sampleTree = $('#sample').tree({
+      url: url,
+      lines: true,
+      onLoadSuccess: function () {
+        sampleTree.tree("collapseAll");
+        // 数据回显
+        var node = sampleTree.tree('find', ECHO_SAMPLE_ID);
+        if (node) {
+          sampleTree.tree("expandTo", node.target);
+          sampleTree.tree('select', node.target);
+          currentSample = node;
+        }
+      },
+      onSelect: function (node) {
+        currentSample = node;
+        getTestObjectStandard();
+      }
+    });
+  }
+
+  // 获取样品规格型号
+  function getTestObjectStandard() {
+    var url = "testObjectOtherInfoController.do?getTestObjectOtherInfo";
+    var testObjectId = GetQueryString("testObjectId");
+    var dataJson = { testObjectId: testObjectId }
+    ajaxRequest(url, dataJson, formatTestObjectOtherInfo);
+  }
+
+  // 将样品辅助信息格式化成需要的规格信息
+  function formatTestObjectOtherInfo(res) {
+    if (res.success == false) {
+      layer.msg(res.msg, { icon: 5 });
+      return;
+    }
+    var data = res.obj;
+    var specificObj = [];
+    for (var i = 0; i < data.length; i++) { // 遍历所有的样品辅助信息（hitek数据中心返回的）
+      var fieldName = data[i] && data[i].systemFieldName ? data[i].systemFieldName : '';
+      var orderNo = data[i] && data[i].orderNo ? data[i].orderNo : 1;
+
+      if (fieldName === "型号" || fieldName === "规格" || fieldName === "标号" || fieldName === "等级") {
+        //循环每个规格型号的value值，可以是数组（对应多个可选的值），也可以为空或者undefined（对应空字符串）
+        if (data[i].listValue && data[i].listValue.length > 0) {
+          specificObj.push({
+            systemFieldName: fieldName,
+            name: data[i].displayName,
+            value: data[i].listValue,
+            isDefaultValue: data[i].isDefaultValue,
+            order: orderNo
+          });
+        } else {
+          var displayNames = chooseAttrArr(fieldName, currentSample);
+          specificObj.push({
+            systemFieldName: fieldName,
+            name: data[i].displayName,
+            value: displayNames || '',
+            isDefaultValue: data[i].isDefaultValue,
+            order: orderNo
+          });
+        }
+      }
+    }
+    standardAttrs = JSON.stringify(specificObj);
+    console.info("specificObj", specificObj);
+  }
+
+  function chooseAttrArr(fieldName, currentSample) {
+    if (fieldName === currentSample.attributes.sampleLevelName) {
+      return currentSample.text;
+    } else {
+      var $tree = $('#sample');
+      var parentId = currentSample.id;
+      var textValue = sampleGetParent($tree, fieldName, parentId);
+      return textValue
+    }
+  }
+
+  function sampleGetParent($tree, fieldName, id) {
+    var node = $tree.tree('find', id);
+    var parentNodes = $tree.tree('getParent', node.target);
+    if (parentNodes) {
+      if (fieldName === parentNodes.attributes.sampleLevelName) {
+        return parentNodes.text;
+      } else {
+        sampleGetParent($tree, fieldName, parentNodes.id);
+      }
+    } else {
+      return '';
+    }
+
+  }
+</script>
+
+<body>
+  <div class="layui-container" style="width: 100%;">
+    <form class="layui-form" lay-filter="form" style="width: 100%;" method="post">
+      <input id="submitBtn" name="submitBtn" lay-filter="submitBtn" lay-submit="" class="layui-btn layui-hide"></input>
+    </form>
+    <input id="model" type="hidden" />
+    <input id="specification" type="hidden" />
+    <input id="label" type="hidden" />
+    <input id="grade" type="hidden" />
+    <div class="layui-row layui-col-space10">
+      <div class="layui-col-xs3 layui-col-sm3 layui-col-md3" style="overflow: hidden;">
+        <table id="sample"></table>
+      </div>
+      <div class="layui-col-xs9 layui-col-sm9 layui-col-md9 layui-col-space5">
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6">
+          <table class="layui-table" id="sampleDetail" lay-filter="sampleDetail" style="margin-top: 0px;">
+          </table>
+        </div>
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6">
+          <table class="layui-table" id="sampleOtherInfo" lay-filter="sampleOtherInfo" style="margin-top: 0px;">
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>

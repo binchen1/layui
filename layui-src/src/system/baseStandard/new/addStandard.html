@@ -1,0 +1,178 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<%-- <t:base type="jquery,easyui,tools"/> --%>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<script type="text/javascript" src="plug-in/easyui-1.5.5.2/jquery.min.js"></script>
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<script>
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<div class="layui-container" style=" padding-top: 10px;">
+	<form class="layui-form" action="">
+	  <div class="layui-form-item" style="padding-top: 20px;">
+	    <label class="layui-form-label">
+	    <span class="layui-color-red" style="margin-right:3px;">*</span>规程名称：</label>
+	    <div class="layui-input-block">
+	      <input type="text" name="standardName" id="standardName" lay-verify="required" autocomplete="off" class="layui-input">
+	    </div>
+	  </div>
+	  <div class="layui-form-item" style="padding-top: 10px;">
+	    <label class="layui-form-label">
+	    颁布号：</label>
+	    <div class="layui-input-block">
+	      <input type="text" name="publishCode" id="publishCode" lay-verify="required" autocomplete="off" class="layui-input">
+	    </div>
+	  </div>
+	  <div class="layui-form-item" style="padding-top: 10px;">
+	    <label class="layui-form-label">执行时间：</label>
+	    <div class="layui-input-block">
+	      <input type="text" name="executeDate" id="executeDate" lay-verify="required" autocomplete="off" class="layui-input">
+	    </div>
+	  </div>
+	</form>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+
+	var testObjectParamId = '${testObjectParamId}';
+	 var testObjectId = GetQueryString('testObjectId');
+	
+
+	layui.use(['form', 'layedit', 'laydate'], function(){
+		  var form = layui.form
+		  ,layer = layui.layer
+		  ,layedit = layui.layedit
+		  ,laydate = layui.laydate
+		  ,$ = layui.$;
+		  
+		  //日期
+		  laydate.render({
+		    elem: '#executeDate'
+		    ,type: 'date'
+		    , trigger: 'click'
+		    ,ready: function(date){
+		    	$("div[class='layui-laydate']").css('top','10px');
+		    }
+		  });
+		  
+	});
+	
+	// 跳转
+	function goSimilarStandardPrompt(){
+	
+		var standardName = $("#standardName").val();
+		var publishCode = $("#publishCode").val();
+		var url = "baseStandardNewController.do?goSimilarStandardPrompt";
+			url+= "&testObjectParamId="+testObjectParamId;
+			url+= "&standardName="+encodeURI(standardName);
+			url+= "&publishCode="+encodeURI(publishCode);
+			url+= "&currentStandardType=${currentStandardType}";
+			url+= "&testObjectId="+testObjectId;
+		/* console.info("url===============");
+		console.info(url); */
+		var layerIndex = parent.layer.open({
+		    type: 2,
+		    title: '新增规程',
+		    offset: 'auto',
+		    skin: 'layui-layer-molv',
+		    content: url,
+		    closeBtn: 0,
+		    btn: ['确定', '取消'],
+		    area: ['60%', '80%'],
+		    btn1:function (index, layero){
+		    	// 这个确定按钮的点击事件，写在 similarStandardPrompt.jsp 页面
+		    	/* var iframeWin = window.parent[layero.find('iframe')[0]['name']];
+		    	iframeWin.doSubmit();
+		    	layer.close(layerIndex); */
+		    },
+		    btn2:function (){
+		      layer.close();
+		    },
+		});
+		
+		var index = parent.layer.getFrameIndex(window.name);
+		parent.layer.close(index)	// 关闭当前层
+	}
+	
+	// 保存自定义规程
+	function doSaveLocalStandard(){
+	
+		var layerMaskIndex;
+		$.ajax({
+			url: 'baseStandardNewController.do?doSaveLocalStandard'
+			,data: {
+				standardName: $("#standardName").val()
+				,publishCode: $("#publishCode").val()
+				,executeDate: $("#executeDate").val()
+				,testObjectParamId: testObjectParamId
+				,type: '${currentStandardType}'
+			}
+			,dataType: 'json'
+			,type: 'post'
+			,beforeSend: function(){
+    			layerMaskIndex = SHOW_LOAD_LAYER('正在处理...');
+    		}
+    		,success: function (res){
+    			CLOSE_LOAD_LAYER(layerMaskIndex);
+    			if(!res.success){	// 如果请求失败
+    				layer.msg('保存规程异常',{icon:5});  
+    			} else {
+    				// 保存成功，刷新父页面数据
+    				//window.parent.location.reload();
+    				var index = parent.layer.getFrameIndex(window.name);
+					parent.layer.close(index);
+					parent.loadParamUseStandard(testObjectId, testObjectParamId);
+    			}
+    		}
+		});
+	}
+	// 验证必填字段
+	function dataRequired(){
+	  var standardNameEle =$("#standardName");
+	  var publishCodeEle =$("#publishCode");
+	  if (!standardNameEle.val()) {
+          formTipFun('规程名称不能为空', standardNameEle)
+         return false;
+      }
+      /* if (!publishCodeEle.val()) {
+          formTipFun('颁布号不能为空', publishCodeEle)
+         return false;
+      }*/
+      return true;
+	}
+	
+	// 检查是否存在类似规程
+	function checkSimilarStandard(){
+	  if(dataRequired()){
+		var layerMaskIndex;
+		$.ajax({
+			url: 'baseStandardNewController.do?checkSimilarStandard'
+			,data: {
+				standardName: $("#standardName").val()
+				,publishCode: $("#publishCode").val()
+			}
+			,dataType: 'json'
+			,type: 'post'
+			,beforeSend: function(){
+    			layerMaskIndex = SHOW_LOAD_LAYER('正在处理...');
+    		}
+    		,success: function (res){
+    			CLOSE_LOAD_LAYER(layerMaskIndex);
+    			if(!res.success){	// 如果请求失败
+    				layer.msg('检查类似规程异常',{icon:5});  
+    				return;
+    			}
+    			
+   				if(res.obj > 0){// 如果有类似数据，则页面跳转
+   					goSimilarStandardPrompt();
+   				} else {// 没有类似数据，则直接保存
+   					doSaveLocalStandard();
+   				}
+    		}
+		});
+	  }
+	}
+		
+</script>

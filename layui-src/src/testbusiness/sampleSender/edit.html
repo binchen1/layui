@@ -1,0 +1,229 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增/编辑送样人员</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <style>
+    #fileUpload>div {
+      height: 40px !important;
+      line-height: 40px;
+    }
+
+    .formtable .inputxt {
+      width: 93%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="height-full">
+    <form class="layui-form table-form" id="commonQueryForm">
+      <div class="layui-form-box">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>手机号：</label>
+          <div class="layui-input-block">
+            <input type="number" onchange="InitObj.contactPhoneBlur()" name="contactPhone" class="layui-input"
+              autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-form-item ">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>姓名：</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+    </form>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer', 'upload'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        var upload = layui.upload;
+        InitObj.init(form, upload)
+      })
+    })
+    var InitObj = {
+      editId: GetQueryString("editId"), // 发放报告id
+      relation: GetQueryString("relation"), // 关联委托单位
+      contactPhoneUrl: 'sampleSenderController.do?getByPhone', // 获取送样人手机号对应的信息
+      detailUrl: 'reportIssueController.do?getDetail', // 获取数据详情或编辑
+      addUrl: 'sampleSenderController.do?doAdd', // 保存数据 
+      updateUrl: 'sampleSenderController.do?doUpdate', // 保存数据 
+      name: $('input[name="name"]'),
+      contactPhone: $('input[name="contactPhone"]'),
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      rowArr: parent.dataGrid.datagrid('getSelected'),
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form, upload) {
+        if (this.editId) {
+          console.log('this.editId', this.editId)
+          // this.contactPhone.attr('readonly', true)
+          this.detailEditData(this.rowArr)
+        }
+      },
+      // 光标离开后获取 根据电话号码，获取信息
+      contactPhoneBlur: function () {
+        var phones = this.contactPhone.val()
+        if (checkTelephone(phones)) {
+          ajaxRequest(this.contactPhoneUrl, { 'contactPhone': phones }, this.contactPhoneCallback, false, true)
+        } else {
+          formTipFun('电话号码有误，请重填', this.contactPhone)
+        }
+      },
+      contactPhoneCallback: function (res) {
+        var that = InitObj;
+        if (res.success && res.obj.length > 0) {
+          //填写送样人电话后，检查所填写的电话在系统中是否已存在，若已存在，
+          // 检查填写的送样人姓名与系统中是否一致，若不一致则提示“系统检索到当前号码持有人为xxx，
+          // 是否更新在填送样人姓名?”是则将当前界面的送样人更新，否则清空送样人电话
+          if ('relationPage' === that.relation) { // 关联页面进来不能修改
+            formTipFun('电话号码已存在', this.contactPhone)
+          }
+          // else if (that.editId) {
+          //   that.editId = res.obj[0].id
+          //   console.log('that.editId', that.editId)
+          //   if (that.name.val() !== res.obj[0].name) {
+          //     layerConfirmFun('系统检索到当前号码持有人为:' + res.obj[0].name + '，是否更新在填送样人姓名?',
+          //       '', ['确定', '取消'], that.contactPhoneYes, res.obj[0].name)
+          //   }
+          // }
+        } else if (res.success && res.obj.length === 0) {
+          // that.editId = ''
+        }
+      },
+      // contactPhoneYes: function (name, index) {
+      //   var that = InitObj;
+      //   that.name.val(name)
+      //   layer.close(index)
+      // },
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          console.log('saveParam', saveParam)
+          console.log('this.editId', this.editId)
+          if (saveParam) {
+            var url = this.addUrl
+            if (this.editId) {
+              url = this.updateUrl
+              saveParam.id = this.editId
+            }
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(url, saveParam, this.saveAjaxCallback, true, true)
+            }else{
+              SHOW_LOAD_LAYER('数据提交中...');
+            }
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+
+      },
+      // 编辑数据处理
+      detailEditData: function (data) {
+        this.name.val(data.name)
+        this.contactPhone.val(data.contactPhone)
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var saveParam = {
+            'name': formdata.name,
+            'contactPhone': formdata.contactPhone,
+          }
+          if (this.editId) {
+            saveParam.id = this.editId
+          }
+          return saveParam
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      // 保存回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj,parentThat = parent;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          if ('relationPage' === that.relation) { // 新增添加关联关系
+            var url = "consignUnitController.do?doAddRelationship";
+            if (res.obj) {
+              var args = {
+                consignUnitId: parentThat.$('#dataGrid').datagrid('getSelected')['id'],
+                sampleSenderIds: res.obj.id
+              };
+              $.ajax({
+                url: url,
+                data: args,
+                dataType: 'JSON',
+                success: function (data) {
+                  if (data.success) {
+                    parentThat.$('#dataGrid0').datagrid('reload');
+                    parentThat.layerAlertFun('成功添加送样人员，并绑定到委托单位', 1, [])
+                    parent.layer.close(that.parentIndex); //再执行关闭 
+                  }
+                }
+              });
+            } else {
+              parentThat.$('#dataGrid0').datagrid('reload');
+              parentThat.layerAlertFun(res.msg, 1, [])
+              parent.layer.close(that.parentIndex); //再执行关闭 
+            }
+            return;
+          } else {
+            parentThat.reloadDataGrid();
+            parentThat.reloadDataGrid0();
+
+            layerAlertFun(res.msg, 6, []);
+            parent.layer.close(that.parentIndex); //再执行关闭 
+          }
+
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.contactPhone) {
+          queryParams.msg = '手机号不能为空'
+          queryParams.element = this.contactPhone
+          return false;
+        }
+        if (!queryParams.name) {
+          queryParams.msg = '姓名不能为空'
+          queryParams.element = this.name
+          return false;
+        }
+        if (queryParams.contactPhone) {
+          var isPass = checkTelephone(queryParams.contactPhone)
+          if (!isPass) {
+            queryParams.msg = '电话号码有误，请重填';
+            queryParams.element = this.contactPhone
+            return false;
+          }
+        }
+        return true;
+      },
+    }
+
+  </script>
+</body>
+
+</html>

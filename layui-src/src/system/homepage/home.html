@@ -1,0 +1,927 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/home.css" />
+  <script type="text/javascript" src="plug-in/Highcharts-5.0.14/code/highcharts.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+
+  <!--[if  IE 9]>
+    <link rel="stylesheet" type="text/css" href="plug-in/assets/css/commonIE9.css" />
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+  <!--   <script type="text/javascript" src="plug-in/assets/js/home.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/home.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script type="text/javascript" src="../../Highcharts-5.0.14/code/highcharts.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <script src="./home.js"></script> -->
+
+  <style>
+    .layui-colla-icon {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="home-box">
+    <!-- 消息通知 -->
+    <div class="home-left">
+      <div class="home-left-header">
+        <div>
+          <img src="plug-in/assets/images/user.png">
+        </div>
+        <p>
+          您好！欢迎使用<br /> <a href="#">博试云试验检测管理信息系统</a>
+        </p>
+        <div>
+          <p>
+            <a href="http://help.qdm123.com/" target="_Blank">帮助系统</a>｜
+            <a href="javascript:addChild()">修改密码</a> ｜
+            <a href="javascript:logoutChild()">退出系统</a> </p>
+          <!-- <p>
+            <a href="#">管理体系</a>｜<a href="#">功能搜索</a>｜<a href="#">帮助视频</a>
+          </p> -->
+        </div>
+      </div>
+      <div>
+        <h4 class="detail-header">公告板</h4>
+        <div class="layui-collapse" lay-accordion="" lay-filter="test" id="collapse"></div>
+        <h4 class="layui-color-blue layui-collapseH" onclick="InitObj.noticeMore()">全部公告 >></h4>
+      </div>
+      <!-- <div id="userBacklogsId">
+        <h4 class="userBacklogs-header">业务提醒</h4>
+        <ul>
+          <li class="userBacklogs-item"><span></span></li>
+        </ul>
+      </div> -->
+    </div>
+    <div class="home-right">
+      <div class="process-box card">
+        <h4 class="detail-header">检测业务主流程</h4>
+        <div class="process" id="process"></div>
+      </div>
+      <!-- 数据区块 -->
+      <div id="dataBlock">
+        <div class="dataBlock dataBlock_1"></div>
+        <div class="dataBlock dataBlock_2"></div>
+        <div class="dataBlock dataBlock_3"></div>
+        <div class="dataBlock dataBlock_4"></div>
+        <div class="dataBlock dataBlock_5"></div>
+        <div class="dataBlock dataBlock_6"></div>
+        <div class="dataBlock dataBlock_7"></div>
+        <div class="dataBlock dataBlock_8"></div>
+      </div>
+      <div class="layui-row layui-col-space15" id="dataChart">
+        <div class="dataChart_1"></div>
+        <div class="dataChart_2"></div>
+        <div class="dataChart_3"></div>
+        <div class="dataChart_4"></div>
+      </div>
+    </div>
+
+  </div>
+
+
+
+  <script>
+    //注意：折叠面板 依赖 element 模块，否则无法进行功能性操作
+    layui.use(['element', 'form'], function () {
+      var element = layui.element;
+      var form = layui.form;
+      InitObj.init(element)
+    });
+    // 修改密码
+    function addChild() {
+      parent.add('修改密码', 'userController.do?changepassword', '', 550, 200)
+    }
+    // 退出系统
+    function logoutChild() {
+      parent.logout()
+    }
+    var InitObj = {
+      elementLayerM: null,
+      consignDB: 'homePageController.do?consignDataBlock',
+      cosignChart: 'homePageController.do?cosignLineChart',
+      feeDB: 'homePageController.do?feeDataBlock',
+      feeChart: 'homePageController.do?feeHistogram',
+      contractDB: 'homePageController.do?contractDataBlock', // 合同为空
+      testTaskDB: 'homePageController.do?testTaskDataBlock',
+      testTaskDepartmentDB: 'homePageController.do?testTaskDepartmentDataBlock',
+      reportDB: 'homePageController.do?reportDataBlock',
+      reportChart: 'homePageController.do?reportPieChart',
+      personCertificateChart: 'homePageController.do?personCertificatePieChart', // 人员专业证书统计 为空
+      personTitleChart: 'homePageController.do?personTitleHistogram',  // 人员职称为空
+      equipmentChart: 'homePageController.do?equipmentDepartHistogram',  // 设备部门分布
+      equipmentYearChart: 'homePageController.do?equipmentDepartHistogram',  // 设备购置年份分布
+      operationDB: 'homePageController.do?operationDataBlock',  // 运营情况
+      userBacklogs: 'homePageController.do?getUserBacklogs', // 查询当前登录用户的待办事项集合
+      processUrl: 'homePageController.do?allProcessGuide',  // 查询全部流程引导节点
+      menuPowerUrl: 'functionController.do?getUserFunctions',  // 查询当前登录人员的菜单权限集合
+      implementPowerUrl: 'functionController.do?getUserFunctions',  // 查询当前登录人员的权限集合
+      // noticeUrl: 'noticeController.do?getUserNotice',  // 查询通知公告(未读)
+      noticeUrl: 'noticeController.do?datagrid',  // 查询通知公告(未读和已读)
+      // qryBacklogUrl: 'homePageController.do?qryBacklog',  // 查询待办事项
+      powerArr: [], // 流程图权限数组
+      processArr: [], // 固定流程图
+      statisticsEnd: 0, // 获取上标完成
+      processPowerSpeed: 0, // 流程与权限的速度
+      isFristOperation: true,  // 运营情况
+      operationDBYear: [],  // 运营情况 年
+      operationDBMonth: [],  // 运营情况 月
+      criclePie: null, // 饼图
+      chartBar: null, // 横向柱状图
+      chartColumn: null, // 柱状图
+      chartLine: null, // 折线图
+      timeUnit: '2', // 折线图
+      blockIndex: '', // 某一个年月区分
+      blockId: '', // 区块id
+      urlArr: {
+        "cosignChart": { url: '', urlCal: '', isDefaultLoad: true },
+        "feeChart": { url: '', urlCal: '', isDefaultLoad: true },
+        "reportChart": { url: '', urlCal: '', isDefaultLoad: true },
+        "personCertificateChart": { url: '', urlCal: '', isDefaultLoad: true },
+        "personTitleChart": { url: '', urlCal: '', isDefaultLoad: true },
+        "equipmentChart": { url: '', urlCal: '', isDefaultLoad: true },
+        "equipmentYearChart": { url: '', urlCal: '', isDefaultLoad: true },
+      },
+      init: function (element) {
+        this.elementLayerM = element
+        this.renderHtmlChart(element)
+        this.ajaxFun()
+        var processArrJs = [
+          { "moduleName": "委托收样", "iconUrl": "plug-in/assets/images/home_01.png" },
+          { "moduleName": "检测收费", "iconUrl": "plug-in/assets/images/home_02.png" },
+          { "moduleName": "任务分配", "iconUrl": "plug-in/assets/images/home_03.png" },
+          { "moduleName": "试验检测", "iconUrl": "plug-in/assets/images/home_04.png" },
+          { "moduleName": "复核确认", "iconUrl": "plug-in/assets/images/home_05.png" },
+          { "moduleName": "报告审批", "iconUrl": "plug-in/assets/images/home_06.png" },
+          { "moduleName": "报告批准", "iconUrl": "plug-in/assets/images/home_07.png" },
+          { "moduleName": "报告打印", "iconUrl": "plug-in/assets/images/home_08.png" },
+          { "moduleName": "报告领取", "iconUrl": "plug-in/assets/images/home_09.png" },
+        ]
+        this.processHtml(processArrJs);
+      },
+      renderHtmlChart: function (element) {
+        this.styleLayout(element)
+        this.optionsData()
+      },
+      ajaxFun: function () {
+        // ajaxRequest(this.qryBacklogUrl, { "moduleName": '委托' }, this.qryBacklogAjaxCallback, false, true)
+        ajaxRequest(this.noticeUrl, {}, this.noticeAjaxCallback, false, true)
+        ajaxRequest(this.userBacklogs, {}, this.userBacklogsAjaxCallback, false, true)
+        ajaxRequest(this.processUrl, {}, this.processAjaxCallback, false, true)
+        ajaxRequest(this.menuPowerUrl, { "functionType": "0", "wipeUrlIsNull": true }, this.menuPowerAjaxCallback, false, true)
+        ajaxRequest(this.implementPowerUrl, { "functionType": "1", "wipeUrlIsNull": true }, this.implementPowerAjaxCallback, false, true)
+      },
+      implementPowerAjaxFun: function (isAjax) {
+        if ('consignDB' === isAjax) {
+          ajaxRequest(this.consignDB, {}, this.consignDBAjaxCallback, false, true)
+        }
+        if ('cosignChart' === isAjax) {
+          ajaxRequest(this.cosignChart, { 'timeUnit': this.timeUnit }, this.cosignChartAjaxCallback, false, true)
+        }
+        if ('feeDB' === isAjax) {
+          ajaxRequest(this.feeDB, {}, this.feeDBAjaxCallback, false, true)
+        }
+        if ('feeChart' === isAjax) {
+          ajaxRequest(this.feeChart, { 'timeUnit': this.timeUnit }, this.feeChartAjaxCallback, false, true)
+        }
+        if ('contractDB' === isAjax) {
+          ajaxRequest(this.contractDB, {}, this.contractDBAjaxCallback, false, true)
+        }
+        if ('testTaskDB' === isAjax) {
+          ajaxRequest(this.testTaskDB, {}, this.testTaskDBAjaxCallback, false, true)
+        }
+        if ('testTaskDepartmentDB' === isAjax) {
+          ajaxRequest(this.testTaskDepartmentDB, {}, this.testTaskDepartmentDBAjaxCallback, false, true)
+        }
+        if ('reportDB' === isAjax) {
+          ajaxRequest(this.reportDB, {}, this.reportDBAjaxCallback, false, true)
+        }
+        if ('reportChart' === isAjax) {
+          ajaxRequest(this.reportChart, {}, this.reportChartAjaxCallback, false, true)
+        }
+        if ('personCertificateChart' === isAjax) {
+          ajaxRequest(this.personCertificateChart, {}, this.personCertificateChartAjaxCallback, false, true)
+        }
+        if ('personTitleChart' === isAjax) {
+          ajaxRequest(this.personTitleChart, { 'timeUnit': this.timeUnit }, this.personTitleChartAjaxCallback, false, true)
+        }
+        if ('equipmentChart' === isAjax) {
+          ajaxRequest(this.equipmentChart, { "dataType": 1 }, this.equipmentChartAjaxCallback, false, true)
+        }
+        if ('equipmentYearChart' === isAjax) {
+          ajaxRequest(this.equipmentYearChart, { "dataType": 2 }, this.equipmentYearChartAjaxCallback, false, true)
+        }
+        if ('operationDB' === isAjax) {
+          ajaxRequest(this.operationDB, { 'timeUnit': '1' }, this.operationDBAjaxCallback, false, true)
+        }
+
+
+      },
+      // 获取流程图权限 执行
+      implementPowerAjaxCallback: function (res) {
+        var that = InitObj
+        var arrUrlObj = {
+          "homePageController.do?consignDataBlock": "consignDB",
+          "homePageController.do?cosignLineChart": "cosignChart",
+          "homePageController.do?feeDataBlock": "feeDB",
+          "homePageController.do?feeHistogram": "feeChart",
+          "homePageController.do?contractDataBlock": "contractDB", // 合同为空
+          "homePageController.do?testTaskDataBlock": "testTaskDB",
+          "homePageController.do?testTaskDepartmentDataBlock": "testTaskDepartmentDB",
+          "homePageController.do?reportDataBlock": "reportDB",
+          "homePageController.do?reportPieChart": "reportChart",
+          "homePageController.do?personCertificatePieChart": "personCertificateChart", // 人员专业证书统计 为空
+          "homePageController.do?personTitleHistogram": "personTitleChart",  // 人员职称为空
+          "homePageController.do?equipmentDepartHistogram": "equipmentChart",  // 设备部门分布
+          "homePageController.do?equipmentDepartHistogram": "equipmentYearChart",  // 设备购置年份分布
+          "homePageController.do?operationDataBlock": "operationDB"  // 运营情况
+        }
+        if (res.obj) {
+          var arr = res.obj
+          for (var i = 0; i < arr.length; i++) {
+            if (arrUrlObj[arr[i].url]) {
+              that.implementPowerAjaxFun(arrUrlObj[arr[i].url])
+            }
+          }
+        }
+
+      },
+      // 获取流程图权限
+      menuPowerAjaxCallback: function (res) {
+        var that = InitObj
+        if (res.obj) {
+          that.powerArr = res.obj;
+          that.processPower(50)
+        }
+      },
+      // 获取流程图上标函数 ，调页面显示
+      statisticsAjaxCallback: function (res, processI) {
+        var that = InitObj
+        res.obj ? that.processArr[processI].superscript = res.obj : ''
+        that.statisticsEnd--;
+        if (0 === that.statisticsEnd) {
+          that.processHtml(that.processArr)
+        }
+      },
+      // 流程图与权限的匹配
+      processPower: function (num) {
+        this.processPowerSpeed += 50
+        if (100 === this.processPowerSpeed) {
+          for (var processI = 0; processI < this.processArr.length; processI++) {
+            for (var powerI = 0; powerI < this.powerArr.length; powerI++) {
+              if (this.processArr[processI].jumpUrl === this.powerArr[powerI].url) {
+                this.processArr[processI].isOpacity = true;
+                this.statisticsEnd++
+                ajaxRequest(this.processArr[processI].statisticsUrl, {}, this.statisticsAjaxCallback, false, true, processI)
+                break;
+              }
+            }
+          }
+        }
+      },
+      // 获取固定流程图
+      processAjaxCallback: function (res) {
+        var that = InitObj
+        if (res.obj) {
+          that.processArr = res.obj;
+          that.processPower(50)
+        }
+      },
+      // 运营情况区块
+      operationDBAjaxCallback: function (res) {
+        var that = InitObj
+        if (that.isFristOperation) {
+          res.obj ? InitObj.blockHtml(res.obj, 'operationDB', '运营情况', true, 8) : ''
+          res.obj ? that.operationDBMonth = res.obj : ''
+        } else {
+          res.obj ? that.operationDBYear = res.obj : ''
+          that.blockHtmlChang(that.operationDBYear[that.blockIndex])
+        }
+      },
+      // 查询当前登录用户的待办事项集合
+      userBacklogsAjaxCallback: function (res) {
+        console.log('查询当前登录用户的待办事项集合', res)
+        // res.obj ? InitObj.blockHtml(res.obj, 'userBacklogsDB', '待办事项', false, 2) : ''
+        if (res.obj) {
+          var dataArr = res.obj, dbId = 'userBacklogsDB', dataTitle = '待办事项', isClick = false, order = 2;
+          var priorityHtml = { 'H': '高', 'M': '中', 'L': '低', };
+          var html = '<h4 class="detail-header">' + dataTitle + '</h4> '
+          html += '<div class="layui-row ' + dbId + '">'
+          $.each(dataArr, function (i, v) {
+            html += '<div class="myDetail-item" style="width: 25%;" >'
+            html += '<div class="matter-box card text-center" style="background:#f7faff ;">'
+            html += '<div class="matter-icon"><i class="layui-icon">&#xe60e;</i> ' + v.moduleName + '</div>'
+            html += '<h3>--</h3>'
+            html += '<div class="matter-info">'
+            var backlogs = v.backlogs;
+            for (var j = 0; j < backlogs.length; j++) {
+              html += '<p>【' + priorityHtml[backlogs[j].priority] + '】' + backlogs[j].name + ''
+              html += '<span>（' + backlogs[j].value + '）</span>'
+              html += '</p>'
+            }
+            html += '</div></div>'
+            html += '</div>'
+            if (0 === ((i+1) % 4)) {
+              html += '<div class="cf"></div>'
+            }
+          })
+          html += '</div>'
+          $('#dataBlock').find('.dataBlock_' + order).html(html)
+        }
+
+        // var html = '', htmlH = '', htmlM = '', htmlL = '', arr = res.obj;
+        // var priorityHtml = { 'H': '', 'M': '', 'L': '', }
+        // if (arr && arr.length > 0) {
+        //   for (var i = 0; i < arr.length; i++) {
+        //     priorityHtml[arr[i].priority] += '<li class="userBacklogs-item">' + arr[i].name
+        //     if (arr[i].value) {
+        //       priorityHtml[arr[i].priority] += '<span>( ' + arr[i].value + ' )</span>'
+        //     } else {
+        //       priorityHtml[arr[i].priority] += '<span>( 0 )</span>'
+
+        //     }
+        //     priorityHtml[arr[i].priority] += '</li > '
+        //   }
+        // }
+        // html = priorityHtml['H'] + priorityHtml['M'] + priorityHtml['L']
+        // $('#userBacklogsId ul').html(html)
+      },
+      // 查询待办事项
+      qryBacklogAjaxCallback: function (res) {
+      },
+      // 查询通知公告(未读)
+      noticeAjaxCallback: function (res) {
+        console.log('386',res)
+        res.obj ? InitObj.collapseHtml(res.obj) : ''
+      },
+      // 设备购置年份分布 chart
+      equipmentYearChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'equipmentYearChart', '设备购置年份分布', false, 7, 6) : ''
+      },
+      // 设备部门分布 chart
+      equipmentChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'equipmentChart', '设备部门分布', false, 6, 6) : ''
+      },
+      // 人员职称统计图 chart
+      personTitleChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'personTitleChart', '人员职称', false, 5, 6) : ''
+      },
+      // 人员专业证书统计图 chart
+      personCertificateChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'personCertificateChart', '人员专业证书', false, 4, 6) : ''
+      },
+      // 报告统计区块
+      reportDBAjaxCallback: function (res) {
+        res.obj ? InitObj.blockHtml(res.obj, 'reportDB', '报告统计', false, 7) : ''
+      },
+      // 报告统计图 chart
+      reportChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'reportChart', '报告统计图', false, 3, 6) : ''
+      },
+      //  试验检测部门信息区块
+      testTaskDepartmentDBAjaxCallback: function (res) {
+        res.obj ? InitObj.blockHtml(res.obj, 'testTaskDepartmentDB', ' 试验检测部门信息', false, 6) : ''
+      },
+      //  试验检测人员信息区块
+      testTaskDBAjaxCallback: function (res) {
+        res.obj ? InitObj.blockHtml(res.obj, 'testTaskDB', ' 试验检测人员信息', false, 5) : ''
+      },
+      // 合同统计区块
+      contractDBAjaxCallback: function (res) {
+        res.obj ? InitObj.blockHtml(res.obj, 'contractDB', '合同统计', false, 4) : ''
+      },
+      // 收样信息区块
+      consignDBAjaxCallback: function (res) {
+        res.obj ? InitObj.blockHtml(res.obj, 'consignDB', '收样信息', false, 1) : ''
+      },
+      // 收样统计图 chart
+      cosignChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'cosignChart', '收样统计图', true, 1, 6) : ''
+      },
+      // 费用信息区块
+      feeDBAjaxCallback: function (res) {
+        res.obj ? InitObj.blockHtml(res.obj, 'feeDB', '费用信息', false, 3) : ''
+      },
+      // 费用统计图 chart
+      feeChartAjaxCallback: function (res) {
+        res.obj ? InitObj.chartHtml(res.obj, 'feeChart', '费用统计图', true, 2, 12) : ''
+      },
+      // 是否第一次加载 isClick 是否需要点击切换年月 order 页面展示的位置 colX 页面展示比例
+      chartHtml: function (arr, chartId, dataTitle, isClick, order, colX) {
+        if (this.urlArr[chartId].isDefaultLoad) {
+          this.dataChartHtml(arr, chartId, dataTitle, isClick, order, colX)
+          this.urlArr[chartId].isDefaultLoad = false
+        } else {
+          Highcharts.chart(chartId, this.dataOption(arr));
+        }
+      },
+      // 根据星期几获取多少号
+      getWeek: function (i, dateStr) {
+        var now = new Date(dateStr);
+        var firstDay = new Date(now - (now.getDay() - 1) * 86400000);
+        firstDay.setDate(firstDay.getDate() + i);
+        var mon = Number(firstDay.getMonth()) + 1;
+        var mons = mon < 10 ? ('0' + mon) : mon;
+        dates = firstDay.getDate() < 10 ? '0' + firstDay.getDate() : firstDay.getDate()
+        return now.getFullYear() + "-" + mons + "-" + dates
+      },
+      // 统计图 年月日格式返回
+      dateArr: function (dateStr) {
+        var dates = new Date(dateStr)
+        dateArr = {
+          "year": dates.getFullYear(),
+          "month": dates.getMonth() + 1 < 10 ? '0' + (dates.getMonth() + 1) : dates.getMonth() + 1,
+          "week": dates.getDay(),
+          "date": dates.getDate() < 10 ? '0' + dates.getDate() : dates.getDate()
+        }
+        yearArr = [], monthArr = [], weekArr = [], yearObj = {}, monthObj = {}, weekObj = {};
+        for (var monthI = 1; monthI < parseInt(dateArr.month) + 1; monthI++) {
+          monthI < 10 ? yearArr.push(dateArr.year + '-0' + monthI) : yearArr.push(dateArr.year + '-' + monthI)
+          monthI < 10 ? yearObj[dateArr.year + '-0' + monthI] = true : yearObj[dateArr.year + '-' + monthI] = true
+        }
+        for (var dateI = 1; dateI < parseInt(dateArr.date) + 1; dateI++) {
+          dateI < 10 ? monthArr.push(dateArr.year + '-' + dateArr.month + '-0' + dateI) : monthArr.push(dateArr.year + '-' + dateArr.month + '-' + dateI)
+          dateI < 10 ? monthObj[dateArr.year + '-' + dateArr.month + '-0' + dateI] = true : monthObj[dateArr.year + '-' + dateArr.month + '-' + dateI]
+        }
+        for (var weekI = 0; weekI < dateArr.week; weekI++) {
+          weekArr.push(this.getWeek(weekI, dateStr))
+          weekObj[this.getWeek(weekI, dateStr)] = true
+        }
+        return { "2": yearArr, "1": monthArr, "0": weekArr, "2obj": yearObj, "1obj": monthObj, "0obj": weekObj }
+      },
+      // 统计图 数据组装
+      dataOption: function (datas) {
+        var colors = ['#fd6284', '#36a2eb', '#ffce56', '#4bc0c0', '#fe9f3f', '#64E572'];
+        var that = InitObj
+        var chartTypeObj = { "line": that.chartLine, "histogram": that.chartColumn, "pie": that.criclePie }
+        var options = chartTypeObj[datas[0].chartType]
+
+        options.title.text = datas[0].chartTitle
+        // 先去重，根据去重结果再组装data
+        if (datas.length === 1) {
+          if ('pie' === datas[0].chartType) {
+
+            for (var i = 0; i < datas.length; i++) {
+              options.series[0].name = datas[i].dataTitle
+              options.series[0].data = []
+              var arrKey = datas[i].data
+              options.colors = colors.slice(0, arrKey.length)
+              for (var j = 0; j < arrKey.length; j++) {
+                options.series[0].data.push({ "name": arrKey[j].chartDataKey, "y": arrKey[j].chartDataValue })
+              }
+            }
+            return options
+          } else {
+            options.colors[0] = colors[4]
+            options.series = []
+            options.xAxis.categories = []
+            for (var i = 0; i < datas.length; i++) {
+              options.series.push({ 'name': datas[i].dataTitle, 'data': [] })
+              var arrKey = datas[i].data;
+              if (0 === arrKey.length) {
+                options.series[i].data.push(0)
+              } else {
+
+                for (var j = 0; j < arrKey.length; j++) {
+                  options.xAxis.categories.push(arrKey[j].chartDataKey)
+                  options.series[i].data.push(arrKey[j].chartDataValue)
+                }
+              }
+            }
+            return options
+          }
+        } else {
+          // 获取当前日期 来读取 年  月 周
+          var xAxisArr = this.dateArr(new Date())
+          options.xAxis.categories = xAxisArr[that.timeUnit]
+          options.colors = colors.slice(0, datas.length)
+          options.series = [];
+          for (var i = 0; i < datas.length; i++) {
+            var arrKey = datas[i].data
+            datas[i].dataObj = JSON.parse(JSON.stringify(xAxisArr[that.timeUnit + 'obj']))
+            for (var j = 0; j < arrKey.length; j++) {
+              if (datas[i].dataObj[arrKey[j].chartDataKey]) {
+                datas[i].dataObj[arrKey[j].chartDataKey] = arrKey[j].chartDataValue
+              }
+            }
+          }
+          for (var ii = 0; ii < datas.length; ii++) {
+            options.series.push({ 'name': datas[ii].dataTitle, 'data': [] })
+            var arrObj = datas[ii].dataObj
+            for (var jj in arrObj) {
+              if (arrObj.hasOwnProperty(jj)) {
+                if (arrObj[jj] !== true) {
+                  options.series[ii].data.push(arrObj[jj])
+                } else {
+                  options.series[ii].data.push(0)
+                }
+              }
+            }
+          }
+          return options
+        }
+
+      },
+      // 统计图页面渲染
+      dataChartHtml: function (dataArr, chartId, dataTitle, isClick, order, colX) {
+        var html = ''
+        html += '<div class="dataBlock layui-col-xs' + colX + '">'
+        html += '  <h4 class="detail-header"> ' + dataTitle + ''
+        if (isClick) {
+          html += '    <a class="rf" onclick="InitObj.headerTabs(event,&quot;' + chartId + '&quot;)">'
+          html += '      <i  class="abtn"> 周</i>'
+          html += '      <i  class="abtn"> 月</i>'
+          html += '      <i  class="abtn abtn-bg"> 年</i>'
+          html += '    </a>'
+        }
+        html += '  </h4>'
+        html += '  <div class="card">'
+        html += '    <div id="' + chartId + '"></div>'
+        html += '  </div>'
+        html += '</div>'
+        $('#dataChart').find('.dataChart_' + order).html(html)
+        Highcharts.chart(chartId, this.dataOption(dataArr));
+      },
+      // 各模块统计图原始数据
+      optionsData: function () {
+        Highcharts.setOptions({
+          colors: ['#fd6284', '#36a2eb', '#ffce56', '#4bc0c0', '#fe9f3f', '#64E572'],
+          chart: {
+            backgroundColor: {
+              linearGradient: [0, 0, 500, 500],
+              stops: [
+                [0, 'rgb(255, 255, 255)'],
+                [1, 'rgb(240, 240, 255)']
+              ]
+            },
+            borderWidth: 0,
+            plotBackgroundColor: 'rgba(255, 255, 255, .9)',
+            plotShadow: true,
+            plotBorderWidth: 1,
+            style: {
+              fontFamily: "",
+              fontSize: '22px',
+              fontWeight: 'bold',
+              color: 'red'
+            },
+          },
+          credits: {
+            enabled: false     //不显示LOGO 
+          }
+        });
+        this.chartLine = {
+          chart: {
+            type: 'line'
+          },
+          title: {
+            text: ''
+          },
+          colors: ['#84d9d2', '#ED7D31'],
+          xAxis: {
+            categories: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+          },
+          yAxis: {
+            title: {
+              text: ''
+            }
+          },
+          tooltip: {
+            crosshairs: true,
+            shared: true
+          },
+          plotOptions: {
+            line: {
+              dataLabels: {
+                // 开启数据标签
+                enabled: true
+              },
+              // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+              enableMouseTracking: true
+            }
+          },
+          series: [{
+            name: '委托单',
+            data: [325, 413, 190, 437, 132, 408, 128, 459, 202, 469, 192, 203]
+          }, {
+            name: '样品',
+            data: [368, 413, 186, 434, 131, 404, 123, 458, 201, 466, 187, 203]
+          }],
+        };
+        this.chartColumn = {
+          chart: {
+            type: 'column'
+          },
+          title: {
+            text: '收费合计'
+          },
+          colors: ['#4472C4'],
+          xAxis: {
+            categories: ['一月', '二', '三月', '四', '五月', '六月', '七', '八月', '九月', '十', '十一', '十二'],
+            crosshair: true
+          },
+          yAxis: {
+            title: {
+              text: ''
+            }
+          },
+          series: [{
+            name: '总人口',
+            data: [7127, 36826, 8243, 9198, 23295, 5780, 22524, 18620, 23610, 38247, 28790, 39666],
+          }]
+        }
+        this.chartBar = {
+          chart: {
+            type: 'bar'
+          },
+          title: {
+            text: '堆叠条形图'
+          },
+          colors: ['red'],
+          xAxis: {
+            categories: ['张三', '李四', '王五', '李二', '周闪', '米大', '刘二', '开朗', '郎朗']
+          },
+          yAxis: {
+            min: 0,
+            title: {
+              text: '水果消费总量'
+            }
+          },
+          legend: {
+            reversed: true
+          },
+          plotOptions: {
+            series: {
+              stacking: 'normal'
+            }
+          },
+          series: [{
+            name: '工时情况',
+            data: [328, 258, 244, 235, 221, 209, 202, 198, 168]
+          }]
+        }
+
+        this.criclePie = {
+          chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+          },
+          title: {
+            text: ''
+          },
+          colors: ['red'],
+          tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+          },
+          plotOptions: {
+            pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              dataLabels: {
+                enabled: false
+              },
+              showInLegend: true
+            }
+          },
+          series: [{
+            name: '人员情况',
+            colorByPoint: true,
+            data: [{
+              name: '七月',
+              y: 61.41,
+              sliced: true,
+              selected: true
+            }, {
+              name: '一月',
+              y: 11.84
+            }, {
+              name: '二月',
+              y: 10.85
+            }, {
+              name: '三月',
+              y: 4.67
+            }, {
+              name: '四月',
+              y: 4.18
+            }, {
+              name: '五月',
+              y: 7.05
+            },]
+          }]
+        }
+      },
+      // 各区块 展示
+      blockHtml: function (dataArr, dbId, dataTitle, isClick, order) {
+        var widths = $('#dataBlock').width(), len = dataArr.length;
+        var colWidth = (widths / len) / widths * 100;
+        var blockColors = ['#f9a976', '#fe7096', '#66b6f7', '#047edf', '#64ded4', '#07cdae']
+        // var blockColors = ['#009688', '#6e92a2', '#757575', '#795548', '#73c9ee', '#5cd593']
+        colWidth = 25; blockColors = '#f7faff00';
+        var html = '<h4 class="detail-header">' + dataTitle + '</h4> <div class="layui-row" id="' + dbId + '">'
+        $.each(dataArr, function (i, v) {
+          html += '<div class="myDetail-item" style="width: ' + colWidth + '%;" onclick="InitObj.jumpPage(&quot;' + v.jumpUrl + '&quot;,&quot;' + v.jumpName + '&quot;)">'
+          html += ' <div class="borderClass" style="background:' + blockColors + ';">'
+          if (isClick) {
+            html += '      <a href="#" class="rf" onclick="InitObj.blockTabs(event,&quot;' + dbId + '&quot;,' + i + ')">'
+            html += '        <i class="abtn abtn-bg">月</i>'
+            html += '        <i class="abtn">年</i>'
+            html += '     </a>'
+          }
+          html += '    <div class="nameClass">'
+          html += '      <span>' + v.name + ' </span>'
+          html += '    </div>'
+          html += '    <p class="text-center"> '
+          if (v.numMain) {
+            html += '      <b>' + v.numMain + '</b> '
+          } else {
+            html += '      <b>' + '0' + '</b> '
+          }
+          if (v.numSupplement) {
+            html += '      ( <b>' + v.numSupplement + ' </b> ) '
+          }
+          html += '    </p><h4 class="layui-color-blue">查看详情&gt;&gt;<span class="rf num-bottom">'
+          if ('待提交收样信息' === v.name) {
+            html += (v.numBottom ? '   退回(' + v.numBottom + ' )' : '   退回(' + 0 + ' )')
+          }
+          html += ' </span></h4> </div>'
+          html += '</div>'
+        })
+        html += '</div>'
+        $('#dataBlock').find('.dataBlock_' + order).html(html)
+      },
+      // 流程页面跳转
+      jumpPage: function (url, name) {
+        var id = "1";
+        window.parent.addTabs({ "id": id, "title": name, "close": false, "url": url });
+
+      },
+      // 数据区块 年月切换
+      blockHtmlChang: function (arr) {
+        $('#' + this.blockId).children().eq(this.blockIndex).find('.nameClass span').html(arr.name)
+        var numMain = arr.numMain ? arr.numMain : '0'
+        var htmlP = ' <b>' + numMain + '</b> '
+        arr.numSupplement ? htmlP += '( <b>' + arr.numSupplement + ' </b> )' : ''
+        $('#' + this.blockId).children().eq(this.blockIndex).find('p').html(htmlP)
+        if ('待提交收样信息' === arr.name) {
+          if (arr.numBotto) {
+
+            $('#' + this.blockId).children().eq(this.blockIndex).find('h4>span').html('退回(' + arr.numBottom + ' )')
+          } else {
+            $('#' + this.blockId).children().eq(this.blockIndex).find('h4>span').html('退回(' + 0 + ' )')
+
+          }
+        }
+
+      },
+      // 区块年月切换
+      blockTabs: function (event, ids, blockIndex) {
+        layui.stope(event)
+        this.blockIndex = blockIndex
+        this.blockId = ids
+        if (this.isFristOperation) {
+          this.isFristOperation = !this.isFristOperation
+          ajaxRequest(this.operationDB, { 'timeUnit': '2' }, this.operationDBAjaxCallback, false, true)
+        } else {
+          $(event.target).index() === 1 ?
+            this.blockHtmlChang(this.operationDBYear[this.blockIndex]) :
+            this.blockHtmlChang(this.operationDBMonth[this.blockIndex])
+        }
+        $(event.target).addClass('abtn-bg').siblings().removeClass('abtn-bg')
+      },
+      // 各图标年月周切换
+      headerTabs: function (event, ids) {
+        this.timeUnit = $(event.target).index()
+        this.urlArr = {
+          "cosignChart": { url: this.cosignChart, urlCal: this.cosignChartAjaxCallback, isDefaultLoad: false },
+          "feeChart": { url: this.feeChart, urlCal: this.feeChartAjaxCallback, isDefaultLoad: false },
+        }
+        if (this.urlArr[ids]) {
+          ajaxRequest(this.urlArr[ids].url, { 'timeUnit': this.timeUnit }, this.urlArr[ids].urlCal, false, true)
+        }
+        $(event.target).addClass('abtn-bg').siblings().removeClass('abtn-bg')
+      },
+      // 流程进程
+      processHtml: function (processArr) {
+        console.log('processArr', processArr)
+        var html = '', len = processArr.length - 1;
+        $.each(processArr, function (i, v) {
+          if (v.isOpacity) {
+            html += ' <div class="process-content" target="'+v.jumpUrl+'" onclick="InitObj.jumpPage(&quot;' + v.jumpUrl + '&quot;,&quot;' + v.moduleName + '&quot;)">'
+          } else {
+            html += ' <div class="process-content" >'
+          }
+          html += '  <div class="text-center">'
+          html += '    <div class="process-content-span">'
+          if (v.isOpacity) {
+            html += '      <img class="layui-circle " src="' + v.iconUrl + '">'
+          } else {
+            html += '      <img class="layui-circle imgOpacity" src="' + v.iconUrl + '">'
+          }
+          if (v.superscript) {
+            html += '      <span class="layui-circle">' + v.superscript + '</span>'
+          }
+          html += '    </div>'
+          html += '    <p>' + v.moduleName + '</p>'
+          html += '  </div>'
+          html += '</div>'
+          if (len !== i) {
+            html += '<div class="process-arrow">'
+            html += ' <img src="plug-in/assets/images/home_arrow.png">'
+            html += '</div>'
+          }
+        })
+        $('#process').html(html);
+        
+        // 初始化目标菜单 - 在线体验登陆到home页直接跳转目标菜单
+        var targetUrl = '${targetUrl}';
+        if(targetUrl) {
+            $("div[target='"+targetUrl+"']").click();
+        }
+      },
+      // 通知 手风琴
+      collapseHtml: function (arr) {
+        console.log('arr collapseHtml',arr)
+        var html = '', isFrist = true;
+        $.each(arr, function (i, v) {
+          // 1:通知, 2:公告
+          if ('1' === v.noticeType) {
+            html += '<div class="layui-colla-item">'
+            var time1 = new Date(v.createTime).Format("yyyy-MM-dd");
+            if (isFrist) {
+              isFrist = false;
+              html += '  <h2 class="layui-colla-title layui-color-blue">' + time1 + ' ' + v.noticeTitle + ' </h2>'
+              html += '  <div class="layui-colla-content layui-show">'
+            } else {
+              html += '  <h2 class="layui-colla-title">' + time1 + ' ' + v.noticeTitle + ' </h2>'
+              html += '  <div class="layui-colla-content ">'
+            }
+            html += v.noticeContent
+            html += '  </div>'
+            html += '</div>'
+          }
+        })
+        $('#collapse').append(html)
+        this.elementLayerM.render()
+      },
+      // 更多通知
+      noticeMore: function () {
+        var url = 'noticeController.do?noticeList'
+        layer.open({
+          type: 2,
+          title: '全部公告',
+          skin: 'mylayui-layer-molv',
+          area: ['90%', '90%'],
+          btn: ['确定', '取消'],
+          content: url, //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+          yes: function (index) {
+            //当点击‘确定’按钮的时候，获取弹出层返回的值
+            layer.close(index)
+          }
+        })
+      },
+      // 手风琴效果 颜色更改
+      styleLayout: function (element) {
+        element.on('collapse(test)', function (data) {
+          data.title.addClass('layui-color-blue').parent().siblings()
+            .children('.layui-colla-title').removeClass('layui-color-blue')
+        });
+      },
+    }
+  </script>
+
+</body>
+
+</html>

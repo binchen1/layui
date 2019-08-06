@@ -1,0 +1,291 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+</script>
+<style>
+  .datagrid-btable .datagrid-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .formtable input,.formtable textarea{
+    	width:98%!important;
+    }
+</style>
+<div class="easyui-layout" fit="true">
+  <div id="project-panel" data-options="region: 'center', split: true">
+    <form id="form" method="POST" action="projectController.do?${empty projectEntity ? 'doAdd' : 'doUpdate'}">
+
+      <input id="id" name="id" type="hidden" value="${projectEntity.id }">
+      <input name="consignUnitIds" type="hidden" value="${consignUnitIds}">
+      <input id="btn_sub" type="hidden" class="btn-4-submit">
+
+      <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+        <tr>
+          <td align="right" style="width: 130px;">
+            <label class="Validform_label"><span style="color: #F00000">*</span>工程项目:</label>
+          </td>
+          <td class="value">
+            <input id="name" name="name" class="inputxt" datatype="*" value='${projectEntity.name}'>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label class="Validform_label">施工单位:</label>
+          </td>
+          <td class="value">
+            <input id="11111" name="11111" class="inputxt" value='${projectEntity.buildUnitName}'>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label class="Validform_label">建设单位:</label>
+          </td>
+          <td class="value">
+            <input id="buildUnitName" name="buildUnitName" class="inputxt" value='${projectEntity.buildUnitName}'>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label class="Validform_label">建设项目:</label>
+          </td>
+          <td class="value">
+            <input id="22222" name="22222" class="inputxt" value='${projectEntity.buildUnitName}'>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label class="Validform_label">见证单位:</label>
+          </td>
+          <td class="value">
+            <input id="3333" name="3333" class="inputxt" value='${projectEntity.buildUnitName}'>
+          </td>
+        </tr>
+        <!-- <tr>
+          <td align="right">
+            <label class="Validform_label">紧急联系人:</label>
+          </td>
+          <td class="value">
+            <input id="contactPerson" name="contactPerson" class="inputxt" value='${projectEntity.contactPerson}'>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label class="Validform_label">联系人电话:</label>
+          </td>
+          <td class="value">
+            <input id="contactPhone" name="contactPhone" class="inputxt" value='${projectEntity.contactPhone}'>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label class="Validform_label">联系人地址:</label>
+          </td>
+          <td class="value">
+            <input id="contactAddress" name="contactAddress" class="inputxt" value='${projectEntity.contactAddress}'>
+          </td>
+        </tr> -->
+        <tr>
+          <td align="right">
+            <label class="Validform_label">备注:</label>
+          </td>
+          <td class="value">
+            <textarea name="remark" class="inputxt" style="height: 50px;">${projectEntity.remark}</textarea>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+  <!-- <div id="consignUnit" data-options="region: 'east', split: true" class="self-noscroll" style="width: 400px;">
+        <div class="toolbar" style="padding:3px">
+            <span>委托单位名称：</span>
+            <input style="line-height:24px; height: 24px; border:1px solid #ccc">
+            <a href="#" class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+            <a href="#" class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+        </div>
+        <table id="dataGrid"></table>
+    </div> -->
+</div>
+<%--suppress JSUnresolvedFunction --%>
+<script>
+
+  //通过查询href中的参数，修改样式
+  function GetQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+  }
+  var unitId = GetQueryString('unitId');
+  if (unitId) {
+
+    //隐藏右侧绑定委托单位部分
+    $('#consignUnit').hide();
+
+    //修改左侧填写部分布局
+    $('#project-panel').panel({ width: 350 });
+    $('.easyui-layout').layout('resize');
+
+    //用于绑定委托单位的id，通过url传递
+    // $('input[name="consignUnitIds"]').val(unitId);
+  }
+
+
+  $(function () {
+    // initDataGrid();
+
+    /**
+     * 查询委托单位按钮事件
+     */
+    $('.btn-4-search').click(function () {
+      dataGrid.datagrid('load', {
+        name: $('.toolbar input').val()
+      });
+    });
+
+    /**
+     * 重置按钮事件
+     */
+    $('.btn-4-reset').click(function () {
+      $('.toolbar input').val('');
+      $('.btn-4-search').trigger('click');
+    });
+
+    /**
+     * 表单验证提交
+     */
+    /* $("#form").Validform({
+        btnSubmit: ".btn-4-submit",
+        tiptype: 4,
+        ignoreHidden: false,
+        dragonfly: false,
+        tipSweep: false,
+        showAllError: true,
+        postonce: true,
+        ajaxPost: true,
+        beforeSubmit: function (curform) {
+            $(curform).find('input[name=consignUnitIds]').val(CONSIGN_UNIT_IDS.join(','));
+            if(CONSIGN_UNIT_IDS.length == 0){
+              parent.tip('请选择委托单位');
+              return false;
+            }
+            else if(CONSIGN_UNIT_IDS[0]=="" && CONSIGN_UNIT_IDS.length == 1){
+              parent.tip('请选择委托单位');
+              return false;
+            }
+        },
+        callback: function (data) {
+            if (data.success) {
+                var index = parent.layer.getFrameIndex(window.name);
+                parent.reloadDataGrid();
+                parent.reloadDataGrid0();
+                parent.layer.close(index);
+                parent.tip(data.msg);
+            } else {
+                parent.tip(data.msg);
+            }
+        }
+    });  */
+  });
+
+  //自定义表单验证
+  function initValidform(config) {
+    $("#form").Validform(config);
+  }
+
+  var dataGrid;
+  var CONSIGN_UNIT_IDS = [];
+
+  /**
+   * 初始化委托单位datagrid
+   */
+  function initDataGrid() {
+    // dataGrid = $('#dataGrid').datagrid({
+    //     url: 'consignUnitController.do?datagrid',
+    //     toolbar: '.toolbar',
+    //     singleSelect: false,
+    //     pagination: false,
+    //     rownumbers: false,
+    //     fit: true,
+    //     fitColumns:true,
+    //     scrollbarSize:0,
+    //     columns: [[
+    //         {title: "ID", field: "id", checkbox: true},
+    //         {title: "委托单位名称", field: "name", width: 168, formatter: applyTitleAttribute},
+    //         {title: "项目标段名称", field: "projectTenderName", width: 167, formatter: applyTitleAttribute}
+    //     ]],
+    //     onCheckAll: function (rows) {
+    //         for (var i in rows) {
+    //             if ($.inArray(rows[i].id, CONSIGN_UNIT_IDS) == -1) {
+    //                 CONSIGN_UNIT_IDS.push(rows[i].id);
+    //             }
+    //         }
+    //     },
+    //     onUncheckAll: function (rows) {
+    //         for (var i in rows) {
+    //             if ($.inArray(rows[i].id, CONSIGN_UNIT_IDS) > -1) {
+    //                 CONSIGN_UNIT_IDS.splice($.inArray(rows[i].id, CONSIGN_UNIT_IDS), 1);
+    //             }
+    //         }
+    //     },
+    //     onCheck: function (index, row) {
+    //         if ($.inArray(row.id, CONSIGN_UNIT_IDS) == -1) {
+    //             CONSIGN_UNIT_IDS.push(row.id);
+    //         }
+    //     },
+    //     onUncheck: function (index, row) {
+    //         if ($.inArray(row.id, CONSIGN_UNIT_IDS) > -1) {
+    //             CONSIGN_UNIT_IDS.splice($.inArray(row.id, CONSIGN_UNIT_IDS), 1);
+    //         }
+    //     },
+    //     onLoadSuccess: function (data) {
+    //         initConsignUnitIds();
+    //         applyNeedSelectRow(data.rows);
+    //     }
+    // });
+
+  }
+
+  /**
+   * 选中已经关联关系的委托单位
+   */
+    // function applyNeedSelectRow(rows) {
+    //     for (var i in rows) {
+    //         if ($.inArray(rows[i].id, CONSIGN_UNIT_IDS) >= 0) {
+    //             dataGrid.datagrid('selectRow', dataGrid.datagrid('getRowIndex', rows[i]));
+    //         } else {
+    //             dataGrid.datagrid('unselectRow', dataGrid.datagrid('getRowIndex', rows[i]));
+    //         }
+    //     }
+    // }
+
+    // function initConsignUnitIds() {
+    //     CONSIGN_UNIT_IDS = [];
+    //     var consignUnitIds = $('#form input[name=consignUnitIds]').val();
+    //     if (consignUnitIds) {
+    //         CONSIGN_UNIT_IDS = consignUnitIds.split(',');
+    //     }
+    // }
+
+    // function applyTitleAttribute(value) {
+    //     return '<span title="' + value + '">' + value + '</span>';
+    // }
+</script>

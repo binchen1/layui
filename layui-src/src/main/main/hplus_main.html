@@ -1,0 +1,997 @@
+<%--
+  Created by IntelliJ IDEA.
+  User: wangkun
+  Date: 2016/4/23
+  Time: 10:33
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@include file="/context/mytags.jsp" %>
+<!DOCTYPE html>
+
+<head>
+  <title>试验检测管理信息系统</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="renderer" content="webkit">
+  <meta name="keywords" content="JEECG,后台bootstrap框架,会员中心主题,后台HTML,响应式后台">
+  <meta name="description" content="JEECG是一个完全响应式，基于Bootstrap3最新版本开发的扁平化主题，她采用了主流的左右两栏式布局，使用了Html5+CSS3等现代技术">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge，chrome=1">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link href="plug-in/assets/css/asidenav.css" rel="stylesheet">
+  <link href="plug-in-ui/hplus/css/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+  <link href="plug-in-ui/hplus/css/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+  <link rel="stylesheet" href="plug-in/ace/assets/css/font-awesome.min.css" />
+  <!--[if IE 7]>
+    <link rel="stylesheet" href="plug-in/ace/assets/css/font-awesome-ie7.min.css"/>
+    <![endif]-->
+  <!-- Sweet Alert -->
+  <link href="plug-in-ui/hplus/css/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+  <link href="plug-in-ui/hplus/css/animate.css" rel="stylesheet">
+  <link href="plug-in-ui/hplus/css/style.css?v=4.1.0" rel="stylesheet">
+  <!--右键菜单-->
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link href="plug-in/hplus/smartMenu.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/menu.css" rel="stylesheet">
+  <!--[if  IE 9]>
+    <link rel="stylesheet" type="text/css" href="plug-in/assets/css/commonIE9.css" />
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+<body class="fixed-sidebar full-height-layout gray-bg" style="overflow:hidden">
+  <div class="menu-header">
+    <div class="menu-header-left" style="display: none">
+      <div class="menu-header-left-img"><img src="plug-in/assets/images/img_login_logo.png"></div>
+      <div class="menu-header-left-text">
+        <h2>试验检测管理信息系统</h2>
+        <p>Laboratory Information Management System</p>
+      </div>
+    </div>
+    <ul class="menu-header-middle" id="nav-menus">
+      <!-- <li class="layui-nav-li active"> <a href="#">
+          <img src="plug-in/assets/images/main_menu_white_01.png">
+          <p>首页</p>
+        </a>
+      </li>
+      <li class="layui-nav-li"> <a href="consignController.do?goConsignList">
+          <img src="plug-in/assets/images/main_menu_02.png">
+          <p>现场检测</p>
+        </a>
+      </li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_03.png">
+          <p>系统管理</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_04.png">
+          <p>检测业务</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_05.png">
+          <p>设备管理</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_06.png">
+          <p>单位管理</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_07.png">
+          <p>质量体系</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_08.png">
+          <p>查询统计</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_09.png">
+          <p>分室管理</p>
+        </a></li>
+      <li class="layui-nav-li"><a href="#">
+          <img src="plug-in/assets/images/main_menu_10.png">
+          <p>后台统计</p>
+        </a></li> -->
+    </ul>
+    <ul class="menu-header-right">
+      <div class="nav-right-img-box">
+        <img src="plug-in/assets/images/user.png" class="">
+      </div>
+      <dl class="nav-right-dl">
+        <dd><a href="http://help.qdm123.com/" target="_Blank">帮助系统</a></dd>
+        <dd><a href="javascript:add('修改密码','userController.do?changepassword','',550,200)">修改密码</a></dd>
+        <dd><a href="javascript:logout()">退出系统</a></dd>
+      </dl>
+    </ul>
+  </div>
+  <div id="wrapper">
+    <!--左侧导航开始-->
+    <nav id="navbar-default" class="navbar-default navbar-static-side" role="navigation"
+      style="display: none;z-index: 1991;">
+      <div class="nav-close"><i class="fa fa-times-circle"></i>
+      </div>
+      <div class="sidebar-collapse">
+        <ul class="nav" id="side-menu">
+          <li>
+            <div class="dropdown profile-element">
+              <span><img alt="image" class="img-circle" src="plug-in/login/images/jeecg-aceplus.png" /></span>
+            </div>
+            <div class="logo-element">HITEK
+            </div>
+          </li>
+
+          <!-- <t:menu style="hplus" menuFun="${menuMap}"></t:menu> -->
+          <!-- <li><a href="#" class=""><i class="fa fa-columns"></i><span class="menu-text">委托/收样</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="consignController.do?goConsignList" data-index="0"><span
+                    class="menu-text">委托管理</span></a></li>
+              <li> <a class="J_menuItem" href="consignUnitController.do?list" data-index="1"><span
+                    class="menu-text">委托单位管理</span></a></li>
+              <li> <a class="J_menuItem" href="sampleSenderController.do?list" data-index="2"><span
+                    class="menu-text">送样人员管理</span></a></li>
+              <li> <a class="J_menuItem" href="projectController.do?list" data-index="3"><span
+                    class="menu-text">工程项目管理</span></a></li>
+              <li> <a class="J_menuItem" href="consignCustomAttributeController.do?list" data-index="4"><span
+                    class="menu-text">委托自定义属性管理</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-credit-card"></i><span class="menu-text">费用管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="feeModelController.do?list" data-index="5"><i class="fa fa-jpy"></i><span
+                    class="menu-text">费用</span></a></li>
+              <li> <a class="J_menuItem" href="creditController.do?goCreditList" data-index="6"><span
+                    class="menu-text">信用管理</span></a></li>
+              <li> <a class="J_menuItem" href="feeReceiptController.do?list" data-index="7"><span
+                    class="menu-text">发票管理</span></a></li>
+              <li> <a class="J_menuItem" href="contractController.do?goContractlist" data-index="8"><span
+                    class="menu-text">合同管理</span></a></li>
+              <li> <a class="J_menuItem" href="contractAuditController.do?goContractAuditList" data-index="9"><span
+                    class="menu-text">合同审核</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-tasks"></i><span class="menu-text">任务分配</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="taskAssignedController.do?goAll" data-index="10"><span
+                    class="menu-text">任务分配</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-flask"></i><span class="menu-text">试验检测</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="testTaskController.do?list" data-index="11"><span
+                    class="menu-text">试验任务</span></a></li>
+              <li> <a class="J_menuItem" href="testTaskReviewController.do?list" data-index="12"><span
+                    class="menu-text">试验复核</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-files-o"></i><span class="menu-text">文件管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="FolderController.do?golist" data-index="13"><span
+                    class="menu-text">文件管理</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-file-text"></i><span class="menu-text">报告管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="reportCreateController.do?goListPage" data-index="14"><i
+                    class="fa icon-edit"></i><span class="menu-text">编制报告</span></a></li>
+              <li> <a class="J_menuItem" href="reportAuditController.do?goReportAuditList" data-index="15"><span
+                    class="menu-text">报告审核</span></a></li>
+              <li> <a class="J_menuItem" href="archiveController.do?goListPage" data-index="16"><span
+                    class="menu-text">资料归档</span></a></li>
+              <li> <a class="J_menuItem" href="reportApproveController.do?goReportApproveList" data-index="17"><span
+                    class="menu-text">报告批准</span></a></li>
+              <li> <a class="J_menuItem" href="reportIssueController.do?goListPage" data-index="18"><span
+                    class="menu-text">报告发放</span></a></li>
+              <li> <a class="J_menuItem" href="reportPrintController.do?goReportPrintList" data-index="19"><span
+                    class="menu-text">报告打印</span></a></li>
+              <li> <a class="J_menuItem" href="tSReportReprintController.do?reportGetinglist" data-index="20"><span
+                    class="menu-text">报告领取</span></a></li>
+              <li> <a class="J_menuItem" href="reportRedoAuditController.do?goListPage" data-index="21"><i
+                    class="fa icon-edit"></i><span class="menu-text">报告重打&amp;修改审批</span></a></li>
+              <li> <a class="J_menuItem" href="tSReportUpdateController.do?list" data-index="22"><span
+                    class="menu-text">报告修改</span></a></li>
+              <li> <a class="J_menuItem" href="tSReportUpdateController.do?reportUpdateexalist" data-index="23"><span
+                    class="menu-text">报告修改审批</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-columns"></i><span class="menu-text">样品管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="objectAuditController.do?goObjectAuditListPage" data-index="24"><span
+                    class="menu-text">样品审核</span></a></li>
+              <li> <a class="J_menuItem" href="waitTestObjectController.do?goListPage" data-index="25"><span
+                    class="menu-text">样品流转</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-wrench"></i><span class="menu-text">设备管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="tSEquipmentController.do?list" data-index="26"><span
+                    class="menu-text">设备类别</span></a></li>
+              <li> <a class="J_menuItem" href="tSEquipmentManageController.do?list" data-index="27"><span
+                    class="menu-text">综合管理</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-cogs"></i><span class="menu-text">系统管理</span><span
+                class="fa arrow"></span></a>
+
+            <ul class="nav nav-second-level collapse">
+              <li class=""> <a class="J_menuItem" href="" data-index="28"><i class="fa fa-columns"></i><span
+                    class="menu-text">机构管理</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-third-level collapse in" aria-expanded="true" style="">
+                  <li> <a class="J_menuItem" href="systemUnitController.do?goSystemUnitPage" data-index="29"><span
+                        class="menu-text">单位管理</span></a></li>
+                  <li> <a class="J_menuItem" href="departController.do?depart" data-index="30"><span
+                        class="menu-text">组织机构</span></a></li>
+                </ul>
+              </li>
+              <li> <a class="J_menuItem" href="userController.do?user" data-index="31"><span
+                    class="menu-text">用户管理</span></a></li>
+              <li> <a class="J_menuItem" href="backlogController.do?goBacklogPage" data-index="32"><span
+                    class="menu-text">待办事项配置</span></a></li>
+              <li> <a class="J_menuItem" href="roleController.do?role" data-index="33"><span
+                    class="menu-text">角色管理</span></a></li>
+              <li> <a class="J_menuItem" href="tSProjectAuthorityController.do?roleManage" data-index="34"><span
+                    class="menu-text">职能管理</span></a></li>
+              <li> <a class="J_menuItem" href="tSProjectAuthorityController.do?list" data-index="35"><span
+                    class="menu-text">职能参数权限</span></a></li>
+              <li class=""> <a class="J_menuItem" href="" data-index="36"><i class="fa fa-columns"></i><span
+                    class="menu-text">系统试验参数</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-third-level collapse in" aria-expanded="true" style="">
+                  <li> <a class="J_menuItem" href="bigCategoryController.do?treeList" data-index="37"><span
+                        class="menu-text">检测大类</span></a></li>
+                  <li> <a class="J_menuItem" href="checkTypeController.do?list" data-index="38"><span
+                        class="menu-text">检测类型</span></a></li>
+                  <li> <a class="J_menuItem" href="utensilController.do?list" data-index="39"><span
+                        class="menu-text">盒子质量</span></a></li>
+                  <li> <a class="J_menuItem" href="testParamController.do?list" data-index="40"><span
+                        class="menu-text">检测参数</span></a></li>
+                  <li> <a class="J_menuItem" href="testParamPriceWorkingHourController.do?list" data-index="41"><span
+                        class="menu-text">参数价格/工时</span></a></li>
+                  <li> <a class="J_menuItem" href="testSampleController.do?treeList" data-index="42"><span
+                        class="menu-text">样品对象</span></a></li>
+                  <li> <a class="J_menuItem" href="baseStandardController.do?list" data-index="43"><span
+                        class="menu-text">标准管理</span></a></li>
+                </ul>
+              </li>
+              <li> <a class="J_menuItem" href="tSBusinessParamController.do?list" data-index="44"><span
+                    class="menu-text">系统参数</span></a></li>
+              <li class=""> <a class="J_menuItem" href="" data-index="45"><i class="fa fa-truck"></i><span
+                    class="menu-text">邮寄管理</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-third-level collapse in" aria-expanded="true" style="">
+                  <li> <a class="J_menuItem" href="tSPostFormColumnsUseableController.do?list" data-index="46"><span
+                        class="menu-text">邮寄表单可用字段</span></a></li>
+                  <li> <a class="J_menuItem" href="tSPostManageController.do?list" data-index="47"><span
+                        class="menu-text">字段配置</span></a></li>
+                  <li> <a class="J_menuItem" href="tSPostSelectTypeController.do?list" data-index="48"><span
+                        class="menu-text">下拉框分类及内容管理</span></a></li>
+                  <li> <a class="J_menuItem" href="tSPostFormsController.do?list" data-index="49"><span
+                        class="menu-text">邮寄单填写</span></a></li>
+                </ul>
+              </li>
+              <li class="active"> <a class="J_menuItem" href="" data-index="50"><i class="fa fa-list-ol"></i><span
+                    class="menu-text">编号管理</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-third-level collapse in" aria-expanded="true" style="">
+                  <li> <a class="J_menuItem" href="tSnCategoryController.do?list" data-index="51"><span
+                        class="menu-text">编号类型</span></a></li>
+                  <li> <a class="J_menuItem" href="tSnModelController.do?list" data-index="52"><span
+                        class="menu-text">编号管理</span></a></li>
+                </ul>
+              </li>
+              <li> <a class="J_menuItem" href="ActivityController.do?goProcessList" data-index="53"><span
+                    class="menu-text">流程列表</span></a></li>
+            </ul>
+
+
+
+          </li>
+          <li><a href="#" class=""><i class="fa fa-leaf"></i><span class="menu-text">后台管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="apiTestController.do?goApiTestPage" data-index="54"><span
+                    class="menu-text">API测试</span></a></li>
+              <li> <a class="J_menuItem" href="processPersonController.do?goListPage" data-index="55"><span
+                    class="menu-text">流程人员预设</span></a></li>
+              <li> <a class="J_menuItem" href="noticeController.do?tSNotice" data-index="56"><span
+                    class="menu-text">系统公告</span></a></li>
+              <li> <a class="J_menuItem" href="systemController.do?typeGroupList" data-index="57"><span
+                    class="menu-text">数据字典</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" class=""><i class="fa fa-columns"></i><span class="menu-text">海特管理</span><span
+                class="fa arrow"></span></a>
+            <ul class="nav nav-second-level collapse">
+              <li> <a class="J_menuItem" href="logEntityController.do?list" data-index="58"><span
+                    class="menu-text">数据变更日志</span></a></li>
+              <li> <a class="J_menuItem" href="functionController.do?function" data-index="59"><span
+                    class="menu-text">菜单管理</span></a></li>
+              <li> <a class="J_menuItem" href="iconController.do?icon" data-index="60"><span
+                    class="menu-text">系统图标</span></a></li>
+              <li> <a class="J_menuItem" href="modelController.do?model" data-index="61"><span
+                    class="menu-text">流程模型管理</span></a></li>
+              <li> <a class="J_menuItem" href="processDefinitionController.do?processDefinition" data-index="62"><span
+                    class="menu-text">流程定义管理</span></a></li>
+              <li class="active"> <a class="J_menuItem" href="" data-index="63"><i class="fa fa-headphones"></i><span
+                    class="menu-text">系统监控</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-third-level collapse in" aria-expanded="true" style="">
+                  <li> <a class="J_menuItem" href="dataSourceController.do?goDruid&amp;isIframe" data-index="64"><span
+                        class="menu-text">数据监控</span></a></li>
+                  <li> <a class="J_menuItem" href="logController.do?log" data-index="65"><span
+                        class="menu-text">系统日志</span></a></li>
+                  <li> <a class="J_menuItem" href="timeTaskController.do?timeTask" data-index="66"><span
+                        class="menu-text">定时任务</span></a></li>
+                  <li> <a class="J_menuItem" href="dynamicDataSourceController.do?dbSource" data-index="67"><span
+                        class="menu-text">多数据源管理</span></a></li>
+                </ul>
+              </li>
+            </ul>
+          </li> -->
+
+        </ul>
+      </div>
+    </nav>
+    <!--左侧导航结束-->
+    <!--右侧部分开始-->
+    <div id="page-wrapper" class="gray-bg dashbard-1">
+      <div class="row content-tabs" style="display:none">
+        <button class="roll-nav roll-left J_tabLeft"><i class="fa fa-backward"></i>
+        </button>
+        <!-- minimalize-styl-2 勿删  -->
+        <a class="navbar-minimalize minimalize-styl-2 btn btn-primary" href="#" style="display:none"><i
+            class="fa fa-bars"></i></a>
+        <nav class="page-tabs J_menuTabs">
+          <div class="page-tabs-content">
+            <a href="javascript:;" id="homePage" class="active J_menuTab"
+              data-id="homePageController.do?goHomePage">首页</a>
+          </div>
+          <button class="roll-nav roll-right J_tabRight">
+            <i class="fa fa-forward"></i>
+          </button>
+          <div class="btn-group roll-nav roll-right">
+            <button class="dropdown J_tabClose" data-toggle="dropdown">
+              关闭操作<span class="caret"></span>
+            </button>
+            <ul role="menu" class="dropdown-menu dropdown-menu-right">
+              <li class="J_tabShowActive"><a>定位当前选项卡</a></li>
+              <li class="J_tabCloseAll"><a>关闭全部选项卡</a></li>
+              <li class="J_tabCloseOther"><a>关闭其他选项卡</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+      <div class="row J_mainContent" id="content-main">
+        <iframe class="J_iframe" name="iframe0" width="100%" height="100%" src="homePageController.do?goHomePage"
+          frameborder="0" data-id="homePageController.do?goHomePage" seamless></iframe>
+      </div>
+      <div class="footer" style="display:none">
+        <div class="pull-right">&copy; <a onclick="officialWebsite()" href="javascript:void(0);">重庆海特科技发展有限公司</a>
+        </div>
+      </div>
+    </div>
+    <!--右侧部分结束-->
+    <!--右侧边栏开始-->
+    <div id="right-sidebar">
+      <div class="sidebar-container">
+        <ul class="nav nav-tabs navs-3">
+          <li class="active">
+            <a data-toggle="tab" href="#tab-1">
+              <i class="fa fa-gear"></i> 主题
+            </a>
+          </li>
+          <li class=""><a data-toggle="tab" href="#tab-2">
+              <i class="fa fa-comments-o" aria-hidden="true"></i>通知
+            </a>
+          </li>
+          <li><a data-toggle="tab" href="#tab-3">
+              <i class="fa fa-info-circle" aria-hidden="true"></i>公告
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div id="tab-1" class="tab-pane active">
+            <div class="sidebar-title">
+              <h3><i class="fa fa-comments-o"></i> 主题设置</h3>
+              <small><i class="fa fa-tim"></i> 你可以从这里选择和预览主题的布局和样式，这些设置会被保存在本地，下次打开的时候会直接应用这些设置。</small>
+            </div>
+            <div class="skin-setttings">
+              <div class="title">主题设置</div>
+              <div class="setings-item">
+                <span>收起左侧菜单</span>
+                <div class="switch">
+                  <div class="onoffswitch">
+                    <input type="checkbox" name="collapsemenu" class="onoffswitch-checkbox" id="collapsemenu">
+                    <label class="onoffswitch-label" for="collapsemenu">
+                      <span class="onoffswitch-inner"></span>
+                      <span class="onoffswitch-switch"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="setings-item">
+                <span>固定顶部</span>
+
+                <div class="switch">
+                  <div class="onoffswitch">
+                    <input type="checkbox" name="fixednavbar" class="onoffswitch-checkbox" id="fixednavbar">
+                    <label class="onoffswitch-label" for="fixednavbar">
+                      <span class="onoffswitch-inner"></span>
+                      <span class="onoffswitch-switch"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="setings-item">
+                <span>
+                  固定宽度
+                </span>
+
+                <div class="switch">
+                  <div class="onoffswitch">
+                    <input type="checkbox" name="boxedlayout" class="onoffswitch-checkbox" id="boxedlayout">
+                    <label class="onoffswitch-label" for="boxedlayout">
+                      <span class="onoffswitch-inner"></span>
+                      <span class="onoffswitch-switch"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="title">皮肤选择</div>
+              <div class="setings-item default-skin nb">
+                <span class="skin-name ">
+                  <a href="#" class="s-skin-0">
+                    默认皮肤
+                  </a>
+                </span>
+              </div>
+              <div class="setings-item blue-skin nb">
+                <span class="skin-name ">
+                  <a href="#" class="s-skin-1">
+                    蓝色主题
+                  </a>
+                </span>
+              </div>
+              <div class="setings-item yellow-skin nb">
+                <span class="skin-name ">
+                  <a href="#" class="s-skin-3">
+                    黄色/紫色主题
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div id="tab-2" class="tab-pane">
+            <div class="sidebar-title">
+              <h3><i class="fa fa-comments-o"></i> 最新通知
+                <small id="messageCount"><i class="fa fa-tim"></i> 您当前有0条未读通知</small>
+              </h3>
+            </div>
+            <ul class="sidebar-list">
+              <li id="messageContent">
+
+              </li>
+
+              <li>
+                <a href="javascript:goAllMessage();" id="messageFooter">
+                  查看全部
+                  <i class="iconfont icon-arrow-right"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div id="tab-3" class="tab-pane">
+            <div class="sidebar-title">
+              <h3><i class="fa fa-cube"></i> 最新公告
+                <small id="noticeCount"><i class="fa fa-tim"></i> 您当前有0个公告</small>
+              </h3>
+
+            </div>
+            <ul class="sidebar-list">
+              <li id="noticeContent">
+
+              </li>
+              <li>
+                <a href="javascript:goAllNotice();" id="noticeFooter">
+                  查看所有公告
+                  <i class="iconfont icon-arrow-right"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--右侧边栏结束-->
+  </div>
+  <!-- 底部固定区域 -->
+  <div class="footer-bottom">
+    <p>
+      <span onclick="goHitekInfoFun()">渝ICP备1002727号 @1998-2015 重庆海特科技发展有限公司 客服电话：（023）68628633</span>
+      <i onclick="jumpQQ()"> QQ：2850989595 </i>
+    </p>
+  </div>
+  <!-- 浮窗导航 -->
+  <div id="asidenav-box"></div>
+
+  <!-- 全局js -->
+  <script src="plug-in-ui/hplus/js/jquery.min.js?v=2.1.4"></script>
+  <script src="plug-in-ui/hplus/js/bootstrap.min.js?v=3.3.6"></script>
+  <script src="plug-in-ui/hplus/js/plugins/metisMenu/jquery.metisMenu.js"></script>
+  <script src="plug-in-ui/hplus/js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+  <script src="plug-in-ui/hplus/js/plugins/layer/layer.min.js"></script>
+
+  <!-- 自定义js -->
+  <script src="plug-in-ui/hplus/js/hplus.js?v=4.1.0"></script>
+  <!--右键菜单-->
+  <script type="text/javascript" src="plug-in/hplus/jquery-smartMenu.js"></script>
+  <script type="text/javascript" src="plug-in/hplus/contabs.js"></script>
+  <t:base type="tools"></t:base>
+  <!-- 第三方插件 -->
+  <script src="plug-in-ui/hplus/js/plugins/pace/pace.min.js"></script>
+  <!-- Sweet alert -->
+  <script src="plug-in-ui/hplus/js/plugins/sweetalert/sweetalert.min.js"></script>
+  <script src="plug-in/jquery-plugs/storage/jquery.storageapi.min.js"></script>
+
+  <!-- 弹出TAB -->
+  <script type="text/javascript" src="plug-in/hplus/hplus-tab.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/asidenav.js"></script>
+  <!-- 在线聊天 -->
+  <script>
+    $(function () {
+      window.console = window.console || (function () {
+        var c = {}; c.log = c.warn = c.debug = c.info = c.error = c.time = c.dir =
+          c.profile = c.clear = c.exception = c.trace = c.assert = function () { }
+        return c
+      })()
+      InitObj.init();
+    })
+    var InitObj = {
+      menuUrl: 'functionController.do?getUserFunctionTreeJson',
+      menuData: [], // 菜单头部数组
+      sideMenuData: [], // 菜单左侧数组
+      menuTreeData: [], // 菜单树
+      dataIndex: 0, //菜单左侧数组个数
+      init: function () {
+        this.menuData = [
+          { "id": "", "functionName": "首页", "functionUrl": "homePageController.do?goHomePage", "imgUrl": "plug-in/assets/images/main_menu_white_01.png" },
+          // { "id": "", "functionName": "委托/收样", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_02.png" },
+          // { "id": "", "functionName": "费用管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_03.png" },
+          // { "id": "", "functionName": "任务分配", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_04.png" },
+          // { "id": "", "functionName": "试验检测", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_05.png" },
+          // { "id": "", "functionName": "文件管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_06.png" },
+          // { "id": "", "functionName": "报告管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_07.png" },
+          // { "id": "", "functionName": "设备管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_08.png" },
+          // { "id": "", "functionName": "系统管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_09.png" },
+          // { "id": "", "functionName": "后台管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_10.png" },
+          // { "id": "", "functionName": "海特管理", "functionUrl": "", "imgUrl": "plug-in/assets/images/main_menu_02.png" }
+        ]
+        ajaxRequest(this.menuUrl, { "functionType": '0' }, this.menuAjaxCallback, false, true);
+        this.menuHeaderFun();
+      },
+      menuHeaderFun: function () {
+        $('#side-menu').on('click', 'a', function (e) {
+          var url = $(this).attr('data-href')
+          var name = $(this).find('.menu-text').html()
+          if ('#' !== url) {
+            jumpPage(url, name)
+          }
+          $('#side-menu li.active').each(function () {
+            $(this).removeClass('active');
+          })
+          $(this).parent().addClass('active').parent().parent().addClass('active');
+        })
+        // 首页菜单效果展示
+        $("#nav-menus").on("click", "a", function (e) {      //只需要找到你点击的是哪个ul里面的就行
+          console.log('首页菜单效果展示', e)
+          e.preventDefault();
+          $("#nav-menus img").each(function () {
+            var imgSrcAll = $(this).attr('src');
+            if (imgSrcAll.indexOf('main_menu_white') > -1) {
+              var imgSrcAll2 = imgSrcAll.replace('main_menu_white', 'main_menu')
+              $(this).attr('src', imgSrcAll2)
+            }
+          });
+          $(this).parent().addClass('active').siblings().removeClass('active');
+          var imgSrc = $(this).find('img').attr('src');
+          if (imgSrc.indexOf('main_menu_white') > -1) { } else {
+            var imgSrc2 = imgSrc.replace('main_menu', 'main_menu_white')
+            $(this).find('img').attr('src', imgSrc2)
+          }
+          var id = $(this).attr('id');
+          var thisHtml = $(this).find('p').html();
+          console.log('thisHtml', thisHtml)
+          console.log('id', id)
+          InitObj.dataIndex = 0;
+          if ('首页' === thisHtml) {
+            var bodyClassName = $('body')[0].className;
+            if (bodyClassName.indexOf('mini-navbar') > -1) {
+              $('a.minimalize-styl-2').click()
+            }
+            $('#homePage').click();
+            $('#navbar-default').hide().css('width', '0px');
+            $('.content-tabs').hide();
+            $('body.full-height-layout #page-wrapper').css('height', 'calc(100% - 36px)');
+            $('#page-wrapper').css('margin-left', '0px');
+          } else {
+            var bodyClassName = $('body')[0].className;
+            if (bodyClassName.indexOf('mini-navbar') > -1) {
+              $('a.minimalize-styl-2').click()
+            }
+            $('#navbar-default').show().css('width', '170px');
+            $('.content-tabs').show();
+            $('body.full-height-layout #page-wrapper').css('height', 'calc(100% - 66px)');
+            $('#page-wrapper').css('margin-left', '200px');
+            InitObj.sideMenuFun(id);
+          }
+        });
+      },
+      menuAjaxCallback: function (res) {
+        console.log('menuAjaxCallback', res)
+        var that = InitObj;
+        if (res.success && res.obj.length > 0) {
+          // that.menuTreeData = res.obj;
+          var data = res.obj.sort(compare("functionOrder"));
+          console.log('data620', data)
+          that.menuTreeData = data;
+          // for (var i = 0; i < that.menuData.length; i++) {
+          var i = 2;
+          for (var j = 0; j < data.length; j++) {
+            if (i > 9) {
+              i = 2;
+            }
+            that.menuData.push({
+              "id": data[j].id, "functionName": data[j].functionName, "functionUrl": data[j].functionUrl,
+              "imgUrl": "plug-in/assets/images/main_menu_0" + i + ".png"
+            })
+            i++;
+            // if (that.menuData[i].functionName === data[j].functionName) {
+            //   that.menuData[i].id =data[j].id;
+            //   that.menuData[i].functionUrl = data[j].functionUrl;
+            //   break;
+            // }
+          }
+          // }
+          that.navMenuHtml(that.menuData)
+        }
+        console.log('menuAjaxCallback2222', res)
+      },
+      navMenuHtml: function (menuData) {
+        console.log('menuData', menuData)
+        var html = '';
+        for (var i = 0; i < menuData.length; i++) {
+          var url = menuData[i].functionUrl || "#";
+          if (0 === i) {
+            html += ' <li class="layui-nav-li active"> <a title="' + menuData[i].functionName + '" href="' + url + '" id="' + menuData[i].id + '">';
+          } else {
+            html += ' <li class="layui-nav-li"> <a title="' + menuData[i].functionName + '" href="' + url + '" id="' + menuData[i].id + '">';
+          }
+          html += '<img src="' + menuData[i].imgUrl + '">';
+          html += '<p>' + menuData[i].functionName + '</p>';
+          html += '</a>';
+          html += '</li>';
+        }
+        $('#nav-menus').html(html)
+      },
+      sideMenuFun: function (ids) {
+        console.log('sideMenuFun', ids)
+        if (ids) {
+          for (var i = 0; i < this.menuTreeData.length; i++) {
+            if (ids === this.menuTreeData[i].id) {
+              this.sideMenuData = this.menuTreeData[i].subFunctions;
+              this.sideMenuHtml(this.sideMenuData)
+              break;
+            }
+          }
+        }
+      },
+      sideMenuHtmlLi: function (dataLi, iconClass) {
+        console.log('sideMenuHtmlLi', dataLi)
+        var htmlLi = '', numIndex = 0;
+        if (dataLi.functionUrl) {
+          this.dataIndex++;
+        }
+        if (dataLi.subFunctions.length > 0) {
+          if (dataLi.functionUrl) {
+            htmlLi += '<li class="active"><a class="J_menuItem" data-href="' + dataLi.functionUrl + '" data-index="' + this.dataIndex + '">'
+          } else {
+            htmlLi += '<li class="active"><a class="J_menuItem" data-href="#" data-index="">'
+          }
+          // htmlLi += '<i class="fa fa-file-text-o"></i> <span class="menu-text">' + dataLi.functionName + '</span><span class="fa arrow"></span></a>'
+          htmlLi += '<i class="fa fa-file-text-o"></i> <span class="menu-text">' + dataLi.functionName + '</span></a>'
+          htmlLi += '<ul class="nav nav-second-level collapse" aria-expanded="true" style="">'
+          htmlLi += this.sideMenuHtmlUl(dataLi.subFunctions, 'fa-circle')
+          htmlLi += '</ul>'
+          htmlLi += ' </li>'
+        } else {
+          // <i class="fa fa-circle"></i>
+          if (dataLi.functionUrl) {
+            htmlLi += '<li> <a class="J_menuItem" data-href="' + dataLi.functionUrl + '" data-index="' + this.dataIndex + '">'
+          } else {
+            htmlLi += '<li> <a class="J_menuItem" data-href="#" data-index="">'
+          }
+          htmlLi += '<i class="fa ' + iconClass + '"></i><span class="menu-text">' + dataLi.functionName + '</span></a></li>'
+        }
+        return htmlLi;
+      },
+      sideMenuHtmlUl: function (data, iconClass) {
+        var html = '';
+        for (var i = 0; i < data.length; i++) {
+          html += this.sideMenuHtmlLi(data[i], iconClass);
+        }
+        return html
+      },
+      sideMenuHtml: function (data) {
+        var html = this.sideMenuHtmlUl(data, 'fa-file-text-o');
+        $('#side-menu').html(html);
+        $("#side-menu").metisMenu();
+        // 默认打开第一个选项卡 $('#side-menu').find('a[data-index="1"]').click();
+      }
+    }
+
+    function jumpPage(url, name) {
+      var id = "1";
+      window.addTabs({ "id": id, "title": name, "close": false, "url": url });
+    }
+    // 跳转到QQ
+    function jumpQQ() {
+      console.log('跳转到QQ')
+      window.open('http://wpa.qq.com/msgrd?uin=2850989595', '_blank')
+    }
+    function goHitekInfoFun() {
+      layerOpenFun('onlineExperienceController.do?goHitekInfo', '关于我们', ['550px', '404px'], [], '', 'noOpenCallback');
+    }
+    // 跳转到公司官网
+    function officialWebsite() {
+      window.open('http://www.hiteksoft.com', '_blank')
+    }
+    var timer = null;
+    function userInfoFun() {
+      if (!renderContent('userInfoCollection')) {
+        var timeWaitFor = (new Date()).valueOf() + 5 * 60 * 1000;
+        timer = setInterval(function () {
+          var openUrl = 'onlineExperienceController.do?goUserInfoCollection';
+          var isOpenObj = { 'isOpen': true }
+          $('body iframe').each(function () {
+            var srcOpen = $(this).attr('src');
+            if (openUrl === srcOpen) {
+              isOpenObj.isOpen = false;
+            }
+          })
+          if (isOpenObj.isOpen) {
+            layerOpenFun(openUrl, '填写信息', ['430px', '424px'], [], '', 'noOpenCallback')
+          }
+        }, 5 * 60 * 1000)
+      } else {
+        clearInterval(timer);
+      }
+    }
+    funCode('experienceUserInfoCollection', '', funCodeCallback);
+    function funCodeCallback(res, objParam) {
+      if (res.obj && res.obj.length > 0) {
+        $.each(res.obj, function (i, v) {
+          if (objParam.codes === v.functioncode) {
+            userInfoFun();
+          }
+        })
+      }
+    }
+
+    function logout() {
+      layer.confirm('您确定要注销吗？', {
+        btn: ['确定', '取消'], //按钮
+        shade: false //不显示遮罩
+      }, function () {
+        location.href = "loginController.do?logout";
+      }, function () {
+        return;
+      });
+    }
+
+    function clearLocalstorage() {
+      var storage = $.localStorage;
+      if (!storage)
+        storage = $.cookieStorage;
+      storage.removeAll();
+      //bootbox.alert( "浏览器缓存清除成功!");
+      layer.msg("浏览器缓存清除成功!");
+    }
+
+    function toJeecgYun() {
+      window.open("http://yun.jeecg.org", "_blank");
+    }
+
+    $(document).ready(function () {
+      //加载公告
+      var url = "noticeController.do?getNoticeList";
+      jQuery.ajax({
+        url: url,
+        type: "GET",
+        dataType: "JSON",
+        async: false,
+        success: function (data) {
+          if (data.success) {
+            var noticeList = data.attributes.noticeList;
+            var noticeCount = data.obj;
+            //加载公告条数
+            if (noticeCount > 99) {
+              $("#noticeCount").html("99+");
+            } else {
+              $("#noticeCount").html(noticeCount);
+            }
+            //加载公告提示
+            var noticeTip = "";
+            noticeTip += "<i class='icon-warning-sign'></i>";
+            noticeTip += noticeCount + " " + data.attributes.tip;
+            $("#noticeTip").html(noticeTip);
+
+            //加载公告条目
+            var noticeContent = "";
+            if (noticeList.length > 0) {
+              for (var i = 0; i < noticeList.length; i++) {
+                noticeContent += "<li><a href='javascript:goNotice(&quot;" + noticeList[i].id + "&quot;)' ";
+                noticeContent += "style='word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>";
+                noticeContent += "<i class='btn btn-xs btn-primary fa fa-user'></i>";
+                noticeContent += "&nbsp;" + noticeList[i].noticeTitle + "</a></li></ul></li>";
+              }
+            }
+            //alert(noticeContent);
+            $("#noticeContent").html(noticeContent);
+
+            //加载公告底部文字
+            var noticeSeeAll = data.attributes.seeAll + "<i class='ace-icon fa fa-arrow-right'></i>";
+            $("#noticeFooter").html(noticeSeeAll);
+          }
+        }
+      });
+
+
+      //加载消息
+      var url = "tSSmsController.do?getMessageList";
+      $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "JSON",
+        async: false,
+        success: function (data) {
+          if (data.success) {
+            var messageList = data.attributes.messageList;
+            var messageCount = data.obj;
+            //加载消息条数
+            if (messageCount > 99) {
+              $("#messageCount").html("99+");
+            } else {
+              $("#messageCount").html(messageCount);
+            }
+            //加载消息tip提示
+            var messageTip = "";
+            messageTip += "<i class='ace-icon fa fa-envelope-o'></i>";
+            messageTip += messageCount + " " + data.attributes.tip;
+            $("#messageTip").html(messageTip);
+
+            //加载消息条目（有限）
+            var messageContent = "";
+            if (messageList.length > 0) {
+              for (var i = 0; i < messageList.length; i++) {
+                messageContent += "<li><a href='javascript:goMessage(&quot;" + messageList[i].id + "&quot;)' class='clearfix'>";
+                messageContent += "<img src='plug-in/ace/avatars/avatar3.png' class='msg-photo' alt='Alex’s Avatar' />";
+                messageContent += "<span class='msg-body'><span class='msg-title'>";
+                messageContent += "<span class='blue'>" + messageList[i].esSender + ":</span>";
+                messageContent += messageList[i].esTitle + "</span>";
+                messageContent += "<span class='msg-time'><i class='ace-icon fa fa-clock-o'></i><span>" + messageList[i].esSendtimeTxt + "</span></span>";
+                messageContent += "</span></a><input id='" + messageList[i].id + "_title' type='hidden' value='" + messageList[i].esTitle + "'>";
+                messageContent += "<input id='" + messageList[i].id + "_status' type='hidden' value='" + messageList[i].esStatus + "'>";
+                messageContent += "<input id='" + messageList[i].id + "_content' type='hidden' value='" + messageList[i].esContent + "'></li>";
+              }
+            }
+            $("#messageContent").html(messageContent);
+
+            //加载消息底部文字
+            var messageSeeAll = data.attributes.seeAll + "<i class='ace-icon fa fa-arrow-right'></i>";
+            $("#messageFooter").html(messageSeeAll);
+          }
+        }
+      });
+
+    });
+    // 修改密码
+    function changePsd() {
+      console.log('修改密码')
+      layerOpenFun('userController.do?changepassword', '修改密码', ['550px', '260px'], ['确定', '取消'], '', 'noOpenCallback');
+    }
+    function goAllNotice() {
+      var addurl = "noticeController.do?noticeList";
+      createdetailwindow("公告", addurl, 800, 400);
+    }
+
+    function goNotice(id) {
+      var addurl = "noticeController.do?goNotice&id=" + id;
+      createdetailwindow("通知公告详情", addurl, 750, 600);
+    }
+
+    function goAllMessage() {
+      var addurl = "tSSmsController.do?getSysInfos";
+      createdetailwindow("通知", addurl, 800, 400);
+    }
+
+    function goMessage(id) {
+      var title = $("#" + id + "_title").val();
+      var content = $("#" + id + "_content").val();
+      $("#msgId").val(id);
+      $("#msgTitle").html(title);
+      $("#msgContent").html(content);
+      var status = $("#" + id + "_status").val();
+      if (status == 1) {
+        $("#msgStatus").html("未读");
+      } else {
+        $("#msgStatus").html("已读");
+      }
+
+      $('.theme-popover-mask').fadeIn(100);
+      $('.theme-popover').slideDown(200);
+    }
+
+    function readMessage() {
+      var msgId = $("#msgId").val();
+      var url = "tSSmsController.do?readMessage";
+      $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "JSON",
+        data: {
+          messageId: msgId
+        },
+        success: function (data) {
+          if (data.success) {
+            $("#msgStatus").html("已读");
+            $("#" + msgId + "_status").val('2');
+          }
+        }
+      });
+    }
+
+    //个人信息弹出层回缩
+    function frameBodyClick() {
+      $(".count-info").attr("aria-expanded", "false").parent().removeClass("open");
+    }
+
+    //新增iframe中绑定click事件回调父级函数
+    function bindFrameClick() {
+      $(".J_iframe").contents().find("body").attr("onclick", "parent.frameBodyClick()");
+    }
+
+    function closeCurrentWin() {
+      //$("i[class='fa fa-times-circle']",window.parent.document).trigger("click");
+      //关闭当前tab
+      var tab = $(".J_menuTab.active");
+      $(tab).find("i[class='fa fa-times-circle']").trigger("click"); //触发小红×的点击事件
+    }
+    function refreshMainTab() {
+      var loading = layer.load();
+      var tab = $(".J_menuTab.active");
+      //切换到第一个tab，并刷新，即是首页
+      var firstA = $(tab).parent().find("a").get(0);
+      var target = $('.J_iframe[data-id="' + $(firstA).data('id') + '"]');
+      if (target == undefined) {
+        target = $('.J_iframe[data-id="' + $(this).parent().data('id') + '"]');
+      }
+      var url = target.attr('src');
+      //显示loading提示
+
+
+      //调用首页标签刷新表格函数，
+      target.get(0).contentWindow.reloadTable();
+
+      $(tab).find("i[class='fa fa-times-circle']").trigger("click"); //触发小红×的点击事件
+
+      layer.close(loading);
+    }
+  </script>
+</body>
+
+</html>

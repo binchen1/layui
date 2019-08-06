@@ -1,0 +1,7 @@
+.divArea .divContent input,select,span {
+  line-height: 28px;
+  
+}
+.divArea .divContent input,select {
+  min-height: 28px;
+}

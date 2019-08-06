@@ -1,0 +1,449 @@
+<!-- <%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script> -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">待归档资料</li>
+      <li>已归档资料</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="quickQryParam" class="layui-input" placeholder="输入编号、委托单位、工程项目后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs8 senior seniorText" style="display:none;">
+                高级查询
+              </div>
+              <div class="layui-col-xs4" id="searchSwitch">
+                <a href="###" class="easyui-linkbutton" iconCls="icon-reload" plain="true">切换到高级查询</a>
+              </div>
+            </div>
+            <div class="senior" style="display:none">
+              <div class="layui-form-item">
+                <label class="layui-form-label">报告编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="reportSn" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignSn" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item seniorRow" style="display: none">
+                <label class="layui-form-label">档案编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="archiveSn" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托单位</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignUnit" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">工程项目</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignProject" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignDate" id="consignDate" class="layui-input" readonly autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">签发日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="signDate" id="signDate" class="layui-input" readonly autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item seniorRow" style="display: none">
+                <label class="layui-form-label">归档日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="archiveDate" id="archiveDate" class="layui-input" readonly autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item seniorRow" style="display: none">
+                <label class="layui-form-label">报告归档地址</label>
+                <div class="layui-input-block">
+                  <input type="text" name="archiveSite" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div>
+                <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.seniorQuickSearch()">查询</a>
+                <button class="easyui-linkbutton" type="reset" iconCls="icon-reload" plain="true">重置</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" class="easyui-linkbutton funBtn_1" iconCls="icon-reload" plain="true">归档</a>
+            <a href="#" class="easyui-linkbutton funBtn_2" iconCls="icon-add" plain="true">归档地址配置</a>
+            <a href="#" style="display:none" class="easyui-linkbutton funBtn_3" iconCls="icon-redo" plain="true">导出</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+
+  <script>
+    $(function () {
+      // tabTableHeight('.layui-tab', '.layui-tab-content')
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          InitObj.initDataGrid(InitObj.columnsFun(data.index))
+        });
+        laydate.render({
+          elem: '#signDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+        laydate.render({
+          elem: '#consignDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+        laydate.render({
+          elem: '#archiveDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+        InitObj.init(form);
+      })
+
+    })
+    var InitObj = {
+      defaultUrl: 'archiveController.do?datagrid', //默认获取数据url
+      addFilePageUrl: 'archiveController.do?goEditPage', // 资料存放url页面
+      addAddressPageUrl: 'archiveSiteController.do?goArchiveSitePage', // 归档地址配置url页面
+      formLayerM: null, // form对象 
+      dataType: 0, // 查询类型: 0:待归档, 1:已归档
+      searchType: 1, // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      addFile: $('#functionButton .funBtn_1'), // 归档
+      addAddress: $('#functionButton .funBtn_2'), // 归档地址配置
+      exportExl: $('#functionButton .funBtn_3'), // 导出
+      searchShow: true, // 普通搜索
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      seniorRow: $('.seniorRow'), // 高级查询显示
+      queryParams: {}, // 查询条件
+      init: function (form) {
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun(0))
+        // 搜素按钮回车键盘
+        this.commonQryKeyDown()
+        // 高级查询与普通查询切换
+        this.styleLayout();
+        this.btnFun(this.addFile, this.addFilePageUrl, '资料归档')
+        this.btnFun(this.addAddress, this.addAddressPageUrl, '归档地址配置')
+        this.btnFun(this.exportExl, '', '导出')
+        form.render()
+      },
+      // 点击功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, reportIds = "", row = $('#dataGrid').datagrid('getSelections');
+          if ('归档地址配置' === openName) {
+            layerOpenFun(openUrl, openName,['90%', '90%'], ['确定', '取消']);
+            return;
+          } else if ('导出' === openName) {
+            that.exportExcel();
+            return;
+          }
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span style="color:#fff">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            for (var i = 0; i < row.length; i++) {
+              if (i == 0) {
+                reportIds += row[i].reportId;
+              } else {
+                reportIds += "," + row[i].reportId;
+              }
+            }
+            if ('资料归档' === openName) {
+              layerOpenFun(openUrl + "&reportIds=" + reportIds, openName,['90%', '90%'], ['确定', '取消'] );
+            }
+            return;
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+
+      // table按钮点击进入详情
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addFilePageUrl + '&editId=' + did + '&detail=detailPage', openName = '查看详情';
+        layerOpenFun(openUrl, openName,['90%', '90%'], [])
+      },
+      // table按钮点击进入编辑
+      goEdit: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addFilePageUrl + '&editId=' + did, openName = '重新编辑';
+        layerOpenFun(openUrl, openName,['90%', '90%'], ['确定', '取消'])
+      },
+      // 导出Excel
+      exportExcel: function () {
+        var queryParams, params = "";
+        // 区分回传的查询条件：1.普通查询     2.高级查询
+        if (this.searchType == 1) {
+          this.quickSearch();
+        } else {
+          this.seniorQuickSearch();
+        }
+        queryParams = this.queryParams
+        for (var key in queryParams) {
+          params += "&" + key + "=" + queryParams[key];
+        }
+        params += "&archiveStatus=" + this.dataType;
+        window.location.href = "archiveController.do?exportXls" + encodeURI(params);
+      },
+
+      // 查询时间分开始结束存放
+      dateStartEnd: function (queryParams, dataString) {
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams[dataString + 'Start'] = DateArr[0];
+          queryParams[dataString + 'End'] = DateArr[1];
+        } else {
+          queryParams[dataString + 'Start'] = '';
+          queryParams[dataString + 'End'] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        delete queryParams['quickQryParam'];
+        if (0 === this.dataType) {
+          delete queryParams['archiveSn'];
+          delete queryParams['archiveSite'];
+        } else {
+          queryParams = this.dateStartEnd(queryParams, 'archiveDate')
+        }
+        queryParams = this.dateStartEnd(queryParams, 'signDate')
+        queryParams = this.dateStartEnd(queryParams, 'consignDate')
+        delete queryParams['signDate'];
+        delete queryParams['consignDate'];
+        delete queryParams['archiveDate'];
+        this.queryParams = queryParams
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var condition = $("input[name='quickQryParam']").val();
+        var queryParams = { 'quickQryParam': condition };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {  // 查询类型: 0:待归档, 1:已归档
+        this.dataType = num;
+        if (1 === num) {
+          this.seniorRow.show()
+          this.addFile.hide(); // 报告发放
+          this.addAddress.hide(); // 报告发放
+          this.exportExl.show(); // 导出
+        } else {
+          this.seniorRow.hide()
+          this.addFile.show(); // 报告发放
+          this.addAddress.show(); // 报告发放
+          this.exportExl.hide(); // 导出
+        }
+        var columns = [];
+        if (num === 1) { // 0:审核中, 1:审核完成
+          columns.push({ title: "reportId", field: "reportId", hidden: true })
+        } else {
+
+          columns.push({ title: "reportId", field: "reportId", checkbox: true, width: 30 })
+        }
+        columns.push({ title: "报告编号", field: "reportSn", width: 100 });
+        columns.push({ title: "委托编号", field: "consignSn", width: 90 });
+        if (num === 1) {
+          columns.push({ title: "报告档案编号", field: "archiveSn", width: 90 });
+          columns.push({ title: "报告档案地址", field: "archiveSite", width: 90 });
+          columns.push({
+            title: "归档日期", field: "archiveDate", width: 80, formatter: function (value) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          })
+          columns.push({ title: "归档人员", field: "archivePersonName", width: 50 });
+        }
+        columns.push({ title: "委托单位", field: "consignUnitName", width: 80 });
+        columns.push({ title: "工程项目", field: "projectName", width: 80 });
+        columns.push({
+          title: "委托日期", field: "consignDate", width: 80, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        columns.push({
+          title: "签发日期", field: "reportSignDate", width: 80, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        if (1 === num) {
+          columns.push({
+            title: "操作",
+            field: "opt",
+            width: 80,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="查看详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.reportId + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+              btns += '<button title="重新编辑" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' + row.reportId + '&quot;,event)"><i class="layui-icon">&#xe9aa;</i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+      },
+
+      // table数据渲染
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&archiveStatus=' + this.dataType,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        this.searchSwitch.click(function () {
+          var that = InitObj;
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+            that.reloadDataGrid(true, {});
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+            that.reloadDataGrid(true, {});
+          }
+          that.formLayerM.render();
+        })
+
+      },
+
+    }
+  </script>
+</body>
+
+</html>

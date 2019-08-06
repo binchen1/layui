@@ -1,0 +1,177 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  color: #000;
+  font-family: PingFangSC-Regular;
+  font-size: 16px;
+}
+.login-box {
+  height: 100%;
+}
+
+.login-header {
+  padding: 14px 20px;
+}
+.login-header div {
+  display: inline-block;
+}
+.login-header-left-img {
+  width: 66px;
+  height: 64px;
+  margin-right: 19px;
+}
+.login-header-left-img img {
+  vertical-align: bottom;
+}
+
+.login-header-left-text h2 {
+  color: #08306C;
+  font-size: 22px;
+}
+.login-header-left-text p {
+  color: #08306C;
+  font-size: 14px;
+}
+/* .login-header-right {
+  float: right;
+  padding-top:10px;
+  margin-right:38px;
+}
+.login-header-right p {
+  color: #333;
+  font-size: 14px;
+  line-height: 24px;
+}
+.login-header-right p span { 
+  color: #2778E3;
+} */
+.login-middle {
+  background: url('../../assets/images/img_bg.png') no-repeat center center;
+  position: absolute;
+  top: 92px;
+  bottom: 40px;
+  width: 100%;
+  background-size: cover;
+}
+.login-middle .login-middle-modal {
+  background:#000 ;
+  opacity: 0.3;
+  width: 100%;
+  height: 100%;
+}
+.login-middle-login {
+  background:#fff;
+  opacity: 0.8;
+  border-radius:20px;
+  position: absolute;
+  right: 16%;
+  top:17%;
+  padding: 38px 49px;
+}
+.login-form {
+  overflow: hidden;
+  width: 300px;
+}
+.login-form h2 {
+  color: #333;
+  font-size: 26px;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-form-content .layui-form-item {
+  margin-top: 29px;
+ }
+.login-form-content .layui-form-label {
+  width: 20px;
+  padding: 0;
+  line-height: 30px;
+ }
+ .login-form-content .layui-form-label .layui-icon {
+  color: #666;
+  font-size:24px;
+}
+.login-form-content .layui-input-block {
+  margin-left: 30px;
+  min-height:30px;
+  
+ }
+ .login-form-content .layui-input-block input { 
+   height: 30px;
+   border:none;
+   border-bottom: 1px solid #D2D2D2;
+   font-size: 14px;
+   color: #666;
+ }
+ .login-form-content .layui-input-block input.last-input {
+   width: 50%;
+ }
+
+
+.login-form-content .test-code-box {
+  width: 106px;
+  height: 30px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.login-form-content .test-code-box img {
+  width: 100%;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.login-form .login-form-right {  
+  text-align: right;
+}
+.login-form .login-form-right a {
+  color: #2577E3;
+}
+.login-form .login-form-btn {
+  width:100%;
+  height:50px;
+  background:#2577e3;
+  border-radius:10px;
+  border:none;
+  color: #fff;
+  font-size:24px;
+  font-family:PingFang-SC-Medium;
+  font-weight:500;
+  line-height:2px;
+  margin: 50px auto 10px;
+}
+.login-form .login-form-last {
+  color: #888;
+  margin-top: 14px;
+}
+.login-middle-bottom {
+  position: absolute;
+  /* width: 100%;  布局出错 */
+  bottom:10%;
+  padding-left:11%;
+
+}
+.login-middle-bottom a {
+  font-size: 18px;
+  margin-right:36px;
+  color: #fff;
+} 
+
+.login-bottom {
+  height: 40px;
+  background: #313131;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  line-height:40px;
+  text-align: center;
+}
+.login-bottom p {
+  color: #fff;
+  font-size: 14px;
+}
+.login-bottom p:hover {
+  cursor: pointer;
+}

@@ -1,0 +1,249 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<%-- <t:base type="jquery,easyui,tools"/> --%>
+<script type="text/javascript" src="plug-in/easyui-1.5.5.2/jquery.min.js"></script>
+<script>
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+  .demoTable-box {
+    padding: 0 15px;
+    padding-top: 5px;
+
+  }
+
+  .demoTable {
+    padding: 5px 10px;
+  }
+
+  .layui-input {
+    height: 30px;
+    width: 300px;
+    margin-right: 10px;
+  }
+
+  .layui-table-view {
+    margin: 0;
+  }
+
+  .layui-table-page {
+    padding: 3px 3px 0;
+    height: 36px;
+  }
+
+  .demoTable-box .layui-table-view .layui-table td,
+  .demoTable-box .layui-table-view .layui-table th {
+    padding: 0;
+  }
+
+
+  .laytable-cell-checkbox {
+    padding-top: 5px;
+  }
+
+  .table-btn {
+    margin-top: 4px;
+  }
+</style>
+
+<body>
+
+  <div class="demoTable-box">
+
+
+    <div class="layui-row">
+      <div class="demoTable">
+        <div class="layui-inline">
+          <input class="layui-input" name="params" value="" placeholder="输入规程名称/颁布号后回车即可查询" id="params"
+            autocomplete="off">
+        </div>
+        <button class="layui-btn layui-btn-sm" data-type="reload">查询</button>
+        <div style="float:right; color: gray">
+          <a class="layui-btn layui-btn-danger layui-btn-xs" style="width:15px;height:15px;">&emsp;</a>&nbsp;表示该规程已过期
+        </div>
+      </div>
+    </div>
+    <div class="layui-row">
+      <table class="layui-hide" id="baseStandardTable" lay-filter="baseStandardTable" style="width: 95%;">
+      </table>
+    </div>
+  </div>
+
+  <script type="text/javascript" charset="utf-8">
+
+
+    var testObjectParamId = GetQueryString('testObjectParamId');
+    var testObjectId = GetQueryString('testObjectId');
+
+    layui.use(['table'], function () {
+      var table = layui.table
+        , $ = layui.$;
+      table.render({
+        elem: '#baseStandardTable'
+        , url: 'baseStandardNewController.do?getImportStandards'
+        , height: 'full-50'
+        , width: 'full'
+        , cols: [[
+          { field: 'id', type: 'checkbox' }
+          , {
+            field: 'type', title: '默认类别', align: 'center', width: 80, templet: function (d) {
+              var data = "";
+              if (d.type == 1) {
+                data = '试验依据';
+              } else if (d.type == 2) {
+                data = '评定标准';
+              } else if (d.type == 3) {
+                data = '试验依据和评定标准';
+              }
+              return expireContent(d, data);
+            }
+          }
+          , {
+            field: 'standardName', title: '规程名称', align: 'center', width: 200, templet: function (d) {
+
+              return expireContent(d, d.standardName);
+            }
+          }
+          , {
+            field: 'publishCode', title: '颁布号', align: 'center', width: 100, templet: function (d) {
+              return expireContent(d, d.publishCode);
+            }
+          }
+          , {
+            field: 'executeDate', title: '执行时间', align: 'center', width: 100, templet: function (d) {
+              return expireContent(d, d.executeDate);
+            }
+          }
+          , {
+            field: 'expireDate', title: '过期时间', align: 'center', width: 100, templet: function (d) {
+              return expireContent(d, d.expireDate);
+            }
+          }
+          , {
+            field: '', title: '操作', align: 'center', templet: function (d) {
+              var buttonGroup = '<button type="button" title="查看详情" class="table-btn layui-btn layui-btn-xs" ';
+              buttonGroup += ' onClick="window.open(\'http://www.doc88.com/tag/' + d.standardName + '\')"><i class="layui-icon">&#xe705;</i></button>';
+              return buttonGroup;
+            }
+          }
+        ]]
+        , id: 'baseStandardTableId'
+        , page: {
+          curr: 1 //重新从第 1 页开始
+        }
+        , where: {
+          params: $('#params').val()
+        }
+      });
+
+      var active = {
+        reload: function () {
+          //执行重载
+          table.reload('baseStandardTableId', {
+            page: {
+              curr: 1 //重新从第 1 页开始
+            }
+            , where: {
+              params: $('#params').val()
+            }
+          });
+        }
+      };
+
+      $('.demoTable .layui-btn').on('click', function () {
+        var type = $(this).data('type');
+        active[type] ? active[type].call(this) : '';
+      });
+
+      // 监听回车事件
+      $('input[name="params"]').on('keyup', function (event) {
+        if (event.keyCode == 13) {
+          var type = 'reload';
+          active[type] ? active[type].call(this) : '';
+        }
+      });
+
+    });
+
+    function expireContent(d, data) {
+      var now = GetNowFormatDate();
+      if (!(d.expireDate)) {	// 过期日期为空，则默认永不过期
+        if (!data) return "";
+        return data;
+      }
+
+      var isExpired = CompareDate(now, d.expireDate);
+      if (isExpired) {
+        if (!data) return "";
+        return '<span style="color:red;">' + data + '</span>';
+      }
+    }
+
+    /**
+    *    试验检测页面调用 -> 提交保存引入的委托
+    */
+    function doSubmit() {
+      layui.use(['table'], function () {
+        var table = layui.table;
+        var checkStatus = table.checkStatus('baseStandardTableId')
+          , data = checkStatus.data, standardIds = '';
+
+        for (var i = 0; i < data.length; i++) {
+          if (i == 0) {
+            standardIds += data[i].id;
+          } else {
+            standardIds += ',' + data[i].id;
+          }
+        }
+        saveUseStandards(standardIds, testObjectParamId);
+      });
+    }
+
+    /**
+    *    委托收样页面调用 -> 引入委托
+    */
+    function returnImport() {
+      var standardInfo;
+      layui.use(['table'], function () {
+        var table = layui.table;
+        var checkStatus = table.checkStatus('baseStandardTableId');
+        standardInfo = checkStatus.data;
+      });
+      var index = parent.layer.getFrameIndex(window.name);
+      parent.layer.close(index);
+      return standardInfo;
+    }
+
+    // 保存引用的规程
+    function saveUseStandards(standardIds, testObjectParamId) {
+      var saveUseStandardLayerMask;
+      $.ajax({
+        url: 'baseStandardNewController.do?doSaveImportStandards'
+        , data: {
+          standardIds: standardIds
+          , testObjectParamId: testObjectParamId
+        }
+        , dataType: 'json'
+        , type: 'post'
+        , beforeSend: function () {
+          saveUseStandardLayerMask = SHOW_LOAD_LAYER('正在同步，请稍候...');
+        }
+        , success: function (res) {
+          CLOSE_LOAD_LAYER(saveUseStandardLayerMask);
+          if (!res.success) {	// 如果请求失败
+            layer.msg('同步规程失败', { icon: 5 });
+          } else {
+            // 刷新父页面数据
+            // window.parent.location.reload();
+            parent.loadParamUseStandard(testObjectId, testObjectParamId, 1)
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+          }
+        }
+      });
+    }
+
+  </script>
+</body>

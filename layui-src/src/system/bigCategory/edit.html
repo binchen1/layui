@@ -1,0 +1,225 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+</script>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<style>
+  .formtable .inputxt,.combo {
+    width: 290px !important;
+  }
+</style>
+
+<form id="form" method="POST" action="bigCategoryController.do?${empty bigCategoryEntity.id ? 'doAdd' : 'doUpdate'}">
+  <input id="id" name="id" type="hidden" value="${bigCategoryEntity.id }">
+  <input id="btn_sub" class="btn-4-submit" type="hidden">
+  <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+    <tr>
+      <td align="right" style="width: 80px;">
+        <label class="Validform_label"><span style="color: #F00000">*</span>大类名称:</label>
+      </td>
+      <td class="value" style="width:120px;">
+        <input id="name" name="name" class="inputxt" value='${bigCategoryEntity.name}'>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">所属上级:</label>
+      </td>
+      <td class="value">
+        <input id="pid" name="parent.id" type="hidden" value="${bigCategoryEntity.parent.id}">
+        <input id="bigCategoryTree" value="${bigCategoryEntity.parent.name}">
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label"><span style="color: #F00000">*</span>试验类型:</label>
+      </td>
+      <td class="value">
+        <c:choose>
+          <c:when test="${empty bigCategoryEntity}">
+            <input type="radio" name="testType" value="0" checked>原材料试验检测
+            <input type="radio" name="testType" value="1">现场试验检测
+          </c:when>
+          <c:otherwise>
+            <c:if test="${bigCategoryEntity.testType == '0'}">原材料试验检测</c:if>
+            <c:if test="${bigCategoryEntity.testType == '1'}">现场试验检测</c:if>
+          </c:otherwise>
+        </c:choose>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label"><span style="color: #F00000">*</span>资质类型:</label>
+      </td>
+      <td class="value qualificationType-td">
+        <c:choose>
+          <c:when test="${empty bigCategoryEntity}">
+            <select id="qualificationType" class="easyui-combobox" name="qualificationType.id" style="width:290px;">
+              <c:forEach items="${qualificationTypes}" var="item">
+                <option value="${item.id}">${item.name}</option>
+              </c:forEach>
+            </select>
+          </c:when>
+          <c:otherwise>
+            ${bigCategoryEntity.qualificationType.name}
+          </c:otherwise>
+        </c:choose>
+      </td>
+    </tr>
+    <!-- <tr>
+      <td align="right">
+        <label class="Validform_label"><span style="color: #F00000">*</span>资质类型:</label>
+      </td>
+      <td class="value">
+        <c:choose>
+          <c:when test="${empty bigCategoryEntity}">
+            <select name="qualificationType.id" datatype="*">
+              <option value="">--请选择--</option>
+              <c:forEach items="${qualificationTypes}" var="item">
+                <option value="${item.id}">${item.name}</option>
+              </c:forEach>
+            </select>
+          </c:when>
+          <c:otherwise>
+            ${bigCategoryEntity.qualificationType.name}
+          </c:otherwise>
+        </c:choose>
+      </td>
+    </tr> -->
+    <tr>
+      <td align="right">
+        <label class="Validform_label">是否禁用:</label>
+      </td>
+      <td class="value">
+        <input type="radio" name="isDeleted" value="1" ${bigCategoryEntity.isDeleted=='1' ? 'checked' : '' }>是
+        <input type="radio" name="isDeleted" value="0" ${empty bigCategoryEntity ? 'checked' :
+          (bigCategoryEntity.isDeleted=='0' ? 'checked' : '' )}>否
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">备注:</label>
+      </td>
+      <td class="value">
+        <textarea name="remark" class="inputxt" style="height: 50px;">${bigCategoryEntity.remark}</textarea>
+      </td>
+    </tr>
+  </table>
+</form>
+<%--suppress JSUnresolvedFunction --%>
+<script type="text/javascript">
+  $(function () {
+
+    $("#form").Validform({
+      btnSubmit: ".btn-4-submit",
+      tiptype: 4,
+      ignoreHidden: true,
+      dragonfly: false,
+      tipSweep: false,
+      showAllError: true,
+      postonce: true,
+      ajaxPost: true,
+      beforeCheck: function (curform) {
+        //在表单提交执行验证之前执行的函数，curform参数是当前表单对象。
+        //这里明确return false的话将不会继续执行验证操作;
+        console.log('1', curform)
+        return dataRequired()
+      },
+      callback: function (data) {
+        if (data.success) {
+          var index = parent.layer.getFrameIndex(window.name);
+          parent.reloadTable();
+          parent.layer.close(index);
+          parent.layerAlertFun(data.msg, '1', []);
+        } else {
+          layerAlertFun(data.msg, '2', []);
+        }
+      }
+    });
+    // 表单数据必填项
+    function dataRequired() {
+      var qualificationType = $('.qualificationType-td input.combo-value');
+      var names = $('#name');
+      if (!names.val()) {
+        formTipFun('大类名称不能为空', names)
+        return false;
+      }
+      if ('--请选择--' === qualificationType.val()) {
+        formTipFun('请选择资质类型', qualificationType.parent())
+        return false;
+      }
+      return true;
+    }
+
+    $('#bigCategoryTree').combotree({
+      url: 'bigCategoryController.do?comboTreeAsync',
+      panelHeight: 200,
+      width: 157,
+      onClick: function (node) {
+        console.log(node)
+        $("#pid").val(node.id);
+        // $('input[name=testType]').closest('tr').hide();
+        // $('select[name="qualificationType.id"]').closest('tr').hide();
+        if (node) {
+          // 发送请求
+          var useMask = false;
+          $.ajax({
+            url: 'bigCategoryController.do?getSelfById',
+            type: 'post',
+            data: {
+              'id': node.id
+            },
+            dataType: 'json',
+            beforeSend: function () {
+              if (useMask) {
+                layerAjaxMaskIndex = SHOW_LOAD_LAYER('正在执行...');
+              }
+            },
+            success: function (res) {
+              if (useMask) {
+                CLOSE_LOAD_LAYER(layerAjaxMaskIndex);
+              }
+              if (res.obj) {
+                var objs = res.obj;
+                $('input:radio[name=testType][value="' + objs.testType + '"]').attr('checked', true).siblings()
+                  .attr('checked', false).attr('disabled', true);
+                $('#qualificationType').combobox('setValue', objs.qualificationTypeId).combobox('disable');
+              }
+            }
+          });
+        }
+      },
+      onLoadSuccess: function (node, data) { 
+        var row = parent.treeGrid.treegrid('getSelected');
+
+      }
+    });
+
+    if ($('#id').val()) {
+      $('#bigCategoryTree').combotree('disable');
+    } else {
+      $('#bigCategoryTree').combotree('setValue', '--请选择--');
+      $('#qualificationType').combobox('setValue', '--请选择--');
+      $('input.combo-text.validatebox-text').attr('disabled', true)
+    }
+  });
+</script>

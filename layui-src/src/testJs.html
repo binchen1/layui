@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    var arr = [
+      {
+        "id": 1,
+        "username": "老大1",
+        "iconCls": "icon-save",
+        "price": 100,
+        "children": [
+          {
+            "id": 11,
+            "username": "老二11"
+          },
+          {
+            "id": 12,
+            "username": "老二12",
+            "state": "open",
+            "price": 100,
+            "children": [
+              {
+                "id": 121,
+                "username": "张三121"
+              },
+              {
+                "id": 122,
+                "username": "张三122"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "username": "老大2",
+        "children": [
+          {
+            "id": 21,
+            "username": "老二21"
+          },
+          {
+            "id": 22,
+            "username": "老二22"
+          }
+        ]
+      }
+    ]
+    var arrStr = JSON.stringify(arr)
+    console.log(arrStr)
+
+
+  </script>
+</body>
+
+</html>

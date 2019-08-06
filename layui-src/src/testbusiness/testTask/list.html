@@ -1,0 +1,60 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">试验检测中</li>
+      <li>复核确认中</li>
+      <li>报告审批中</li>
+      <li>报告已批准</li>
+    </ul>
+    <div class="layui-tab-content" id="iframeBox">
+      <iframe class="width-full" style="height:99%" name="waitAssign" frameborder="none" src="testTaskController.do?list&page=testing"></iframe>
+    </div>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['element'], function () {
+        var element = layui.element;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          if (0 === data.index) {
+            var htmls = '<iframe class="width-full" style="height:99%" name="waitAssign"  frameborder="none" src="testTaskController.do?list&page=testing"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else if (1 === data.index) {
+            var htmls = '<iframe class="width-full" style="height:99%" name="waitAssign" frameborder="none" src="testTaskController.do?list&page=reviewConfirm"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else if (2 === data.index) {
+            var htmls = '<iframe class="width-full" style="height:99%" name="waitAssign" frameborder="none" src="testTaskController.do?list&page=reportApproval"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else {
+            var htmls = '<iframe class="width-full" style="height:99%" name="waitAssign" frameborder="none" src="testTaskController.do?list&page=reportApproved"></iframe>'
+            $('#iframeBox').html(htmls)
+          }
+        });
+      })
+    })
+  </script>
+</body>
+
+</html>

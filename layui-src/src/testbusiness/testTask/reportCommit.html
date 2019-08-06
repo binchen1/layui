@@ -1,0 +1,372 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<%@include file="/context/jquery.jsp"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <title>报告提交页面</title>
+  <script type="text/javascript">
+    //获得根目录
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var path = prePath;
+    var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+    var basePath = prePath + postPath;
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/base64/base64.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath +
+      "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/assets/js/common.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath +
+      "/webpage/com/hitek/testbusiness/testTask/reportCommit.js'><\/script>");
+  </script>
+  <link type="text/css" rel="stylesheet" href="plug-in/assets/css/jquery.pagewalkthrough.css" />
+  <script type="text/javascript" src="plug-in/assets/js/jquery.pagewalkthrough.min.js"></script>
+
+  <style>
+    .layui-form-item {
+      margin-bottom: 1px;
+    }
+
+    #walkthrough-content {
+      display: none
+    }
+
+    #jpWalkthrough #jpwTooltip #tooltipInner {
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form" style="">
+    <div class="layui-form-item" style="margin-top:20px;">
+      <label class="layui-form-label">报告类型:</label>
+      <div class="layui-input-block" id="reportTypeDiv" style="padding-left:1%">
+        <input type="radio" name="reportType" id="formalReport" value="formal" lay-filter="reportType" title="正式报告"
+          checked>
+        <input type="radio" name="reportType" id="temporaryReport" value="temporary" lay-filter="reportType"
+          title="临时报告">
+      </div>
+    </div>
+    <div class="layui-form-item" id="ageDiv">
+      <label class="layui-form-label">选择龄期:</label>
+      <div class="layui-input-block" id="ageRadioDiv" style="padding-left:1%">
+
+      </div>
+    </div>
+    <!-- <div class="layui-form-item">
+		  	<label class="layui-form-label">报告编号:</label>
+		  	<div class="layui-input-inline" style="width:260px;">
+		  		<input type="text" id="reportCodeInput" name="title" value="" style="width:260px;border:none;" class="layui-input" readonly>
+		  		<input type="hidden" id="reportCodeHidden" value=""/>
+		  	</div>
+		  	<div id="reportCodeADiv" style="float:left;">
+		  		<label class="layui-form-label layui-text" style="text-align:left;">
+		  			<a href="javascript:void(0);" onclick="preModifyReportCode()">>>>修改</a>
+		  		</label>
+		  	</div>
+		  	<div id="reportCodeBtnDiv" style="float:left;display:none">
+		  		<label class="layui-form-label layui-text" style="text-align:left;">
+			  		<a onclick="sureModifyReportCode()" class="layui-btn layui-btn-xs" style="float:left">确定</a>
+			  		<a onclick="cancelModifyReportCode()" class="layui-btn layui-btn-xs" style="float:left">取消</a>
+			  	</label>
+		  	</div>
+    </div> -->
+    <div class="layui-form-item">
+      <label class="layui-form-label font-weight">报告编号:</label>
+      <div class="layui-inline">
+        <div class="layui-input-inline">
+          <input type="text" class="layui-input" id="reportCodeInput" name="reportSn" placeholder="请输入报告编号">
+        </div>
+        <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+          onclick="reportSnNumberFun()">生成编号</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检测人员:</label>
+      <div class="layui-input-inline" id="testPersonInnerDiv" style="width:260px;">
+        <!-- <input type="text" name="title" placeholder="张三；李四" style="width:260px;border:none;" class="layui-input" readonly> -->
+      </div>
+      <div style="float:left" id="reAllotPersonDiv">
+        <label class="layui-form-label layui-text" style="text-align:left;width:120px;">
+          <a href="javascript:void(0);" onclick="goReAssignPage()">>>>重新指定人员</a>
+        </label>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">复核人员:</label>
+      <div class="layui-input-inline" id="recheckPersonInnerDiv">
+        <!-- <input type="text" name="title" placeholder="王五" style="width:260px;border:none;" class="layui-input" readonly> -->
+      </div>
+    </div>
+    <div class="layui-form-item" id="auditPersonDiv">
+      <label class="layui-form-label">审核人员:</label>
+      <div class="layui-input-inline" id="auditPersonInnerDiv">
+        <!-- <input type="text" name="title" placeholder="赵六" style="width:260px;border:none;" class="layui-input" readonly> -->
+      </div>
+    </div>
+    <div class="layui-form-item" id="approverDiv">
+      <label class="layui-form-label">批准人员:</label>
+      <div class="layui-input-inline" id="approverInnerDiv">
+        <!-- <input type="text" name="title" placeholder="陈七" style="width:260px;border:none;" class="layui-input" readonly> -->
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检验结果:</label>
+      <div class="layui-input-block" id="qualifiedDiv" style="padding-left:1%">
+        <!-- <input type="radio" name="judge" value="1" title="合格" checked>
+				<input type="radio" name="judge" value="0" title="不合格"> -->
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检验结论:</label>
+      <div class="layui-input-inline" style="width:80%;">
+        <!-- 所检项目符合《钢筋混凝土用钢 第2部分：热轧带肋钢筋》GB/T 1499.2-2007标准技术要求。 -->
+        <input type="text" name="title" id="testVerdictInput" value="" style="width:100%;border:none;"
+          class="layui-input" readonly>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检测备注:</label>
+      <div class="layui-input-inline" style="width:80%;">
+        <!-- 重量偏差不包含在资质等级范围内。 -->
+        <input type="text" name="title" id="vardictRemarkInput" value="" style="width:100%;border:none;"
+          class="layui-input" readonly>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">报告文件:</label>
+      <div style="float:left;">
+        <label class="layui-form-label" style="text-align:left;width:180px;"><a id="attachmentA"
+            href="javascript:void(0);">暂无附件</a></label>
+      </div>
+      <div style="float:left">
+        <label class="layui-form-label layui-text" style="text-align:left;width:150px;"><a
+            onclick="goAttachmentChoosePage();" href="javascript:void(0);">>>>重新选择报告文件</a></label>
+      </div>
+      <div style="float:left">
+        <label class="layui-form-label layui-text" style="text-align:left;width:150px;"><a id="uploadA"
+            href="javascript:void(0);">>>>上传报告文件</a></label>
+      </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">提交意见:</label>
+      <div class="layui-input-block" style="padding-left:1%;padding-right:5%;">
+        <textarea name="desc" id="commitOpinion" placeholder="请输入内容" class="layui-textarea"></textarea>
+      </div>
+    </div>
+    <a style="display:none;" id="openUdrReport"></a>
+    <a style="display:none;" id="openUdrRecord"></a>
+  </form>
+  <div id="walkthrough-content">
+    <div id="walkthrough-1">
+      <h3>欢迎来到提交报告界面</h3>
+    </div>
+
+    <div id="walkthrough-2">
+      用于出具阶段性报告 1/3
+    </div>
+
+    <div id="walkthrough-3">
+      提交正式报告后，不能再提交临时报告 2/3
+    </div>
+
+    <div id="walkthrough-4">
+      信息确认完毕后，点击确认按钮，提交报告 3/3
+    </div>
+
+    <!-- <div id="walkthrough-5">
+        这是页脚和版权信息。
+      </div> -->
+  </div>
+  <script>
+    $(function () {
+
+
+      // 勿删 来源commom.js 在线体验第一次进入引导页
+      funCode('showGuideMaskLayer', funCodeCallback);
+      function funCodeCallback(res, objParam) {
+        if (res.obj && res.obj.length > 0) {
+          $.each(res.obj, function (i, v) {
+            if (objParam.codes === v.functioncode) {
+              if (!renderContent('report-commit-guide')) {
+                guideFun();
+                storeFunc('report-commit-guide', 'report-commit-guide');
+              }
+            }
+          })
+        }
+      }
+      function guideFun() {
+        $('body').pagewalkthrough({
+          name: 'introduction',
+          steps: [
+            {
+              popup: {
+                content: '#walkthrough-1',
+                type: 'modal'
+              }
+            },
+            {
+              wrapper: '#temporaryReport+div',
+              popup: {
+                content: '#walkthrough-2',
+                type: 'tooltip',
+                position: 'bottom',
+                offsetHorizontal: -50
+              }
+            }, {
+              wrapper: '#formalReport+div',
+              popup: {
+                content: '#walkthrough-3',
+                type: 'tooltip',
+                position: 'bottom',
+                width: 200,
+                offsetHorizontal: -50
+              }
+            }, {
+              wrapper: '.btn-4-complete',
+              popup: {
+                content: '#walkthrough-4',
+                type: 'modal',
+                position: 'right'
+              }
+            }
+          ],
+          buttons: {
+            jpwClose: {
+              i18n: '点击此处关闭',
+              show: true
+            },
+            jpwNext: {
+              i18n: '下一步 &rarr;',
+            },
+            jpwPrevious: {
+              i18n: '&larr; 上一步',
+            },
+            jpwFinish: {
+              i18n: '完成 &#10004;',
+            }
+          }
+        });
+        $('body').pagewalkthrough('show');
+      }
+
+      layui.config({
+        version: true //一般用于更新模块缓存，默认不开启。设为true即让浏览器不缓存。也可以设为一个固定的值，如：201610
+        ,
+        debug: false //用于开启调试模式，默认false，如果设为true，则JS模块的节点会保留在页面
+        ,
+        base: '' //设定扩展的Layui模块的所在目录，一般用于外部模块扩展
+      });
+      //Demo
+      var form;
+      var layer;
+      layui.use(['layer', 'form', 'upload'], function () {
+        form = layui.form,
+          layer = layui.layer,
+          $ = layui.$,
+          upload = layui.upload;
+
+        var uploadLoading;
+        var uploadInst = upload.render({
+          elem: '#uploadA', //绑定元素
+          url: 'uploadController.do?upload',
+          accept: 'file', //允许的文件类型file（所有文件）详见https://www.layui.com/doc/modules/upload.html文件上传模块
+          size: 50000, //允许的大小(kb)
+          multiple: true, //允许多文件上传
+          number: 5, //一次上传文件数量最大值
+          data: {
+            folderId: taskDefaultFolderId
+          }, //跟随本次上传操作一同提交的数据信息
+          before: function (obj) { //提交前触发的函数
+            uploadLoading = layer.load(0, {
+              shade: 0.2
+            });
+          },
+          done: function (res) {
+            //单个文件上传完毕回调,多文件上传的情况下,每个都会调一次
+            if (res.success) {
+              //res:{"success":true,"msg":"操作成功","obj":[{"id":"402882206565747f016565dd420a0001","businessKey":null,"subclassname":null,"attachmenttitle":"taskUserChoose.jsp","realpath":"http://192.168.2.4:8801/fileShare/A03/images/2018/e6832476-636c-4e62-951b-ea77c2aeb5d4.jsp","createdate":null,"note":null,"swfpath":null,"extend":null,"relevantEntityId":null}],"attributes":null,"jsonStr":"{\"msg\":\"操作成功\",\"success\":true,\"obj\":[{\"attachmenttitle\":\"taskUserChoose.jsp\",\"id\":\"402882206565747f016565dd420a0001\",\"realpath\":\"http://192.168.2.4:8801/fileShare/A03/images/2018/e6832476-636c-4e62-951b-ea77c2aeb5d4.jsp\"}]}"}
+              //ajax写入任务和文件/目录之间的关系
+              addAttachmentToTask(res.obj[0].id);
+              //layer.msg('单个成功');
+            } else {
+              layer.msg(res.msg, function () { });
+            }
+          },
+          allDone: function (obj) { //当文件全部被提交后，才触发
+            //刷新页面信息
+            initPageInfo();
+            layer.close(uploadLoading);
+            layer.msg('上传成功');
+
+            console.log(obj.total); //得到总文件数
+            console.log(obj.successful); //请求成功的文件数
+            console.log(obj.aborted); //请求失败的文件数
+          },
+          error: function () {
+            //请求异常回调
+            layer.close(uploadLoading);
+            layer.msg('上传失败,请重试');
+          }
+
+        });
+
+        //监听报告类型的redio选中事件
+        form.on('radio(reportType)', function (data) {
+          if (data.value == 'formal') {
+            showFormalReportInfo();
+            reportTypeChange();
+          } else {
+            $($('.ageRdo')[0]).attr("checked", "checked");
+            form.render('radio');
+            showTemporaryReportInfo();
+            reportTypeChange();
+          }
+        });
+
+        //监听龄期选择的radio选中事件
+        form.on('radio(age)', function (data) {
+          var ageRadios = $("#ageRadioDiv").children(".ageRdo");
+          var thisRadio = data.elem;
+          if (ageRadios[ageRadios.length - 1] == thisRadio) {
+            if (!isSureCommit) { //没有报告id(非确认提交)的情况下才关联选中    
+              $("#formalReport").attr("checked", "checked");
+              form.render('radio');
+              showFormalReportInfo();
+              reportTypeChange();
+            }
+          } else {
+            if (!isSureCommit) { //没有报告id(非确认提交)的情况下才关联选中    
+              $("#temporaryReport").attr("checked", "checked");
+              form.render('radio');
+              showTemporaryReportInfo();
+              reportTypeChange();
+            }
+          }
+        });
+
+        //监听提交
+        form.on('submit(formDemo)', function (data) {
+          layer.msg(JSON.stringify(data.field));
+          return false;
+        });
+
+      })
+    });
+  </script>
+</body>
+
+</html>

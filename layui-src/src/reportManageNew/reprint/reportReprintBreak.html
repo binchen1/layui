@@ -1,0 +1,105 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <style>
+    .layui-form-label {
+      width: 80px;
+    }
+
+    .tips {
+      text-align: right;
+      color: red;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <form class="layui-form" style="margin:15px;" id="commonQueryForm">
+      <p class="tips"><span>请注意，本次申请将被中止且不能恢复！</span></p>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">中止原因：</label>
+        <div class="layui-input-block">
+          <textarea name="Reason" placeholder="请输入内容" class="layui-textarea"></textarea>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        InitObj.init();
+      })
+    })
+    var InitObj = {
+      defaultUrl: 'reportAuditController.do?getReportDetailGeneral', // 默认url
+      breakAuditUrl: 'reportRedoAuditController.do?breakAudit', // 中止url
+      auditId: GetQueryString("auditId"), // 获取父页面传递过来的id
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      init: function () { 
+      },
+     
+      openCallback: function () {
+        var saveParam=this.saveData()
+        if (this.saveData()) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(this.breakAuditUrl, { 'auditId': this.auditId, 'Reason': saveParam.Reason }, this.saveAjaxCallback, true, true)
+          }else{
+            SHOW_LOAD_LAYER('数据提交中...');
+          }
+        } else {
+          return false
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 5 });
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          return;
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (requiredParam) { 
+        if (!requiredParam.Reason) {
+          layer.msg('中止内容不能为空')
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var requiredParam = $('#commonQueryForm').serializeJSON(); 
+        if (this.dataRequired(requiredParam)) {
+          // 保存数据
+          return requiredParam;
+        }
+        return false;
+      },
+    }
+  </script>
+</body>
+
+</html>

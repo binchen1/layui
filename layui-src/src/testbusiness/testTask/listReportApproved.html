@@ -1,0 +1,64 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/testbusiness/testTask/listTesting.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <style>
+    .datagrid-cell, .datagrid-cell-group, 
+    .datagrid-header-rownumber, 
+    .datagrid-cell-rownumber {
+        white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- dataType 数据类型：1.检测中，2.复核中，3.报告审批中，4.报告已审批 -->
+  <div class="layui-tab-brief">
+    <div class="height-full" data-options="region: 'center'">
+      <div class="tb-box" id="toolbar">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" id="queryParam" name="queryParam" class="layui-input" placeholder="输入编号/样品名称/工程部位/用途（回车即可查询）..."
+                    autocomplete="off">
+                  <input id="dataType" name="dataType" type="hidden" value="4" />
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a class="easyui-linkbutton btn-4-PrintBlankTable" plain="true" icon="icon-print">打印空表</a>
+          </span>
+        </div>
+      </div>
+      <table id="testingDataTable" class="easyui-datagrid"></table>
+    </div>
+  </div>
+</body>
+
+</html>

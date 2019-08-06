@@ -1,0 +1,342 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<t:base type="jquery,easyui,tools,DatePicker"></t:base>
+<div class="easyui-layout" fit="true" style="overflow-x:hidden">
+	<div region="center" style="padding:0px;border:0px">
+		<div id="tabs-container">
+			<div class="tabs-header tabs-header-noborder no-print">
+				<div class="tabs-wrap"
+					style="margin-left: 0px; margin-right: 0px; width: 100%;">
+					<ul class="tabs">
+						<li id="tab_index_1" class="tabs-selected">
+							<a href="javascript:void(0)" class="tabs-inner">
+								<span class="tabs-title">未收费</span> <span class="tabs-icon"></span>
+							</a>
+						</li>
+						<li id="tab_index_2" class="">
+							<a href="javascript:void(0)" class="tabs-inner">
+								<span class="tabs-title">部分收费</span> <span class="tabs-icon"></span>
+							</a>
+						</li>
+						<li id="tab_index_3" class="">
+							<a href="javascript:void(0)" class="tabs-inner">
+								<span class="tabs-title">已结清</span> <span class="tabs-icon"></span>
+							</a>
+						</li>
+						<li id="tab_index_4" class="">
+							<a href="javascript:void(0)" class="tabs-inner">
+								<span class="tabs-title">全部</span> <span class="tabs-icon"></span>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="tabs-panels tabs-panels-noborder tab-contents">
+				<div id="cont_index_1" class="panel"
+					style="display: block; width: 100%;">
+					<div title=""
+						style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+						class="panel-body panel-body-noheader panel-body-noborder">
+						<div style="width: 100%; height: 100%">
+							<iframe name="waitAssign" width="100%" height="100%"
+								frameborder="none"
+								src="feeModelController.do?listByStatus&status=3"></iframe>
+						</div>
+					</div>
+				</div>
+				<div id="cont_index_2" class="panel" style="display: none; ">
+					<div title=""
+						style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+						class="panel-body panel-body-noheader panel-body-noborder">
+						<div style="width: 100%; height: 100%">
+							<iframe name="myAssigned" width="100%" height="100%"
+								frameborder="none"
+								src="feeModelController.do?listByStatus&status=2"></iframe>
+						</div>
+					</div>
+				</div>
+				<div id="cont_index_3" class="panel" style="display: none; ">
+					<div title=""
+						style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+						class="panel-body panel-body-noheader panel-body-noborder">
+						<div style="width: 100%; height: 100%">
+							<iframe name="myAssigned" width="100%" height="100%"
+								frameborder="none"
+								src="feeModelController.do?listByStatus&status=1"></iframe>
+						</div>
+					</div>
+				</div>
+				<div id="cont_index_4" class="panel" style="display: none; ">
+					<div title=""
+						style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+						class="panel-body panel-body-noheader panel-body-noborder">
+						<div style="width: 100%; height: 100%">
+							<iframe name="myAssigned" width="100%" height="100%"
+								frameborder="none"
+								src="feeModelController.do?listByStatus&status=1,2,3"></iframe>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+	<!--    <input type="hidden" id="actTaskId" value="${actTaskId }"> -->
+</div>
+<script type="text/javascript">
+
+ /**
+ * 布局
+ */
+ function layout(){
+	 var w_width = window.innerWidth;
+	 var w_height = window.innerHeight;
+	 $("#tabs-container").children(".tabs-header").width(w_width);
+	 $(".tab-contents").height(w_height-36);
+	 $(".tabs-panels").width(w_width);
+	 $(".tab-contents-inner").height(w_height-36-27)
+ }
+ layout();
+ $(window).resize(function(){
+		 layout();
+		
+ })
+ function closeTab(){
+	 window.parent.refreshMainTab();
+	 window.parent.closeCurrentWin();	 
+ }
+
+/**
+ * tabs
+ */
+var tabs = $("#tabs-container").children(".tabs-header").find("li");
+var tab_contents = $("#tabs-container").children(".tab-contents").children(".panel");
+$.each(tabs,function(){
+	$(this).click(function(){
+		if(!$(this).hasClass("tabs-selected")){
+			$("#tabs-container").children(".tabs-header").find("li.tabs-selected").removeClass("tabs-selected");
+			$.each(tab_contents,function(){
+				$(this).css("display","none");
+			});
+			var tab_id = $(this).attr("id");
+			$("#tabs-container").children(".tab-contents").find("#cont"+tab_id.substring(3,tab_id.length)).css("display","block");
+			$(this).addClass("tabs-selected");
+		}
+	})
+});
+/**
+* 加载完毕后，要弹出收费的框
+*/
+$(document).ready(function(){
+	var  id = GetQueryString("id");
+	var  taskId = GetQueryString("taskId");
+	if(id!=null && id!=""){
+		layer.open({title:"收费",content:'feeModelController.do?goActivity&id='+id+"&taskId="+taskId,type:2, area: ['80%','90%'], //宽高
+			btn:['提交','回退',"移交","取消"],
+				yes:function(index){
+					passProcess(index);
+				}, //提交
+				btn2:function(index){
+					backProcess(index);
+				},//回退'
+				btn3:function(index){
+					deliverTask(index);
+				},//移交
+			});
+		}
+});
+ function GetQueryString(name)
+	{
+	     var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+	     var r = window.location.search.substr(1).match(reg);
+	     if(r!=null)return  unescape(r[2]); return null;
+	}
+ 
+
+
+ </script>
+<script type="text/javascript">
+		var width = 800;
+		var height = 600;
+		function closeCurrentWin(){
+			window.parent.closeCurrentWin();
+		}
+		function refreshMainTab(){
+			window.parent.refreshMainTab();
+		}
+		/**
+		*提交
+		*/
+		function passProcess(index) {
+			var body = layer.getChildFrame('body', index);
+			$(body).find("#isSubmit").val("true");
+			$(body).find('#btn_sub').trigger('click');
+			
+		/* 	$('#btn_sub').parent().find("#isSubmit").val("true");
+			$('#btn_sub').click(); */
+			//refreshMainTab();
+		}
+	
+		function deliverTask(index) {
+			var body = layer.getChildFrame('body', index);
+			var taskId = $(body).find("#taskId").val();
+			var title = "选择可移交的用户";
+			
+			var addurl = basePath + "/ActivityController.do?deliverUsers&taskId=" + taskId;
+			//移交 驳回 回退都要求填写评论，并且可以查看历史评论
+			layer.open({title:"移交",content: addurl,type:2, area: ['80%','90%'], //宽高
+			btn:['提交',"取消"],
+				yes:function(index){
+				var body=layer.getChildFrame('body', index);
+					var json ={};
+					 json.userName =body.find("input[name='userName']:checked").val();
+					 json.taskId = body.find("#taskId").val();
+				//执行移交
+				 	$.ajax({
+						url : basePath + '/ActivityController.do?doDeliverUser',
+						data : json,
+						dataType : "json",
+						type : "POST",
+						contentType : "application/x-www-form-urlencoded",
+						//traditional: true,  
+						success : function(data) {
+							window.parent.tip(data.msg);
+							refreshMainTab();
+							return true;
+						}
+					}); 
+				}//提交
+			
+			});
+	
+		
+		}
+	
+	
+		function backProcess(index) {
+			var body = layer.getChildFrame('body', index);
+			var taskId = $(body).find("#taskId").val();
+			var title = "驳回";
+			var addurl = basePath + "/ActivityController.do?getBackProcessPage&taskId=" + taskId;
+			layer.open({title:"驳回",content: addurl,type:2, area: ['80%','90%'], //宽高
+			btn:['提交',"取消"],
+				yes:function(index){
+				var body=layer.getChildFrame('body', index);
+					var json ={};
+					 json.taskId = body.find("#taskId").val();
+					  json.activityId = body.find("input[name='activityId']:checked").val();
+					 json.ueditorContent = body.find("textarea[name='ueditorContent']").val();
+				//执行
+					$.ajax({
+						url : basePath + '/ActivityController.do?backProcess',
+						data : json,
+						dataType : "json",
+						type : "POST",
+						contentType : "application/x-www-form-urlencoded",
+						//traditional: true,  
+						success : function(data) {
+							window.parent.tip(data.msg);
+							refreshMainTab();
+							return true;
+						}
+					}); 
+				}//提交
+			
+			});
+		}
+
+	
+		function showActivityStatus() {
+			//opensavesubwin("查看流程图", iframe.basePath+"/ActivityController.do?showActivityStatus&taskId="+$('#taskId', iframe.document).val());
+			var title = "查看流程图";
+			var addurl = basePath + "/ActivityController.do?showActivityStatus&taskId=" + $('#taskId').val();
+			$.dialog({
+				id : "thirdLayer",
+				content : 'url:' + addurl,
+				zIndex : getzIndex(),
+				lock : true,
+				width : width,
+				height : height,
+				title : title,
+				opacity : 0.3,
+				cache : false,
+				cancelVal : '关闭',
+				cancel : true, /*为true等价于function(){}*/
+				close : function() { //无论何种关闭方法都要执行
+					iframe = this.iframe.contentWindow;
+					//页面中close方法 ，利用了闭包的原理，实质是打开子窗口的close方法
+					iframe.close();
+				}
+			});
+		}
+	
+		function showComments() {
+			var title = "评论";
+			var addurl = basePath + "/ActivityController.do?goComments&taskId=" + $('#taskId').val();
+			$.dialog({
+				content : 'url:' + addurl,
+				zIndex : getzIndex(),
+				lock : true,
+				width : width,
+				height : height,
+				title : title,
+				opacity : 0.3,
+				cache : false,
+				cancelVal : '关闭',
+				cancel : true /*为true等价于function(){}*/
+	
+			});
+		};
+
+	</script>
+	
+	<!-- 报错了，该页面应该不用表单验证，可以删除 -->
+<!-- 	<script type="text/javascript">
+		$("#formobj").Validform({
+			tiptype : 4,
+			btnSubmit : "#btn_sub",
+			btnReset : "#btn_reset",
+			ajaxPost : true,
+			usePlugin : {
+				passwordstrength : {
+					minLen : 6,
+					maxLen : 18,
+					trigger : function(obj, error) {
+						if (error) {
+							obj.parent().next().find(".Validform_checktip").show();
+							obj.find(".passwordStrength").hide();
+						} else {
+							$(".passwordStrength").show();
+							obj.parent().next().find(".Validform_checktip").hide();
+						}
+					}
+				}
+			},
+			callback : function(data) {
+				var win = window.parent;
+				if (data.success == true) {
+					refreshMainTab();
+					//frameElement.api.close();
+					window.parent.tip(data.msg);
+				} else {
+					if (data.responseText == '' || data.responseText == undefined) {
+						$.messager.alert('错误', data.msg);
+						$.Hidemsg();
+					} else {
+						try {
+							var emsg = data.responseText.substring(data.responseText.indexOf('错误描述'), data.responseText.indexOf('错误信息'));
+							$.messager.alert('错误', emsg);
+							$.Hidemsg();
+						} catch (ex) {
+							$.messager.alert('错误', data.responseText + "");
+							$.Hidemsg();
+						}
+					}
+					return false;
+				}
+				
+				win.reloadTable();
+			}
+		});
+	</script> -->

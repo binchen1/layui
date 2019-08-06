@@ -1,0 +1,513 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<%-- <t:base type="jquery,easyui,tools"/> --%>
+<script type="text/javascript" src="plug-in/easyui-1.5.5.2/jquery.min.js"></script>
+<script>
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+  .layuiTip-class.layui-layer-tips { border: 1px solid #666; }
+.layuiTip-class.layui-layer-tips .layui-layer-content { box-shadow: 0 0 0 #000;  color: #000; }
+.layuiTip-class.layui-layer-tips i.layui-layer-TipsL { display: none; }
+.layuiTip-class .layui-layer-btn { background: #FFCCCC; padding: 0 0 10px 30px; }
+.layuiTip-class .layui-layer-btn a ,.layuiTip-class .layui-layer-btn .layui-layer-btn0{ height: 22px; line-height: 22px;background-color: #5BAAEB;color: #fff; }
+/* .layui-table-tips-main{display:none}
+.layui-table-tips-c{display:none} */
+</style>
+<div class="layui-container" style="margin: 0 0 0 0; padding-top: 5px;">
+  <div class="layui-row" style="width:900px;">
+    <div class="layui-col-xs2 layui-col-sm2 layui-col-md2">
+
+      <span class="layui-text" style="padding-bottom: 5px;">参数列表：</span>
+      <ul class="layui-nav layui-nav-tree layui-bg-green" lay-filter="paramsList" style="width: 150px;margin-top: 10px;">
+        <c:forEach var="testObjParam" items="${testObjectParams }">
+          <li id="${testObjParam.testParamId}" class="layui-nav-item">
+            <a title="${testObjParam.testParamDisplayName }" href="javascript:loadParamUseStandard('${testObjParam.testObjectId}','${testObjParam.testParamId}');">${testObjParam.testParamDisplayName
+              }</a>
+          </li>
+        </c:forEach>
+      </ul>
+    </div>
+    <div class="layui-col-xs10 layui-col-sm10 layui-col-md10" style="padding-left: 10px;">
+      <div class="layui-row">
+        <a title="引用规程库" name="importStandard" class="layui-btn layui-btn-xs" href="javascript:importStandard();">
+          引用规程库
+        </a>
+        <a title="新增自定义规程" name="addStandard" class="layui-btn layui-btn-xs" href="javascript:addStandard();">
+          新增规程
+        </a>
+        <a title="从hitek数据中心同步到本地库" name="syncStandard" class="layui-btn layui-btn-xs" href="javascript:syncStandard();">
+          同步规程库
+        </a>
+        <div style="float:right; color: gray">
+            <a class="layui-btn layui-btn-danger layui-btn-xs" style="height:16px; width:16px;">&emsp;</a>&nbsp;表示该规程已过期
+        </div>
+      </div>
+      <form class="layui-form" action="">
+        <table class="layui-table" id="standardTable" lay-filter="standardTable" style="margin-top: 0px;width: 95%;">
+        </table>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+
+  var initTestObjectId = '${initTestObjectId}';
+  var initTestParamId = '${initTestParamId}';
+  $(function () {
+    loadParamUseStandard(initTestObjectId, initTestParamId);
+  });
+
+  var tableData;// 当前数据表格的数据
+  var selectedBasis = {};	// 已勾选依据
+  var selectedStandard = {};	// 已勾选标准
+  var currentTestObjectParamId;// 当前操作的收样参数ID
+  var currentTestObjectId;// 当前操作的收样参数ID
+
+  // 加载参数的规程
+  function loadParamUseStandard(testObjectId, testObjectParamId) {
+
+    if (tipIndex) {
+      layer.close(tipIndex);
+    }
+    $("#" + testObjectParamId).addClass("layui-bg-cyan");
+    $("#" + testObjectParamId).siblings().removeClass("layui-bg-cyan");
+
+    // 保存当前参数数据
+    if (tableData) {
+      saveData();
+    }
+    currentTestObjectParamId = testObjectParamId;
+    currentTestObjectId = testObjectId;
+
+    // 加载新的参数规程
+    var url = "baseStandardNewController.do?getTestParamStandards";
+    $.ajax({
+      url: url
+      , async: false
+      , data: {
+        testObjectId: testObjectId
+        , testObjectParamId: testObjectParamId
+      }
+      , dataType: 'json'
+      , type: 'post'
+      , success: function (res) {
+        if (res.success) {
+          tableData = res.obj;
+        }
+      }
+    });
+
+    /* console.info("tableData:");
+    console.info(tableData); */
+
+    layui.use(['table', 'form'], function () {
+      var $ = layui.$
+        , form = layui.form
+        , table = layui.table;
+
+      tableRender(table, tableData);
+
+      // 初始化已勾选数据
+      selectedBasis = {};	// 已勾选依据
+      selectedStandard = {};	// 已勾选标准
+      for (var i = 0; i < tableData.length; i++) {
+        var type = tableData[i].baseStandardUseType;
+        // 用“规程名称@@颁布号”来确定规程的唯一性
+        if (type == '1') {
+          selectedBasis[tableData[i].baseStandardName + "@@" + tableData[i].publishCode] = clone(tableData[i]);
+        } else if (type == '2') {
+          selectedStandard[tableData[i].baseStandardName + "@@" + tableData[i].publishCode] = clone(tableData[i]);
+        } else if (type == '3') {
+          selectedBasis[tableData[i].baseStandardName + "@@" + tableData[i].publishCode] = clone(tableData[i]);
+          selectedStandard[tableData[i].baseStandardName + "@@" + tableData[i].publishCode] = clone(tableData[i]);
+        }
+      }
+
+      // 选择依据事件
+      form.on('checkbox(selectBasis)', function (obj) {
+
+        var checkBoxElement = obj.elem;
+        if (checkBoxElement.checked) {	// 选中
+          selectBasis(checkBoxElement);
+        } else {						// 取消
+          cancelBasis(checkBoxElement);
+        }
+      });
+
+      // 选择评定标准事件
+      form.on('checkbox(selectStandard)', function (obj) {
+        var checkBoxElement = obj.elem;
+        if (checkBoxElement.checked) {	// 选中
+          selectStandard(checkBoxElement);
+        } else {						// 取消
+          cancelStandard(checkBoxElement);
+        }
+      });
+
+    });
+  }
+
+  // 渲染table表单
+  function tableRender(table, tableData) {
+    table.render({
+      elem: '#standardTable'
+      , cols: [[
+        {
+          field: 'baseStandardUseType', title: '试验依据', align: 'center', width: 80, templet: function (d) {
+            if (d.baseStandardUseType == 1 || d.baseStandardUseType == 3) {
+              return "<input type='checkbox' value='" + d.LAY_TABLE_INDEX + "' lay-filter='selectBasis' checked='checked' />";
+            }
+            return "<input type='checkbox' value='" + d.LAY_TABLE_INDEX + "' lay-filter='selectBasis' />";
+          }
+        }
+        , {
+          field: 'baseStandardUseType', title: '评定标准', align: 'center', width: 80, templet: function (d) {
+            if (d.baseStandardUseType == 2 || d.baseStandardUseType == 3) {
+              return "<input type='checkbox' value='" + d.LAY_TABLE_INDEX + "' lay-filter='selectStandard' checked='checked' />";
+            }
+            return "<input type='checkbox' value='" + d.LAY_TABLE_INDEX + "' lay-filter='selectStandard' />";
+          }
+        }
+        , { 
+            field: 'baseStandardName', title: '规程名称', align: 'center' 
+            ,templet: function (row) {
+	            if (row.expireDate) {
+	               if(new Date(row.expireDate) < new Date()){
+	                   var html = '<span style="color:red">'+row.baseStandardName+'</span>';
+	                   return html;
+	               }
+	            }
+	            return row.baseStandardName;
+	        }
+          }
+        , { field: 'publishCode', title: '颁布号', align: 'center', width: 120 }
+        , {
+          field: 'executeDate', title: '执行时间', align: 'center', width: 100, 
+	          templet: function (d) {
+	            if (d.executeDate) {
+	              return d.executeDate.split(" ")[0];
+	            }
+	            return "";
+	          }
+          }
+         /* , {
+	           field: 'expireDate', title: '过期时间', align: 'center', width: 100, 
+	           templet: function (d) {
+		            if (d.expireDate) {
+		               return d.expireDate.split(" ")[0];
+		            }
+	                return "";
+	           }
+           } */
+        /* ,{field: 'baseStandardId', title: '操作', align:'center'} */
+        , {
+          field: 'id', title: '操作', align: 'center', templet: function (d) {
+            var buttonGroup = '<div class="layui-btn-group">';
+            buttonGroup += '<button type="button" title="查看详情" class="layui-btn layui-btn-sm" ';
+            buttonGroup += ' onClick="window.open(\'http://www.doc88.com/tag/' + d.baseStandardName + '\')"><i class="layui-icon">&#xe705;</i></button>';
+            buttonGroup += '<button type="button" title="应用到其他参数" lay-event="referenceToOtherParams" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe621;</i></button>';
+            buttonGroup += '<button type="button" title="取消引用" lay-event="doDelete" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe640;</i></button>';
+            buttonGroup += '</div>';
+            return buttonGroup;
+          }
+        }
+      ]]
+      , data: tableData
+      , page: false
+      , limit: 1000
+    });
+  }
+
+  // 选中依据
+  function selectBasis(checkBoxElement) {
+    for (var i = 0; i < tableData.length; i++) {
+      if (tableData[i].LAY_TABLE_INDEX == checkBoxElement.value) {
+        var cloneObj = clone(tableData[i]);
+        cloneObj.baseStandardUseType = 1;
+        selectedBasis[cloneObj.baseStandardName + "@@" + cloneObj.publishCode] = cloneObj;
+      }
+    }
+  }
+
+  // 取消依据
+  function cancelBasis(checkBoxElement, selected) {
+    for (var i = 0; i < tableData.length; i++) {
+      if (tableData[i].LAY_TABLE_INDEX != checkBoxElement.value) {
+        continue;
+      }
+      var cloneObj = clone(tableData[i]);
+      delete selectedBasis[cloneObj.baseStandardName + "@@" + cloneObj.publishCode];
+    }
+  }
+
+  // 选中标准
+  function selectStandard(checkBoxElement) {
+    for (var i = 0; i < tableData.length; i++) {
+      if (tableData[i].LAY_TABLE_INDEX == checkBoxElement.value) {
+        var cloneObj = clone(tableData[i]);
+        cloneObj.baseStandardUseType = 2;
+        selectedStandard[cloneObj.baseStandardName + "@@" + cloneObj.publishCode] = cloneObj;
+      }
+    }
+  }
+
+  // 取消标准
+  function cancelStandard(checkBoxElement) {
+    for (var i = 0; i < tableData.length; i++) {
+      if (tableData[i].LAY_TABLE_INDEX != checkBoxElement.value) {
+        continue;
+      }
+      var cloneObj = clone(tableData[i]);
+      delete selectedStandard[cloneObj.baseStandardName + "@@" + cloneObj.publishCode];
+    }
+  }
+  var parentIndex = parent.layer.getFrameIndex(window.name)
+
+  // 保存勾选的规程
+  function saveData(isClose) {
+
+    var saveDataLayerIndex;
+    $.ajax({
+      url: 'baseStandardNewController.do?doSaveTestParamStandards'
+      , data: {
+        selectedBasis: JSON.stringify(selectedBasis)
+        , selectedStandard: JSON.stringify(selectedStandard)
+        , testObjectParamId: currentTestObjectParamId
+      }
+      , dataType: 'json'
+      , type: 'post'
+      , beforeSend: function () {
+        saveDataLayerIndex = SHOW_LOAD_LAYER('正在保存...');
+      }
+      , success: function (res) {
+        CLOSE_LOAD_LAYER(saveDataLayerIndex);
+        if (!res.success) {	// 如果请求失败
+          layer.msg('规程保存失败', { icon: 5 });
+        } else {
+          layer.msg('规程保存成功', { icon: 6 });
+        }
+
+        if(isClose == 1){
+	        window.parent.reloadTable();
+	        parent.layer.close(parentIndex); //再执行关闭 
+        }
+      }
+    });
+  }
+
+  // 引用规程库
+  function importStandard() {
+    layer.open({
+      type: 2,
+      title: '引用规程库',
+      offset: 'auto',
+      skin: 'layui-layer-molv',
+      content: "baseStandardNewController.do?goImportStandards&testObjectParamId=" + currentTestObjectParamId+'&testObjectId='+currentTestObjectId,
+      closeBtn: 0,
+      btn: ['确定', '取消'],
+      area: ['760px', '90%'],
+      btn1: function (index, layero) {
+        var iframeWin = window[layero.find('iframe')[0]['name']];
+        iframeWin.doSubmit();
+      },
+      btn2: function () {
+        layer.close();
+      },
+    });
+  }
+
+  // 同步规程库
+  function syncStandard() {
+    var syncDataLayerMaskIndex;
+    $.ajax({
+      url: 'baseStandardNewController.do?doSyncTestParamStandardsFromHitekDataCenter'
+      , data: {
+
+      }
+      , dataType: 'json'
+      , type: 'post'
+      , beforeSend: function () {
+        syncDataLayerMaskIndex = SHOW_LOAD_LAYER('正在同步，请稍候...');
+      }
+      , success: function (res) {
+        CLOSE_LOAD_LAYER(syncDataLayerMaskIndex);
+        if (!res.success) {	// 如果请求失败
+          layer.msg('同步规程失败', { icon: 5 });
+        } else {
+          layer.msg('同步规程成功', { icon: 6 });
+        }
+      }
+    });
+  }
+
+  // 新增 
+  function addStandard() {
+
+    var url = "baseStandardNewController.do?goAdd&testObjectParamId="
+      + currentTestObjectParamId + "&currentStandardType=" + '${currentStandardType}'+"&testObjectId="+currentTestObjectId;
+    layer.open({
+      type: 2,
+      title: '新增规程',
+      offset: 'auto',
+      skin: 'layui-layer-molv',
+      content: url,
+      closeBtn: 0,
+      btn: ['确定', '取消'],
+      area: ['60%', '80%'],
+      btn1: function (index, layero) {
+        var iframeWin = window[layero.find('iframe')[0]['name']];
+        iframeWin.checkSimilarStandard();
+      },
+      btn2: function () {
+        layer.close();
+      },
+    });
+  }
+
+  // 取消规程引用
+  function deleteUseStandard(obj, data) {
+    var id = data.id;
+    delete selectedBasis[data.baseStandardName + "@@" + data.publishCode];
+    delete selectedStandard[data.baseStandardName + "@@" + data.publishCode];
+    obj.del();
+
+    // 这里不用每次保存，等切换收样参数时，或用户点击确定时，触发保存操作
+    var url = "baseStandardNewController.do?doDeleteUseStandard";
+    $.ajax({
+      url: url
+      ,async: false
+      ,data: {
+        id: id
+      }
+      ,dataType: 'json'
+      ,type: 'post'
+      ,success: function(res){
+        if(res.success){
+          obj.del();
+          layer.msg('操作成功',{icon:6});
+        } else {
+          layer.msg('操作失败',{icon:5});
+        }
+      }
+    });
+  }
+
+  function referenceToOtherParams(testObjectParamIds, data, tipIndex) {
+    // 发送后台请求，将该规程引用到其他参数
+    var url = "baseStandardNewController.do?referenceToOtherParams";
+    $.ajax({
+      url: url
+      , async: false
+      , data: {
+        testObjectParamIds: testObjectParamIds
+        , baseStandardName: data.baseStandardName
+        , publishCode: data.publishCode
+        , baseStandardUseType: data.baseStandardUseType
+      }
+      , dataType: 'json'
+      , type: 'post'
+      , success: function (res) {
+        if (res.success) {
+          layer.msg('操作成功', { icon: 6 });
+          layer.close(tipIndex);
+        } else {
+          layer.msg('操作失败', { icon: 5 });
+        }
+      }
+    });
+  }
+
+  var tipIndex;
+  layui.use(['table'], function () {
+    var $ = layui.$
+      , table = layui.table;
+
+    table.on('tool(standardTable)', function (obj) {
+      var data = obj.data;
+      // 取消引用
+      if (obj.event === 'doDelete') {
+        deleteUseStandard(obj, data);
+      } else if (obj.event === 'referenceToOtherParams') {
+        console.log('obj.event ', obj.event)
+        // layui.stope(obj.event);
+        var innerHtml = '<div>'
+        innerHtml += '<p>将当前规程应用到以下参数</p>'
+        var paramList = eval('${paramList}');
+        innerHtml += '<label><input type="checkbox" id="CheckAll" style="vertical-align:middle;" value="全选">';
+        innerHtml += '<span style="vertical-align:middle;margin-left:5px;" >全部</span></label>';
+        for (var i = 0; i < paramList.length; i++) {
+          innerHtml += '<div style="padding-left:10px">';
+          innerHtml += '<label><input type="checkbox" onclick="oneToAll()" name="referenceParam" style="vertical-align:middle;" value=' + paramList[i].id + ' >';
+          innerHtml += '<span style="vertical-align:middle;margin-left:5px;" >' + paramList[i].name + '</span></label>';
+          innerHtml += '</div>';
+        }
+        innerHtml += '</div>';
+
+        tipIndex = layer.tips(innerHtml, this, {
+          time: 1000 * 1000
+          , skin: 'layuiTip-class'
+          , tips: [4, '#FFCCCC']
+          , btn: ['确定', '取消']
+          , btn1: function () {
+            var testObjectParamIds = "";
+            var index = 1;
+            $(":checked[name='referenceParam']").each(function () {
+              var testObjectParamId = $(this).val();
+              if (index == 1) {
+                testObjectParamIds += testObjectParamId;
+                index++;
+              } else {
+                testObjectParamIds += "," + testObjectParamId;
+              }
+            });
+
+            // 引用该规程到其他参数
+            referenceToOtherParams(testObjectParamIds, data, tipIndex);
+          }
+          , btn2: function () {
+
+          }
+        }
+        );	// 弹出框 1000秒后消失
+      }
+    });
+
+  });
+  // 点击应用到其他参数 下选择框
+  $(document).on("click", "#CheckAll", function (e) {
+    console.log(e)
+    if (e.target.checked) {
+      $("input:checkbox").prop("checked", "checked");
+    } else {
+      $("input:checkbox").removeAttr("checked");
+    }
+  });
+  //判断CheckAll下所有的子checkbox全部选中时，总checkbox选中，否则，反之；
+  function oneToAll() {
+    var allChecked = 0;//所有选中checkbox的数量
+
+    var all = 0;//所有checkbox的数量
+
+    $("input:checkbox[name='referenceParam']").each(function (i) {
+      all++;
+      if ($(this).is(":checked")) {
+        allChecked++;
+      }
+
+    });
+
+    if (allChecked == all) {//相等时，则所有的checkbox都选中了，否则，反之；
+
+      $("#CheckAll").prop("checked", true);
+
+    } else {
+
+      $("#CheckAll").prop("checked", false);
+
+    }
+  }
+</script>

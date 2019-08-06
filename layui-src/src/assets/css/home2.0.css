@@ -1,0 +1,171 @@
+
+.home-box {
+  margin-top: 7px;
+  margin:5px 10px;
+}
+.header>img {
+  margin-right: 10px;
+}
+
+.header>p {
+  margin: 20px 0 10px;
+  font-size: 14px;
+}
+.header .layui-color-blue {
+  margin-right: 5px;
+}
+
+.unReturn {
+  border: none;
+  margin-right: 0;
+}
+
+.process-box {
+  background: #fff;
+  /* border: 1px solid #666; */
+  margin-top: 20px;
+  padding: 5px 10px;
+}
+
+.process {
+  display: flex;
+  display: -webkit-flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.process>div {
+  /* flex: 1;
+  width: 0; */
+}
+
+.process-content p {
+  white-space: nowrap;
+}
+
+.process-content-span {
+  position: relative;
+  display: inline-block;
+}
+.process-content-span img {
+  height: 55px;
+  width: 55px;
+  border: 2px solid red;
+  transition: all 0.3s;
+}
+.process-content-span img:hover{
+  transform: scale(1.1);
+  /* opacity: 0.2; */
+}
+.process-content-span img.imgOpacity{
+  opacity: 0.2;
+}
+
+.process-content-span span {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef5889;
+  color: #fff;
+  min-width: 20px;
+  height: 16px;
+  line-height: 16px;
+  padding: 1px;
+}
+
+.process-content-span b {
+  position: absolute;
+  top: 50%;
+  right: 0;
+}
+
+.detail-header {
+  padding: 20px 0;
+  font-weight: bold;
+}
+
+.detail-header .rf i.abtn {
+  padding: 3px 18px;
+
+}
+
+.detail-header .rf i.abtn.abtn-bg {
+  background: #E8FFFF;
+}
+
+.myDetail-item {
+  display: inline-block;
+  color: #fff;
+}
+
+.myDetail-item>div {
+  margin: 5px;
+  padding: 0px 2px 2px 10px;
+  min-height: 80px;
+}
+.myDetail-item .nameClass {
+  padding-top: 10px;
+}
+.myDetail-item .rf .abtn,
+.detail-header .rf .abtn {
+  background: #fff;
+  font-style: normal;
+  padding: 2px 5px;
+  float: left;
+  text-align: center;
+  border: 1px solid #666666;
+}
+
+.myDetail-item .rf .abtn:first-child,
+.detail-header .rf .abtn:not(:last-child) {
+  border-right: none;
+}
+
+.myDetail-item .rf .abtn.abtn-bg {
+  background: #66FFFF;
+}
+
+.myDetail-item>div>.text-center {
+  margin: 8px auto 14px;
+  font-size: 18px;
+  height: 21px;
+
+}
+.myDetail-item>div>.text-center b{
+  font-size: 15px;
+}
+.myDetail-item .rf.num-bottom { 
+  font-size: 12px
+ }
+
+ #collapse {
+   margin: 10px 0px;
+   background: #fff;
+ }
+ #collapse .layui-colla-title {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 15px;
+    background: #fff;
+ }
+ #collapse .layui-colla-item {
+    border-color: #e6e0e0;
+ }
+ #collapse .layui-colla-content{
+    transition: all 0.3s;
+ }
+ #userBacklogsId {
+   margin-top: 20px;
+   padding: 10px;
+ }
+ #userBacklogsId .userBacklogs-header {
+    font-weight: bold;
+    font-size: 14px;
+ }
+ #userBacklogsId .userBacklogs-item {
+    margin: 10px auto;
+ }
+ #userBacklogsId .userBacklogs-item span {
+   margin-left: 10px;
+ }

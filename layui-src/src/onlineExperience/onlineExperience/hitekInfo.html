@@ -1,0 +1,135 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%> 
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>关于我们</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>关于我们</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+ 
+  <style>
+    .info-box {
+      padding: 40px 30px 0px;
+    }
+
+    .img-box {
+      width: 156px;
+      height: 156px;
+      padding: 3px;
+      display: inline-block;
+    }
+
+    .img-box img {
+      max-width: 100%;
+    }
+
+    .left-box>div {
+      margin: 22px 0;
+    }
+
+    .layui-row p,
+    .layui-row p span,
+    .layui-row p u {
+      font-size: 14px;
+    }
+
+    .right-box {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .info-box-footer {
+      text-align: center;
+      margin-top: 45px;
+    }
+
+    .info-box-footer .row-btn {
+      color: #fff;
+      background-color: #5BAAEB;
+      height: 28px;
+      line-height: 28px;
+      padding: 0 7px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="info-box">
+    <div class="layui-row">
+      <div class="layui-col-xs6">
+        <div class="left-box">
+          <div class="layui-row">
+            <p>官网：<a href="#"><u class="layui-color-blue"> www.hiteksoft.com </u></a></p>
+          </div>
+          <div class="layui-row">
+            <p>QQ: <span>2850989595</span> </p>
+          </div>
+          <div class="layui-row">
+            <p>邮箱: <span>2850989595@qq.com</span> </p>
+          </div>
+          <div class="layui-row">
+            <p>联系人: <span>赵经理</span> </p>
+          </div>
+          <div class="layui-row">
+            <p>联系电话: <span>15123020004</span> </p>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="right-box">
+          <div class="img-box">
+            <img src="plug-in/assets/images/public-address.jpg">
+            <!-- <img src="../../assets/images/public-address.jpg"> -->
+          </div>
+          <p>扫一扫关注海特科技公众号</p>
+        </div>
+      </div>
+    </div>
+    <div class="info-box-footer">
+      <a href="#" class="row-btn" onclick="InitObj.closeIframe()" class="layui-btn" >我知道了</a>
+    </div>
+  </div>
+  
+  <script>
+    $(function () {
+      layui.use(['laydate', 'layer'], function () {
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        InitObj.init()
+      });
+    })
+    var InitObj = {
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function () { },
+      closeIframe: function () {
+        parent.layer.close(this.parentIndex);
+      },
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,265 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>试验检测中</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/testbusiness/testTask/listTesting.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+  <script type="text/javascript" src="plug-in/base64/base64.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <style>
+    .datagrid-cell,
+    .datagrid-cell-group,
+    .datagrid-header-rownumber,
+    .datagrid-cell-rownumber {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <div class="height-full" data-options="region: 'center'">
+      <div class="tb-box" id="toolbar">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" id="queryParam" name="queryParam" class="layui-input"
+                    placeholder="输入编号/样品名称/工程部位/用途（回车即可查询）..." autocomplete="off">
+                  <input id="dataType" name="dataType" type="hidden" value="1" />
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" id="searchButton" class="easyui-linkbutton btn-4-search" plain="true"
+                    icon="iconfont icon-search">查询</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a style="display:none" data-funCode="createTestTask" class="easyui-linkbutton" onclick="goCreateTaskPage()"
+              plain="true" icon="iconfont icon-add">创建试验</a>
+            <a style="display:none" data-funCode="testTaskRollback" class="easyui-linkbutton btn-4-TaskBack"
+              onclick="goRollbackPage()" plain="true" icon="iconfont icon-undo">退回</a>
+            <a style="display:none" data-funCode="testtaskGiveup" class="easyui-linkbutton btn-4-TaskGivingUp"
+              onclick="giveupTask()" plain="true" icon="iconfont icon-cancel">放弃任务</a>
+            <a style="display:none" data-funCode="testtaskTransfer" class="easyui-linkbutton btn-4-TaskTransfer"
+              onclick="goTaskTransfer()" plain="true" icon="iconfont icon-man">任务转交</a>
+            <a style="display:none" data-funCode="testtaskPrintNullTable"
+              class="easyui-linkbutton btn-4-PrintBlankTable" onclick="printEmptyRecord()" plain="true"
+              icon="iconfont icon-print">打印空表</a>
+            <a style="display:none" data-funCode="createReportByTestTasks"
+              class="easyui-linkbutton btn-4-createByTestTasks" onclick="createByTestTasks()" plain="true"
+              icon="iconfont icon-add">创建综合报告</a>
+          </span>
+        </div>
+      </div>
+      <table id="testingDataTable" class="easyui-datagrid"></table>
+      <iframe id='udrIframe' name='udrIframe' width='0' height='0' frameborder='none' src=''></iframe>
+    </div>
+  </div>
+
+  <script>
+
+    $(function () {
+      layui.use(['layer'], function () {
+        var layer = layui.layer;
+      })
+
+    })
+
+
+    //跳转创建试验页面
+    function goCreateTaskPage() {
+      layer.open({
+        type: 2,
+        title: '创建试验',
+        skin: 'mylayui-layer-molv',
+        area: ['100%', '100%'],
+        btn: ['确定', '取消'],
+        // content: 'testerTasteController.do?goTaskCreatePage', //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+        content: 'consignController.do?goEditSample', //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+        yes: function (index, layero) {
+          console.log('index')
+          //这里写点击确定时的业务逻辑
+          //  layer.close(index);
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+          /*调用子页面方法，构建检测对象JSON对象*/
+          iframeWin.storeSamples();
+          //样品弹窗中的样品信息对象
+          var testObjects = iframeWin.createTestObject();
+
+          console.log('testObjects', testObjects);
+          // var meta = new Base64().encode(JSON.stringify(testObjects[0]))
+          if (testObjects) {
+            var meta = JSON.stringify(testObjects)
+            // layer.close(index);
+            ajaxRequest('testerTasteController.do?createTest', { 'metaData': meta }, metaDataAjaxCallback, true, true, index)
+          }
+        }
+      });
+    }
+    var count = 0;
+    function getProgress(consignId, index) {
+      var consignId = consignId;
+      var index = index;
+      $.ajax({
+        url: 'testerTasteController.do?getTestTaskCreateProgress'
+        , data: { 'consignId': consignId }
+        , async: false
+        , dataType: 'json'
+        , type: 'post'
+        , success: function (res) {
+          console.log('res' + res)
+          count++;
+          if (!res.obj.isFinish) {
+            if (count > 10) {
+              layerAlertFun('已超时，请重试', 5, []);
+            } else {
+              setTimeout(getProgress(consignId, index), 1 * 60 * 1000);
+            }
+          } else {
+            progressAjaxCallback(res, index);
+          }
+        }
+      })
+    }
+    function metaDataAjaxCallback(res, index) {
+      console.log('res', res)
+      if (!res.success) {
+        layer.msg(res.msg, { icon: 5 })
+      } else {
+        setTimeout(getProgress(res.obj, index), 0);
+      }
+    }
+
+    function progressAjaxCallback(res, index) {
+      console.log('131 res', res, index)
+      if (!res.success) {
+        layer.msg(res.msg, { icon: 5 })
+      } else {
+        if (res.obj.isFinish) {
+          layer.close(index);
+          goDetail(res.obj.testTaskId);
+          reloadDataGrid()
+        } else {
+          layerAlertFun('正在进行中，' + res.obj.taskName, 5, []);
+        }
+      }
+    }
+
+    //跳转退回页面
+    function goRollbackPage() {
+      var rows = $('#testingDataTable').datagrid('getSelections');
+      if (rows.length === 1) {
+        var testTaskId = rows[0].id;
+        showRollbackPage('testTask', testTaskId);
+      } else if (rows.length > 1) {
+        btnTipMsg(event, '一次只能退回一条记录')
+      } else {
+        btnTipMsg(event, '请选择一条记录')
+      }
+    }
+    //退回后的回调函数,刷新列表数据
+    function rollbackCallBack() {
+      reloadDataGrid();
+    }
+
+    //放弃任务
+    function giveupTask() {
+      var rows = $('#testingDataTable').datagrid('getSelections');
+      if (rows.length === 1) {
+        var testTaskId = rows[0].id;
+        var url = 'testTaskController.do?giveupTestTask&testTaskId=' + testTaskId;   // TODO 
+        ajaxRequest(url, '', giveupTaskSuccFunc, true, false);
+      } else if (rows.length > 1) {
+        btnTipMsg(event, '一次只能退回一条记录')
+      } else {
+        btnTipMsg(event, '请选择一条记录')
+      }
+    }
+    //放弃任务回调
+    function giveupTaskSuccFunc() {
+      reloadDataGrid();
+    }
+
+    // 任务转交
+    function goTaskTransfer() {
+      var rows = $('#testingDataTable').datagrid('getSelections');
+      var objectIds = ''; // testTaskIds
+      for (var i = 0; i < rows.length; i++) {
+        if (i == 0) {
+          objectIds += rows[i].id;
+        } else {
+          objectIds += "," + rows[i].id;
+        }
+      }
+      layer.open({
+        type: 2,
+        title: '任务转交',
+        skin: 'mylayui-layer-molv',
+        area: ['30%', '70%'],
+        btn: ['确定', '取消'],
+        content: 'commonController.do?goAssigneeSelect&type=testTask&objectIds=' + objectIds, //这里content是一个URL，如果你不想让iframe出现滚动条，你还可以content: ['http://sentsin.com', 'no']
+        yes: function (index) {
+          //当点击‘确定’按钮的时候，获取弹出层返回的值
+          var iframeWin = window["layui-layer-iframe" + index], iframeWinRes = '';
+          iframeWin.resetAssignee();  // 重置任务责任人
+        }
+      });
+    }
+    // 创建综合报告
+    function createByTestTasks() {
+      var rows = $('#testingDataTable').datagrid('getSelections');
+      var createUrl = "reportCreateController.do?createByTestTasks", testTaskIds = "";
+      if (rows.length == 0) {
+        window.open('reportCreateController.do?goEditPage', '创建报告');
+        
+        /* 现在的需求是要直接跳转报告创建页面 见ReadMine #20538
+        btnTipMsg(event, '请勾选数据');*/
+        return; 
+      }
+      for (var i = 0; i < rows.length; i++) {
+        if (i == 0) {
+          testTaskIds += rows[i].id;
+        } else {
+          testTaskIds += "," + rows[i].id;
+        }
+      }
+      ajaxRequest(createUrl, { "testTaskIds": testTaskIds }, createSuccFunc, true, false);
+
+    }
+    // 创建综合报告回调
+    function createSuccFunc(res) {
+      if (!res.success) {
+        layerAlertFun(res.msg, 5, []);
+        return;
+      } else {
+        var openUrl = "reportCreateController.do?goEditPage";
+        window.open(openUrl + '&reportId=' + res.obj, "编辑报告")
+      }
+    }
+
+  </script>
+
+</body>
+
+</html>

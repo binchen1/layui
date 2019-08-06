@@ -1,0 +1,386 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>报告重打&修改审批</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    .tb-box-form {
+      width: 100%;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">审核中</li>
+      <li>审核完成</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form id="commonQueryForm" class="layui-form">
+            <div class="layui-row">
+              <div class="layui-col-xs8">
+                <div class="layui-input-inline" style="width:80%">
+                  <input name="quickQryParam" class="layui-input" placeholder="输入编号/委托单位/工程项目后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs4 header-checkbox">
+                <input type="checkbox" name="write" lay-filter="checkboxChk" lay-skin="primary" title="只显示待我审核的申请"
+                  checked>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tb-box-btn" id="functionButton">
+          <span> <a href="#" class="easyui-linkbutton funBtn_1" iconCls="iconfont icon-add" plain="true">新增申请</a>
+            <a href="#" class="easyui-linkbutton funBtn_2" iconCls="iconfont icon-ok" plain="true">审核通过</a>
+            <a href="#" class="easyui-linkbutton funBtn_3" iconCls="iconfont icon-undo" plain="true">审核不通过</a>
+          </span>
+          <span id="isHideSpan" style="display:none">
+            <a href="#" class="easyui-linkbutton funBtn_4" iconCls="iconfont icon-cancel" plain="true">中止申请</a>
+            <a href="#" class="easyui-linkbutton funBtn_5" iconCls="iconfont icon-tip" plain="true">处理客户单位申请</a>
+          </span>
+          <button class="layui-btn layui-btn-sm show funBtn_6">
+            <i class="layui-icon">&#xe633;</i>
+          </button>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+  <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        InitObj.init(form);
+        element.on('tab(docDemoTabBrief)', function (data) {
+          if (0 === data.index) {
+            $('.header-checkbox input').attr('title', '只显示待我审核的申请')
+            $('.header-checkbox span').html('只显示待我审核的申请')
+          } else {
+            $('.header-checkbox input').attr('title', '只显示我已审核的申请')
+            $('.header-checkbox span').html('只显示我已审核的申请')
+          }
+          InitObj.initDataGrid(InitObj.columnsFun(data.index))
+        });
+        
+      })
+
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      userId: $('#userId').val(), // 用户id 
+      defaultUrl: 'reportRedoAuditController.do?datagrid', //默认获取数据url
+      waitForMe: '1', // waitForMe 待我审批:0:查询全部,1:查询待我审批的
+      iDone: '1', // iDone  我已审批:0:查询全部,1:查询我已审批的
+      addPageUrl: 'reportRedoAuditController.do?goNewPage', // 跳转到新增页面
+      auditPageUrl: 'reportRedoAuditController.do?goAuditPage', // 跳转到审核页面
+      auditId: '', // 选中数据id
+      auditStatus: 0, // 0:审核中, 1:审核完成
+      stateMsg: '', // 状态提示信息
+      functionButton: $('#functionButton'),
+      addBtn: $('#functionButton .funBtn_1'), // 新增申请
+      okBtn: $('#functionButton .funBtn_2'), // 审核通过
+      undoBtn: $('#functionButton .funBtn_3'), // 审核不通过
+      cancelBtn: $('#functionButton .funBtn_4'), // 中止申请
+      tipBtn: $('#functionButton .funBtn_5'), // 处理客户单位申请
+      isShow: $('#functionButton .funBtn_6'),  // 是否显示其他按钮 
+      tipUrl: '', // 处理客户单位申请
+      isHide: true,
+      isHideSpan: $('#isHideSpan'),
+      init: function (form) {
+        console.log('form', form)
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun(0))
+        this.commonQryKeyDown()
+        this.styleLayout();
+        this.btnFun(this.addBtn, this.addPageUrl, '报告重打/修改申请')
+        this.btnFun(this.okBtn, this.auditPageUrl, '审核通过')
+        this.btnFun(this.undoBtn, this.auditPageUrl, '审核不通过')
+        this.btnFun(this.cancelBtn, ' reportRedoAuditController.do?goAuditBreakPage', '中止申请')
+        form.on('checkbox(checkboxChk)', function (data) {
+          var that = InitObj;
+          if (data.elem.checked) {
+            // waitForMe 待我审批:0:查询全部,1:查询待我审批的
+            // iDone  我已审批:0:查询全部,1:查询我已审批的
+            that.iDone = '1';
+            that.waitForMe = '1';
+            that.initDataGrid(that.columnsFun(that.auditStatus))
+          } else {
+            that.iDone = '0';
+            that.waitForMe = '0';
+            that.initDataGrid(that.columnsFun(that.auditStatus))
+          }
+        });
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, row = $('#dataGrid').datagrid('getSelections');
+          if ('报告重打/修改申请' === openName) {
+            layerOpenFun(openUrl, openName, ['90%', '90%'], ['确定', '取消'])
+            return;
+          }
+          if (!row || row.length === 0) {
+            btnTipMsg(event, '请选择一条记录')
+            return;
+          } else {
+            var isUserId = true; that.auditId = '';
+            for (var i = 0; i < row.length; i++) {
+              if (row[i].nowAuditUserId !== that.userId) {
+                isUserId = false;
+              }
+              that.auditId += row[i].id + ','
+            }
+            that.auditId = that.auditId.slice(0, that.auditId.length - 1)
+            if ('审核通过' === openName) {
+              if (isUserId) {
+                layerOpenFun(openUrl + '&auditId=' + that.auditId + '&isPass=30', openName, ['90%', '90%'], ['确定', '取消'])
+              } else {
+                layer.msg('当前所选包含您不能审核的数据，请重新选择！', { icon: 2 })
+              }
+            } else if ('审核不通过' === openName) {
+              if (isUserId) {
+                layerOpenFun(openUrl + '&auditId=' + that.auditId + '&isPass=40', openName, ['90%', '90%'], ['确定', '取消'])
+              } else {
+                layer.msg('当前所选包含您不能审核的数据，请重新选择！', { icon: 2 })
+              }
+            } else if ('中止申请' === openName) {
+              layerOpenFun(openUrl + '&auditId=' + that.auditId, openName, ['90%', '90%'], ['确定', '取消'])
+            }
+            return;
+          }
+        })
+      },
+
+      // 点击进入详情页
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addPageUrl + '&auditId=' + did + '&detail=detailPage', openName = '查看报告详情';
+        layerOpenFun(openUrl, openName, ['90%', '90%'], [])
+      },
+      // 点击重新提交，调用新增申请窗口
+      goEdit: function (did, applyPersonId, event) {
+        layui.stope(event)
+        if (this.userId === applyPersonId) {
+          var openUrl = this.addPageUrl + '&auditId=' + did, openName = '报告重打/修改申请';
+          layerOpenFun(openUrl, openName, ['90%', '90%'], ['确定', '取消'])
+        } else {
+          layer.msg('您不是当前流程的发起人，不能重新提交！', { icon: 2 })
+        }
+
+      },
+      // 报告修改对比，打开报告修改对比窗口
+      goContrast: function (did, event) {
+        layui.stope(event)
+        window.open("reportRedoAuditController.do?goReportContrastPage&auditId=" + did, '报告打印详情')
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var data = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, { quickQryParam: data.quickQryParam });
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {  // 0:审核中, 1:审核完成
+        this.auditStatus = num;
+        var columns = [];
+        // 各tabs展示数据
+        if (num === 1) { // 0:审核中, 1:审核完成
+          this.functionButton.hide()
+          columns.push({ title: "id", field: "id", hidden: true })
+        } else {
+          this.functionButton.show()
+          columns.push({ title: "id", field: "id", checkbox: true, width: 30 })
+        }
+        columns.push({ title: "报告编号", field: "reportNumber", width: 80 })
+        columns.push({
+          title: "申请类型", field: "auditType", width: 40, formatter: function (value, row, index) {
+            if ('0' === value) {
+              return '报告修改'
+            } else if ('1' === value) {
+              return '报告重打'
+            }
+          }
+        })
+        columns.push({ title: "委托单位", field: "unitName", width: 80 })
+        columns.push({
+          title: "申请日期", field: "applyDate", width: 30, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          }
+        })
+        columns.push({ title: "申请发起人", field: "applyPersonName", width: 30 })
+        columns.push({
+          title: "流程状态", field: "auditStatus", width: 40, formatter: function (value, row, index) {
+            // 10:审核中 20:审核终止 30:审核通过 40:审核不通过
+            var auditStatus = { '10': '审核中', '20': '审核终止', '30': '审核通过', '40': '审核不通过' }
+            return auditStatus[value]
+          }
+        })
+        columns.push({
+          title: "更多", title: "更多", field: "more", width: 100, formatter: function (value, row, index) {
+            var html = '';
+            if (row.projectName) {
+              html += '工程项目：' + row.projectName + '； '
+            }
+            if ('1' === row.auditType) { //auditType 0:修改  1:重打
+              // '类型为报告重打的，显示：工程项目，重打份数，重打原因'
+              if (row.reprintCount) {
+                html += '重打份数：' + row.reprintCount + '； '
+              }
+              if (row.reprintReason) {
+                html += '重打原因：' + row.reprintReason + '； '
+              }
+            } else {
+              // '类型为报告修改的，显示：工程项目，修改内容'
+              if (row.modifyContent) {
+                html += '修改内容：' + row.modifyContent + '； '
+              }
+            }
+            return html;
+          }
+        })
+        columns.push({
+          title: "操作",
+          field: "opt",
+          width: 50,
+          formatter: function (value, row, index) {
+            var btns = '';
+            btns += '<button title="查看详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+
+            if (num === 1) { // 0:审核中, 1:审核完成
+              if (row.auditStatus === '40') {
+                // 只有流程状态为【审核不通过】的才显示  重新提交按钮
+                btns += '<button title="重新提交" class="layui-btn layui-btn-sm" ';
+                btns += 'onclick="InitObj.goEdit(&quot;' + row.id + '&quot;,&quot;' + row.applyPersonId + '&quot;,event)">'
+                btns += '<i class="layui-icon">&#xe9aa;</i></button>';
+              }
+              if (row.auditType === '0' && row.auditStatus === '30') {
+                // 申请类型为【报告修改】且流程状态为审核通过的才显示报告修改  对比按钮
+                btns += '<button title="报告修改对比" class="layui-btn layui-btn-sm" onclick="InitObj.goContrast(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe62a;</i></button>';
+              }
+            }
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        var url, dataUrl = this.defaultUrl + '&auditStatus=' + this.auditStatus;
+        if (0 === this.auditStatus) {
+          // 待我审批:0:查询全部,1:查询待我审批的
+          url = '&waitForMe=' + this.waitForMe
+        } else { //我已审批:0:查询全部,1:查询我已审批的
+          url = '&iDone=' + this.iDone
+        }
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: dataUrl + url,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          method: 'get',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            // 重新渲染列表中 图标
+            $("a[name='reload']").linkbutton({
+              plain: true,
+              iconCls: 'icon-reload'
+            });
+          }
+        });
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        var that = this;
+        this.isShow.click(function (e) {
+          if (that.isHide) {
+            that.isHideSpan.show();
+            that.isHide = !that.isHide;
+            $(this).removeClass("show"); //移除
+          } else {
+            that.isHideSpan.hide();
+            that.isHide = !that.isHide;
+            $(this).addClass("show"); // 追加样式
+          }
+        })
+
+      },
+
+    }
+  </script>
+</body>
+
+</html>

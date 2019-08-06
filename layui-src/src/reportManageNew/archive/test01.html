@@ -1,0 +1,579 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <script src="./add.js"></script> -->
+  <style>
+    .layui-form-box {
+      padding: 10px;
+    }
+    .modal {
+      height: 100%;
+      width: 100%;
+      background: pink;
+      opacity: .2;
+      position: fixed;
+      z-index: 1;
+    }
+    .layui-row {
+     background: #fff;
+     padding: 10px 5px;
+     overflow: hidden;
+    }
+    .layui-row.first {
+     text-align: center;
+    }
+    .layui-row:nth-child(2n-1) {
+     background: #eee;
+    }
+    .layui-col-xs1 {
+      padding-left: 10px;
+      background: red;
+    }
+    .layui-input, .layui-textarea, .layui-select {
+      background: transparent;
+    }
+    .layui-btn-sm {
+      height: 24px;
+      line-height: 24px;
+    }
+  </style>
+</head>
+
+<body style="height:100%">
+  <div class="modal" style="display:none"></div>
+  <form class="layui-form" id="commonQueryForm">
+    <div class="layui-form-box">
+      <div class="layui-form-item">
+        <label class="layui-form-label">归档日期：</label>
+        <div class="layui-input-block">
+          <input type="text" class="layui-input" name="archiveDate" id="archiveDate" placeholder="请选择归档日期" lay-verify="required"
+            autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">归档人员：</label>
+        <div class="layui-input-block">
+          <input type="text" name="archivePersonName" placeholder="请输入归档人员" class="layui-input" lay-verify="required"
+            value="${LOCAL_CLINET_USER.realName }" autocomplete="off">
+          <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+          <input type="hidden" id="userName" value="${ LOCAL_CLINET_USER.realName }" />
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">归档方式：</label>
+        <div class="layui-input-block" id="saveTypeDiv">
+          <input class="layui-bg-blue" type="radio" lay-filter="saveType" name="saveType" value="0" title="统一存放"
+            checked>
+          <input class="layui-bg-blue" type="radio" lay-filter="saveType" name="saveType" value="1" title="分开存放">
+        </div>
+      </div>
+      <div class="layui-form-item saveType-zero">
+        <label class="layui-form-label">档案编号：</label>
+        <div class="layui-input-block">
+          <input type="text" name="archiveSn" placeholder="请输入档案编号" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item saveType-zero" id="reportIdsDiv">
+        <label class="layui-form-label">归档地址：</label>
+        <div class="layui-input-block">
+          <span class="choiceShow"></span>
+          <input type="hidden" name="archiveSiteId" />
+          <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);" onclick="InitObj.addressSel('')">选择</a>
+        </div>
+      </div>
+      <div class="saveType-zero">
+        <div class="layui-container">
+          <div class="layui-row first">
+            归档资料
+          </div>
+          <div id="zeroHtml">
+          </div>
+        </div>
+        <a class="layui-btn layui-btn-sm" onclick="InitObj.addHtml()" style="border:none">
+          <i class="layui-icon">&#xe61f;</i> 加
+        </a>
+        <!-- <p onclick="InitObj.remove()">减</p> -->
+      </div>
+      <div class="saveType-one" style="display:none">
+        <div class="layui-container">
+          <div class="layui-row first">
+            <div class="layui-col-xs6">
+              归档资料
+            </div>
+            <div class="layui-col-xs2">
+              档案编号
+            </div>
+            <div class="layui-col-xs4">
+              归档地址
+            </div>
+          </div>
+          <div id="oneHtml">
+            <!-- <div class="layui-row">
+              <div class="layui-col-xs6">
+                <p>检测报告(共5份)</p>
+                <div>BG-2018-SNJ-00001;BG-2018-SNJ-00002;BG-2018-SNJ-00003;BG-2018-SNJ-00004;BG-2018-SNJ-00004(3d)</div>
+              </div>
+              <div class="layui-col-xs2">
+                <input type="text" name="consignProject" class="layui-input" autocomplete="off">
+              </div>
+              <div class="layui-col-xs4">
+                <div id="reportIdsDiv">
+                  <span class="choiceShow"></span>
+                  <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);" id="reportIdsSel">选择</a>
+                </div>
+              </div>
+            </div> -->
+          </div>
+        </div>
+        <a class="layui-btn layui-btn-sm" onclick="InitObj.addOneHtml()" style="border:none">
+          <i class="layui-icon">&#xe61f;</i>加
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        var upload = layui.upload;
+        var newDate = new Date(new Date).Format("yyyy-MM-dd");
+        laydate.render({
+          elem: '#archiveDate'
+          , value: newDate
+        });
+        InitObj.init(form)
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      userId: $('#userId').val(), // 用户id 
+      userName: $('#userName').val(), // 用户name
+      reportIds: GetQueryString("reportIds"), // 获取父页面传递过来的报告id集合
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      addAddressPageUrl: './reportArchiveAddress.html', // 归档地址配置url页面
+      addAddressPageUrl: 'archiveSiteController.do?goArchiveSitePage', // 归档地址配置url页面
+      reportsUrl: 'archiveController.do?getWaitForArchiveList', // 获取报告基本信息url
+      saveUrl: 'archiveController.do?batchSaveArchive', // 保存数据
+      detailUrl: 'archiveController.do?getReportArchiveDetail', // 查看已保存的数据
+      delAddUrl: 'archiveController.do?delArchiveById', // 删除自定义的归档资料
+      saveTypeZero: $('.saveType-zero'), // 统一存放
+      saveTypeOne: $('.saveType-one'), // 分开存放
+      reportData: [], // 报告相关数据集合
+      addNumber: 100,// 添加的个数
+      addNumber2: 100,// 添加的个数
+      // 0:用户自定义, 1:委托单, 2:任务, 3:记录, 4:报告
+      reportIdsList: [], //获取的报告数据
+      saveParam: null, // 提交保存数据
+      reportIdsDiv: $('#reportIdsDiv'), // 统一存放归档地址 点击按钮
+      saveTypeDiv: $('#saveTypeDiv'), //存放类型 0:统一存放, 1:分开存放
+      archivePersonName: $('input[name="archivePersonName"]'), // 归档人员
+      archiveSn: $('input[name="archiveSn"]'), // 归档编号
+      addresstTypeNum: '', // 地址类型号
+      saveParamNum:'', // 数据删除后删除本地数据位置
+      numClass:'', // 数据删除后删除页面数据位置
+      archiveId:'', // 归档资料 id 编辑提交需要
+      init: function (form) {
+        this.formLayerM = form;
+        console.log('reportIds', this.reportIds)
+        console.log('editId', this.editId)
+        console.log('detail', this.detail)
+        // this.reportData = [{"typeName":"","codes":"","total":""}]
+        if (this.editId) {
+          this.detail();
+          this.reportIdsList.push(this.editId)
+          if (this.detail === 'detailPage') {
+            // 处理报告详情及检测任务
+            $('.modal').show();
+          } else {
+            $('.modal').hide();
+          }
+        }
+        if (this.reportIds) {
+          this.reportIdsList = this.reportIds.split(',')
+          this.reportDetial()
+        }
+        this.styleLayout(form)
+      },
+ 
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          console.log('openCallbacksaveParam', saveParam)
+          if (saveParam) {
+
+            ajaxRequest(this.saveUrl, { archiveListStr: JSON.stringify(saveParam) }, this.saveAjaxCallback, false, true)
+          }
+        }
+        return false;
+      },
+      remove: function (num,archiveId, index) {
+        if(archiveId){
+          ajaxRequest(this.delAddUrl, { archiveId: archiveId }, this.removeAjaxCallback, false, true)
+        }else{
+          $('#zeroHtml').find('.removeClass' + num).remove()
+          this.saveParam.splice(index, 1)
+        }
+      },
+      removeAjaxCallback: function(res){
+        console.log('removeAjaxCallback',res)
+        var that = InitObj;
+        if(res.success){
+          console.log('success')
+          // $('#zeroHtml').find('.removeClass' + that.numClass).remove()
+          // that.saveParam.splice(that.saveParamNum, 1)
+        }
+      },
+      removeOneAjaxCallback: function(res){
+        console.log('removeOneAjaxCallback',res)
+        var that = InitObj;
+        if(res.success){
+          $('#oneHtml').find('.removeClass' + that.numClass).remove()
+          that.saveParam.splice(that.saveParamNum, 1)
+        }
+      },
+      removeOne: function (numClass,archiveId, saveParamNum) {
+        console.log(numClass,index)
+        console.log('removwOne',this.saveParam)
+        if(archiveId){
+          ajaxRequest(this.delAddUrl, { archiveId: archiveId }, this.removeOneAjaxCallback, false, true)
+        }else{
+          $('#oneHtml').find('.removeClass' + numClass).remove()
+          this.saveParam.splice(saveParamNum, 1)
+        }
+      },
+      
+      addHtml: function () {
+        var html = '', removeClass = 'removeClass' + this.addNumber
+        html += '<div class="layui-row ' + removeClass + '"><div class="layui-col-xs11">'
+        html += '<input type="text" name="typeName' + this.addNumber + '"  class="layui-input zeroTitle" autocomplete="off"></div><div class="layui-col-xs1">'
+        html += '<button class="layui-btn layui-btn-sm" onclick="InitObj.remove(' + this.addNumber + ')"><i class="layui-icon">&#xe640;</i> 减</button>'
+        html += '</div></div>'
+        this.addNumber++
+        console.log('添加', html)
+        console.log('添加', this.reportData)
+        $('#zeroHtml').append(html)
+      },
+      addOneHtml: function () {
+        var html = '', removeClass = ' removeClass' + this.addNumber2
+        html += '<div class="layui-form-item ' + removeClass + '"> '
+        html += '<div class="layui-col-xs6">'
+        html += '<input type="text"  class="layui-input oneTitle" autocomplete="off">'
+        html += '</div>'
+        html += ' <div class="layui-col-xs2">'
+        html += '<input type="text"  class="layui-input oneArchiveSn" autocomplete="off">'
+        html += '</div>'
+        html += '<div class="layui-col-xs3">'
+        html += '  <div id="reportIdsDiv' + this.addNumber2 + '">'
+        html += '   <input type="hidden" class="layui-input oneArchiveSite"  />'
+        html += '   <span class="choiceShow"></span>'
+        html += '   <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);" onclick="InitObj.addressSel(' + this.addNumber2 + ')">选择</a>'
+        html += '  </div> '
+        html += '</div> '
+        html += '<div class="layui-col-xs1"> '
+        html += '<button class="layui-btn layui-btn-sm" onclick="InitObj.removeOne(' + this.addNumber2 + ')" ><i class="layui-icon">&#xe640;</i> 减</button>'
+        html += '</div> </div> '
+        this.addNumber2++
+        console.log('添加', html)
+        $('#oneHtml').append(html)
+        this.formLayerM.render();
+        console.log('this.formLayerM', this.formLayerM)
+      },
+      addressLayerCallback: function (res) {
+        console.log('地址1', res)
+        var that = InitObj;
+
+        $('#reportIdsDiv' + that.addresstTypeNum).find('.choiceShow').html(res[0].site)
+        $('#reportIdsDiv' + that.addresstTypeNum).find('input').val(res[0].id)
+      },
+      addressSel: function (num) {
+        // layerOpenFun(openUrl, openName, that.addressLayerCallback);
+        this.addresstTypeNum = num
+        layerOpenFun(this.addAddressPageUrl, '归档地址配置', this.addressLayerCallback);
+      },
+      renderOneHtmlFun: function (object) {
+        var html = '';
+        console.log('object351', object)
+        for (const key in object) {
+          const value = object[key];
+          if (object.hasOwnProperty(key) && value.total > 0) {
+            // console.log('分开存放 key', key)
+            console.log('分开存放 value', value)
+            var removeClass = 'removeClass' + key;
+            html += ' <div class="layui-row ' + removeClass + '">'
+            html += ' <div class="layui-col-xs6">'
+            html += ' <p>' + value.typeName + '(共' + value.total + '份)</p>'
+            html += ' <div>' + value.codes + '</div>'
+            html += ' </div>'
+            html += ' <div class="layui-col-xs2">'
+            html += ' <input type="text" name="archiveSn' + key + '" value="' + value.archiveSn + '" class="layui-input" autocomplete="off">'
+            html += ' </div>'
+            html += ' <div class="layui-col-xs3">'
+            html += ' <div id="reportIdsDiv' + key + '">'
+            html += ' <span class="choiceShow">' + value.archiveSite + '</span>'
+            html += ' <input type="hidden" name="archiveSiteId' + key + '"" value="' + value.archiveSiteId + '"/>'
+            html += ' <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);" onclick="InitObj.addressSel(' + key + ')">选择</a>'
+            html += ' </div></div>'
+            if (value.isRemove) {
+              html += '<div class="layui-col-xs1"> '
+              html += '<button class="layui-btn layui-btn-sm" onclick="InitObj.removeOne(' + key + ',&quot;'+value.archiveId+ '&quot;,' + value.saveParamIndex + ')" ><i class="layui-icon">&#xe640;</i> 减</button>'
+              html += '</div> '
+            }
+
+            html += ' </div>'
+          }
+        }
+        $('#oneHtml').html(html)
+        this.formLayerM.render()
+        console.log('this.formLayerM', this.formLayerM)
+      },
+      renderHtmlFun: function (object) {
+        var html = '';
+        // $('#zeroHtml').html(html)
+        console.log('object ZERO', object)
+        for (const key in object) {
+          const value = object[key];
+          if (object.hasOwnProperty(key) && value.total>0) {
+            console.log('统一存放 value', value)
+            var removeClass = 'removeClass' + key;
+            html += ' <div class="layui-row ' + removeClass + '"><div class="layui-col-xs11">'
+            html += ' <p>' + value.typeName + '(共' + value.total + '份)</p>'
+            html += ' <div>' + value.codes + '</div>'
+            html += ' </div>'
+            if (value.isRemove) {
+              html += ' <div class="layui-col-xs1">'
+              html += '<button class="layui-btn layui-btn-sm" onclick="InitObj.remove(' + key + ',&quot;'+value.archiveId+ '&quot;,'+ value.saveParamIndex + ')"><i class="layui-icon">&#xe640;</i> 减</button>'
+              html += '</div>'
+            }
+            html += ' </div>'
+          }
+        }
+        $('#zeroHtml').html(html)
+        console.log('formLayerM', this.formLayerM)
+      },
+      detailData: function (data) {
+        console.log('detailData', data) // 报告编号 reportSn
+        if (data[0].saveType === '0') {
+          // saveTypeDiv:$('#saveTypeDiv'), //存放类型 0:统一存放, 1:分开存放
+          this.saveTypeDiv.find('input[value="1"]').attr('checked', false)
+          this.saveTypeDiv.find('input[value="0"]').attr('checked', true)
+          this.saveTypeZero.show()
+          this.saveTypeOne.hide()
+        } else {
+          this.saveTypeDiv.find('input[value="0"]').attr('checked', false)
+          this.saveTypeDiv.find('input[value="1"]').attr('checked', true)
+          this.saveTypeZero.hide()
+          this.saveTypeOne.show()
+        }
+        this.reportIdsDiv.find('.choiceShow').html(data[0].archiveSite)
+        this.reportIdsDiv.find('input').val(data[0].archiveSiteId); // 统一存放归档地址 提交数据
+        this.archivePersonName.val(data[0].archivePersonName); // 归档人员
+        this.archiveSn.val(data[0].archiveSn); // 归档编号
+        $('#archiveDate').val(new Date(data[0].archiveDate).Format('yyyy-MM-dd')); // 归档日期
+        this.renderData(data)
+        this.formLayerM.render();
+
+      },
+      renderData: function (data) {
+        this.saveParam = JSON.parse(JSON.stringify(data))
+        this.reportData = {
+          "1": { "typeName": "检测报告", "codes": "", "total": 0, "archiveSite": '', "archiveSn": "", "archiveSiteId": '' },
+          "2": { "typeName": "委托单", "codes": "", "total": 0, "archiveSite": '', "archiveSn": "", "archiveSiteId": '' },
+          "3": { "typeName": "原始记录单", "codes": "", "total": 0, "archiveSite": '', "archiveSn": "", "archiveSiteId": '' },
+          "4": { "typeName": "任务分配单", "codes": "", "total": 0, "archiveSite": '', "archiveSn": "", "archiveSiteId": '' },
+        }
+        for (var i = 0; i < data.length; i++) {
+          var type = data[i].archiveType
+          if (this.reportData[type]) {
+            data[i].relatedObjectSn ? this.reportData[type].codes += data[i].relatedObjectSn + ',' : ''
+            data[i].relatedObjectSn ? this.reportData[type].total++ : ''
+            this.reportData[type].archiveSite = data[i].archiveSite || '';
+            this.reportData[type].archiveSn = data[i].archiveSn || '';
+            this.reportData[type].archiveSiteId = data[i].archiveSiteId || '';
+          } else {
+            var len = Object.getOwnPropertyNames(this.reportData).length;
+            // this.archiveId = data[i].id ;
+            // console.log('this.archiveId',this.archiveId)
+            this.reportData[len + 1] = {
+              "typeName": data[i].userArchiveTitle, "codes": "", "total": 1, "isRemove": true, "saveParamIndex": i, "archiveId": data[i].id,
+              "archiveSite": data[i].archiveSite || '', "archiveSn": data[i].archiveSn || '', "archiveSiteId": data[i].archiveSiteId || ''
+            }
+          }
+        }
+        this.renderHtmlFun(this.reportData)
+        this.renderOneHtmlFun(this.reportData)
+      },
+      // 获取报告关联数据回调
+      reportDetialAjaxCallback: function (res) {
+        var that = InitObj
+        console.log('reportDetialAjaxCallback', res)
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 6 });
+          return;
+        } else {
+          that.renderData(res.obj)
+          return;
+        }
+      },
+      // 获取报告关联数据
+      reportDetial: function (dataJson) {
+        ajaxRequest(this.reportsUrl, { "reportIds": this.reportIds }, this.reportDetialAjaxCallback, false, true)
+      },
+      // 查看报告详情ajax回调
+      detailCallback: function (res) {
+        console.log('报告详情', res)
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 6 });
+          return;
+        } else {
+          InitObj.detailData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detail: function () {
+        ajaxRequest(this.detailUrl, { "reportId": this.editId }, this.detailCallback, false, true)
+      },
+      // 表单数据必填项
+      dataRequired: function (requiredParam) {
+        if (!requiredParam.archiveDate) {
+          layer.msg('归档日期不能为空')
+          return false;
+        }
+        if (!requiredParam.archivePersonName) {
+          layer.msg('归档人员不能为空')
+          return false;
+        }
+        return true;
+      },
+      // 新增数据保存处理  
+      saveAddData: function (requiredParam) {
+        // 处理增加数据
+        var zeroTitle = new Array(), oneTitle = new Array(), oneArchiveSn = new Array(), oneArchiveSite = new Array();
+        $('.zeroTitle').each(function (key, value) {
+          zeroTitle[key] = $(this).val();      //如果是其他标签 用 html();
+        });
+        $('.oneTitle').each(function (key, value) {
+          oneTitle[key] = $(this).val();      //如果是其他标签 用 html();
+        });
+        $('.oneArchiveSn').each(function (key, value) {
+          oneArchiveSn[key] = $(this).val();      //如果是其他标签 用 html();
+        });
+        $('.oneArchiveSite').each(function (key, value) {
+          oneArchiveSite[key] = $(this).val();      //如果是其他标签 用 html();
+        });
+        if ('0' === requiredParam.saveType) {
+          for (var r = 0; r < zeroTitle.length; r++) {
+            for (var c = 0; c < this.reportIdsList.length; c++) {
+              this.saveParam.push({ "archiveType": "0", "userArchiveTitle": zeroTitle[r], "reportId": this.reportIdsList[c] })
+            }
+          }
+        } else {
+          for (var oneR = 0; oneR < oneTitle.length; oneR++) {
+            for (var oneC = 0; oneC < this.reportIdsList.length; oneC++) {
+              this.saveParam.push({
+                "archiveType": "0", "userArchiveTitle": oneTitle[oneR], "archiveSn": oneArchiveSn[oneR],
+                "archiveSiteId": oneArchiveSite[oneR], "reportId": this.reportIdsList[oneC],
+              })
+            }
+          }
+        }
+        return this.saveParam
+      },
+      
+      // 保存数据处理
+      saveData: function () {
+        var requiredParam = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(requiredParam)) {
+          var archivePersonId = (this.userName === requiredParam.archivePersonName ? this.userId : '')
+          var arr = this.saveAddData(requiredParam)
+          // 保存数据
+          for (var i = 0; i < arr.length; i++) {
+            // 编辑时有id archiveType
+            arr[i].archivePersonName = requiredParam.archivePersonName
+            arr[i].archiveDate = requiredParam.archiveDate
+            arr[i].saveType = requiredParam.saveType
+            arr[i].archivePersonId = archivePersonId
+            if ('0' === requiredParam.saveType) {
+              arr[i].archiveSn = requiredParam.archiveSn
+              arr[i].archiveSiteId = requiredParam.archiveSiteId
+            } else {
+              var num = arr[i].archiveType
+              if ('0' !== num) { // 等于0 已经赋值，不用重复赋值
+                arr[i].archiveSn = requiredParam['archiveSn' + num]
+                arr[i].archiveSiteId = requiredParam['archiveSiteId' + num]
+              }
+
+            }
+          }
+          return arr
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        console.log('saveAjaxCallback', res)
+        layer.msg(res.msg);
+        // var that = parent.InitObj;
+        // parent.layer.close(that.layuiIndex);
+        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        parent.layer.close(index); //再执行关闭 
+        // that.reloadDataGrid(false);
+      },
+     
+      styleLayout: function (form) {
+        var that = this;
+        form.on('radio(saveType)', function (data) {
+          console.log(data.value)
+          console.log(typeof data.value)
+          if ('0' === data.value) {
+            console.log('统一存放')
+            that.saveTypeZero.show()
+            that.saveTypeOne.hide()
+          } else {
+            console.log('分开存放')
+            that.saveTypeZero.hide()
+            that.saveTypeOne.show()
+          }
+        });
+      },
+
+    }
+
+  </script>
+</body>
+
+</html>

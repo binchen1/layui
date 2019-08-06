@@ -1,0 +1,795 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+  .datagrid-btable .datagrid-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+<div class="easyui-layout" fit="true" id="content-wrapper">
+  <div data-options="region: 'center'" fit="true">
+    <div id="tabs" class="easyui-tabs" fit="true">
+
+      <div title="试验参数收费标准、工时管理" style="margin: 3px; height: 100%;" fit="true">
+
+        <div class="easyui-layout" fit="true">
+
+          <div class="big-category" data-options="region: 'west', title: '单位大类', split: true"
+            style="width: 202px; height: 100%; background:#EEE; padding: 2px;">
+            <div class="search-box">
+              <form>
+                <select class="easyui-combobox" name="qualificationTypeId" style="width: 190px">
+                  <option value="">--请选择--</option>
+                  <c:forEach items="${qualificationTypes}" var="item">
+                    <option value="${item.id}">${item.name}</option>
+                  </c:forEach>
+                </select>
+              </form>
+            </div>
+            <div style="margin-top: 20px;">
+              <table class="easyui-treegrid" id="treeGridOfBigCategory"></table>
+            </div>
+          </div>
+
+          <div class="test-param self-noscroll" data-options="region: 'center', title: '试验参数列表', split: true">
+            <div class="toolbar" fit="true">
+              <div class="search-box">
+                <form class="formtable">
+                  <input type="hidden" name="bigCategoryId">
+                </form>
+              </div>
+              <div class="datagrid-toolbar" fit="true">
+                <span style="float:left; height: auto;">
+                  <a class="easyui-linkbutton btn-4-save" plain="true" icon="icon-save">保存</a>
+                  <a class="easyui-linkbutton btn-4-update" plain="true" icon="icon-edit">修改</a>
+                  <a class="easyui-linkbutton btn-4-update-UN" plain="true" icon="icon-cancel"
+                    style="display: none;">取消修改</a>
+                  <a class="easyui-linkbutton btn-4-virtual-sample-price" plain="true">按样品维护价格</a>
+                  <a class="easyui-linkbutton btn-4-test-param-additional-fees" plain="true">附加费用管理</a>
+                  <a class="easyui-linkbutton btn-4-share-price" plain="true">设置共用单价</a>
+                  <a class="easyui-linkbutton btn-4-share-price-UN" plain="true">取消共用单价</a>
+                </span>
+                <!-- <span style="float:right; height: auto;">
+                                    <input type="radio" name="model" checked="checked" value="0">单选
+                                    <input type="radio" name="model" value="1">多选
+                                </span> -->
+              </div>
+            </div>
+            <table id="dataGridOfTestParamPriceAndWorkingHour" fit="true"></table>
+          </div>
+
+          <div class="sub-price" data-options="region: 'east', title: '试验参数子价格管理', split: true" style="width: 230px;">
+
+            <div class="toolbar" fit="true">
+              <div class="search-box">
+                <form>
+                  <input type="hidden" name="testParamId">
+                </form>
+                <input class="x-title" type="hidden" data-title="">
+              </div>
+              <div class="datagrid-toolbar" fit="true">
+                <span style="float:left; height: auto;">
+                  <a class="easyui-linkbutton btn-4-add-sub-price" plain="true" icon="icon-add">添加</a>
+                  <a class="easyui-linkbutton btn-4-update-sub-price" plain="true" icon="icon-edit">修改</a>
+                  <a class="easyui-linkbutton btn-4-delete-sub-price" plain="true" icon="icon-remove">删除</a>
+                </span>
+              </div>
+            </div>
+            <table id="dataGridOfTestParamSubPrice" fit="true"></table>
+          </div>
+        </div>
+      </div>
+
+      <div title="全局附加费用管理">
+        <div class="additional-fees">
+          <div class="toolbar" fit="true">
+            <div class="search-box">
+              <form class="formtable">
+                <table>
+                  <tr>
+                    <td>细目名称：</td>
+                    <td>
+                      <input name="name" style="line-height:26px; border:1px solid #ccc">
+                    </td>
+                    <td>
+                      <span style="float:right; height: auto;">
+                        <a class="easyui-linkbutton btn-4-global-additional-fees-search" plain="true"
+                          icon="icon-search">查询</a>
+                        <a class="easyui-linkbutton btn-4-global-additional-fees-reset" plain="true"
+                          icon="icon-reload">重置</a>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </form>
+            </div>
+            <div class="datagrid-toolbar" fit="true">
+              <span style="float:left; height: auto;">
+                <a class="easyui-linkbutton btn-4-global-additional-fees-add" plain="true" icon="icon-add">新增</a>
+                <a class="easyui-linkbutton btn-4-global-additional-fees-update" plain="true" icon="icon-edit">修改</a>
+                <a class="easyui-linkbutton btn-4-global-additional-fees-delete" plain="true" icon="icon-remove">删除</a>
+              </span>
+            </div>
+          </div>
+          <table class="easyui-datagrid" id="dataGridOfAdditionalFee"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /*datagrid -- dataGrid0 处于行内编辑状态时，记录已选中的行的ID数组*/
+    var ROW_EDIT_IDS = [];
+    /*行内编辑变更救过存储变量*/
+    var ROW_EDIT_RESULT_PARAM = [];
+
+    var treeGrid;   //单位大类treegrid
+    var dataGrid0;  //试验参数价格、工时datagrid
+    var dataGrid1;  //试验参数子价格datagrid
+    var dataGrid2;  //全局附加费用datagrid
+
+    /*全局附加费用datagrid是否已经初始化过了*/
+    var GLOBAL_ADDITIONAL_FEES_INIT;
+
+    $(function () {
+      /**
+       *隐藏easyui面板的折叠按钮
+       */
+      $('a[class*=layout-button-]').hide();
+
+      initTreeGrid();
+      initDataGrid0();
+      initDataGrid1();
+
+      $('#tabs').tabs({
+        onSelect: function (title, index) {
+          if (index == 1 && !GLOBAL_ADDITIONAL_FEES_INIT) {
+            initDataGrid2();
+            GLOBAL_ADDITIONAL_FEES_INIT = true;
+          }
+        }
+      });
+
+      /**
+       *  资质下来改变事件
+       */
+      $('.big-category .search-box select').combobox({
+        onChange: function () {
+
+          cleanTestParamPriceAndWorkingHourQuery();
+          reloadDataGrid0();
+
+          cleanTestParamSubPriceQuery();
+          reloadDataGrid1();
+
+          /*重载单位大类树数据*/
+          initTreeGrid();
+        }
+      });
+
+      /**
+       *  试验参数修改按钮事件
+       */
+      $('.btn-4-update').click(function () {
+        var selections = dataGrid0.datagrid('getSelections');
+        if (!selections || selections.length == 0) {
+          tip('请选择要修改的试验参数');
+          return;
+        }
+        /*选中行启用行内编辑状态*/
+        ROW_EDIT_IDS = [];
+        for (var i in selections) {
+          var index = dataGrid0.datagrid('getRowIndex', selections[i]);
+          dataGrid0.datagrid('beginEdit', index);
+          ROW_EDIT_IDS.push(selections[i].id);
+        }
+        $(this).hide();
+        $('.btn-4-update-UN').show();
+      });
+
+      /**
+       *  取消修改按钮事件
+       */
+      $('.btn-4-update-UN').click(function () {
+        var selections = dataGrid0.datagrid('getSelections');
+        /*选中行结束行内编辑状态*/
+        for (var i in selections) {
+          var index = dataGrid0.datagrid('getRowIndex', selections[i]);
+          dataGrid0.datagrid('cancelEdit', index);
+        }
+        $(this).hide();
+        $('.btn-4-update').show();
+        /*清空*/
+        ROW_EDIT_IDS = [];
+        ROW_EDIT_RESULT_PARAM = [];
+      });
+
+      /**
+       *  试验参数保存按钮事件
+       */
+      $('.btn-4-save').click(function () {
+        /* var selections = dataGrid0.datagrid('getSelections');
+        for (var i in selections) {
+            //调用easyui datagrid的endEdit方法结束编辑， 该方法会触发onAfterEdit事件（组装行内编辑变更内容）
+            var index = dataGrid0.datagrid('getRowIndex', selections[i]);
+            dataGrid0.datagrid('endEdit', index);
+        }
+        $('.btn-4-update-UN').hide();
+        $('.btn-4-update').show();
+
+        if (ROW_EDIT_RESULT_PARAM.length > 0) {
+            ajaxSubmitResponseJSON({
+                    method: 'POST',
+                    url: 'testParamPriceWorkingHourController.do?doSaveCommon',
+                    data: {
+                        params: ROW_EDIT_RESULT_PARAM.join(',')
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            initDataGrid0();
+                        }
+                        tip(data.msg);
+                    }
+                }
+            );
+        } 
+        //清空
+        ROW_EDIT_IDS = [];
+        ROW_EDIT_RESULT_PARAM = [];
+        */
+        if ($.isEmptyObject(AJAX_PARAMS)) {
+          tip('未做任何修改');
+          return;
+        }
+        var AJAX_ARR = [];
+        $.each(AJAX_PARAMS, function (i, val) {
+          AJAX_ARR.push(val);
+        });
+        if (AJAX_ARR.length > 0) {
+          ajaxSubmitResponseJSON({
+            method: 'POST',
+            url: 'testParamPriceWorkingHourController.do?doSaveCommon',
+            data: {
+              params: AJAX_ARR.join(',')
+            },
+            success: function (data) {
+              if (data.success) {
+                initDataGrid0();
+              }
+              tip(data.msg);
+              //清空
+              AJAX_PARAMS = {};
+            }
+          });
+        }
+      });
+
+      /**
+       * 按样品设置试验参数价格按钮事件
+       */
+      $('.btn-4-virtual-sample-price').click(function () {
+        var selections = dataGrid0.datagrid('getSelections');
+        if (!selections || selections.length == 0) {
+          tip('请选择试验参数');
+          return;
+        }
+        if (selections.length > 1) {
+          tip('按样品设置试验参数价格只能选择一个参数');
+          return;
+        }
+        var title = '试验参数：' + selections[0].displayName + '按样品设置单价、工时信息';
+        var url = 'testParamPriceWorkingHourController.do?editTestSamplePrice';
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: title,
+          content: url,
+          maxmin: false,
+          btn: ['关闭'],
+          area: ['550px', '600px']
+        });
+      });
+
+      /**
+       * 试验参数附加费用按钮事件
+       */
+      $('.btn-4-test-param-additional-fees').click(function () {
+        var selections = dataGrid0.datagrid('getSelections');
+        if (!selections || selections.length == 0) {
+          tip('请选择试验参数');
+          return;
+        }
+        if (selections.length > 1) {
+          tip('只能选择一个参数');
+          return;
+        }
+        var title = '试验参数：' + selections[0].displayName + '附加费用管理';
+        var url = 'additionalFeeController.do?testParamAdditionalFee&testParamId=' + selections[0].id;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: title,
+          content: url,
+          maxmin: false,
+          btn: ['关闭'],
+          area: ['550px', '600px']
+        });
+      });
+
+      /**
+       *  设置共用单价按钮事件
+       */
+      $('.btn-4-share-price').click(function () {
+        var selections = dataGrid0.datagrid('getSelections');
+        if (!selections || selections.length < 2) {
+          tip('至少选择2个试验参数才能设置共价');
+          return;
+        }
+        for (var i in selections) {
+          if (selections[i].identity) {
+            tip('试验参数：' + selections[i].displayName + '不能重复设置共价');
+            return;
+          }
+        }
+        var url = 'testParamPriceWorkingHourController.do?editSharePrice';
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '设置共享单价',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '200px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       *  取消共价
+       */
+      $('.btn-4-share-price-UN').click(function () {
+        var selections = dataGrid0.datagrid('getSelections');
+        if (!selections || selections.length == 0) {
+          tip('请选择需要取消共价的试验参数');
+          return;
+        }
+        var params = [];
+        for (var i in selections) {
+          var identity = selections[i].identity;
+          if (!identity) {
+            tip('试验参数：' + selections[i].displayName + '无共价信息');
+            return;
+          }
+          params.push(selections[i].id);
+        }
+        confirmAndDoReq({
+          title: '确认取消共价',
+          content: '是否确认取消共价？',
+          url: 'testParamPriceWorkingHourController.do?doRemoveSharePrice',
+          data: {
+            testParamIds: params.join(',')
+          },
+          success: function (data) {
+            reloadDataGrid0();
+          }
+        });
+      });
+
+      /**
+       *  添加子价格事件
+       */
+      $('.btn-4-add-sub-price').click(function () {
+        var testParamId = $('.sub-price .search-box input[name=testParamId]').val();
+        if (!testParamId) {
+          tip('请选择需要添加子价格的试验参数');
+          return;
+        }
+        var url = 'testParamPriceWorkingHourController.do?editSubPrice&testParamId=' + testParamId;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '新增',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '300px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       *  修改子价格事件
+       */
+      $('.btn-4-update-sub-price').click(function () {
+        var selectedRow = dataGrid1.datagrid('getSelected');
+        if (!selectedRow) {
+          tip('请选择需要修改的试验参数子价格');
+          return;
+        }
+        var url = 'testParamPriceWorkingHourController.do?editSubPrice&id=' + selectedRow.id;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '修改',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '300px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       *  删除子价格事件
+       */
+      $('.btn-4-delete-sub-price').click(function () {
+        var selectedRow = dataGrid1.datagrid('getSelected');
+        if (!selectedRow) {
+          tip('请选择需要删除的试验参数子价格');
+          return;
+        }
+        confirmAndDoReq({
+          url: 'testParamPriceWorkingHourController.do?doDel&id=' + selectedRow.id,
+          success: function (data) {
+            if (data.success) {
+              reloadDataGrid1();
+            }
+          }
+        });
+      });
+
+      /**
+       * 新增全局附加费用按钮事件
+       */
+      $('.btn-4-global-additional-fees-add').click(function () {
+        var url = 'additionalFeeController.do?edit';
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '新增',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '400px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       * 修改全局附加费用按钮事件
+       */
+      $('.btn-4-global-additional-fees-update').click(function () {
+        var selectedRow = dataGrid2.datagrid('getSelected');
+        if (!selectedRow) {
+          tip('请选择需要修改的全局附加费用');
+          return;
+        }
+        var url = 'additionalFeeController.do?edit&id=' + selectedRow.id;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '修改',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '400px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       * 删除全局附加费用按钮事件
+       */
+      $('.btn-4-global-additional-fees-delete').click(function () {
+        var selectedRow = dataGrid2.datagrid('getSelected');
+        if (!selectedRow) {
+          tip('请选择需要删除的全局附加费用');
+          return;
+        }
+        confirmAndDoReq({
+          url: 'additionalFeeController.do?doDel&id=' + selectedRow.id,
+          success: function (data) {
+            if (data.success) {
+              reloadDataGrid2();
+            }
+          }
+        });
+      });
+
+      /**
+       * 查询全局附加费用按钮事件
+       */
+      $('.btn-4-global-additional-fees-search').click(function () {
+        reloadDataGrid2(true);
+      });
+
+      /**
+       * 重置全局附加费用按钮事件
+       */
+      $('.btn-4-global-additional-fees-reset').click(function () {
+        $('.additional-fees .search-box form')[0].reset();
+        $('.btn-4-global-additional-fees-search').trigger('click');
+      });
+
+      /**
+       *  单选-多选切换事件
+       */
+      $('input[name=model]').click(function () {
+        if ($(this).val() == 0) {
+          dataGrid0.datagrid('options').singleSelect = true;
+        } else {
+          dataGrid0.datagrid('options').singleSelect = false;
+        }
+        /*试验参数列表处于编辑状态，则关闭先结束编辑状态*/
+        $('.btn-4-update-UN').trigger('click');
+        dataGrid0.datagrid('unselectAll');
+        cleanTestParamSubPriceQuery();
+        reloadDataGrid1();
+      });
+    });
+
+    /**
+     *  初始化单位大类树
+     **/
+    function initTreeGrid() {
+      var queryParams = $('.big-category .search-box form').serializeJSON();
+      treeGrid = $('#treeGridOfBigCategory').treegrid({
+        url: 'bigCategoryController.do?datagrid',
+        idField: 'id',
+        treeField: 'name',
+        queryParams: queryParams,
+        columns: [[
+          { title: 'ID', field: 'id', checkbox: true },
+          { title: '大类名称', field: 'name', width: 160 }
+        ]],
+        onSelect: function (row) {
+          var bigCategoryId = $('.test-param .search-box input[name=bigCategoryId]').val();
+          if (row.id != bigCategoryId) {
+
+            $('.test-param .search-box input[name=bigCategoryId]').val(row.id);
+            reloadDataGrid0();
+
+            cleanTestParamSubPriceQuery();
+            reloadDataGrid1();
+          }
+        }
+      });
+    }
+
+    /**
+     *  加载试验参数列表
+     **/
+    function initDataGrid0() {
+      dataGrid0 = $('#dataGridOfTestParamPriceAndWorkingHour').datagrid({
+        url: 'testParamPriceWorkingHourController.do?datagridCommon',
+        singleSelect: false,
+        pagination: false,
+        toolbar: '.test-param .toolbar',
+        fit: true,
+        fitColumns: true,
+        scrollbarSize: 0,
+        columns: [[
+          { title: 'ID', field: 'id', hidden: true },
+          { title: '试验项目名称', field: 'testItemName', width: 120, hidden: true, formatter: applyTitleAttribute },
+          { title: '试验参数系统名称', field: 'name', width: 120, formatter: applyTitleAttribute },
+          { title: '试验参数显示名称', field: 'displayName', width: 120, formatter: applyTitleAttribute },
+          {
+            title: '单价（元）', field: 'price',
+            /*  editor: {
+                 type: 'numberbox',
+                 options: {
+                     min: 0,
+                     precision: 2
+                 }
+             }  */
+            formatter: function (value, rowData, rowIndex) {
+              var inputVal = value ? value : '';
+              return "<input type='text' rowid='" + rowData.id + "' class='priceclass' onchange='priceChange(this)' value='" + inputVal + "' />";
+            }
+          },
+          { title: '共用单价名称', field: 'identity' },
+          { title: '共用单价（元）', field: 'sharePrice' },
+          {
+            title: '工时数（小时）', field: 'workingHour',
+            /* editor: {
+                type: 'numberbox',
+                options: {
+                    min: 0
+                }
+            } */
+            formatter: function (value, rowData, rowIndex) {
+              var inputVal = value ? value : '';
+              return "<input type='text' rowid='" + rowData.id + "' class='timeclass' onchange='timeChange(this)' value='" + inputVal + "' />";
+            }
+          },
+        ]],
+        onClickRow: function (index, row) {
+          /*ROW_EDIT_IDS.length > 0 表示试验参数datagrid处于行内编辑状态*/
+          if (ROW_EDIT_IDS.length > 0) {
+            if ($.inArray(row.id, ROW_EDIT_IDS) >= 0) {
+              dataGrid0.datagrid('selectRow', index);
+            } else {
+              dataGrid0.datagrid('unselectRow', index);
+            }
+
+            if (dataGrid0.datagrid('options').singleSelect) {
+              var selectedRowId = ROW_EDIT_IDS[0];
+              var rows = dataGrid0.datagrid('getRows');
+              for (var i in rows) {
+                if (rows[i].id == selectedRowId) {
+                  dataGrid0.datagrid('selectRow', dataGrid0.datagrid('getRowIndex', rows[i]));
+                }
+              }
+            }
+          }
+          /*加载试验参数子价格列表*/
+          var testParamId = $('.sub-price .search-box input[name=testParamId]').val();
+          if (row.id != testParamId) {
+            $('.sub-price .search-box input[name=testParamId]').val(row.id);
+            $('.sub-price .search-box input.x-title').data('title', row.displayName);
+            reloadDataGrid1();
+          }
+        },
+        onAfterEdit: function (index, row, changes) {
+          /*组装行内编辑变更结果*/
+          var param = row.id +
+            ':' + (changes.price ? changes.price : '') +
+            ':' + (changes.workingHour ? changes.workingHour : '');
+          ROW_EDIT_RESULT_PARAM.push(param);
+        }
+      });
+    }
+
+    /**
+     *  重新加载试验参数datagrid列表
+     */
+    function reloadDataGrid0(goFirstPage) {
+      /*查询条件*/
+      var queryParams = $('.test-param .search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid0.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid0.datagrid('reload', queryParams);
+      }
+    }
+
+    /**
+     *  清空试验参数列表查询条件
+     */
+    function cleanTestParamPriceAndWorkingHourQuery() {
+      $('.test-param .search-box form').find(':enabled').val('');
+    }
+
+    /**
+     *  试验参数子价格列表
+     */
+    function initDataGrid1() {
+      dataGrid1 = $('#dataGridOfTestParamSubPrice').datagrid({
+        url: 'testParamPriceWorkingHourController.do?datagridSubPrice',
+        title: '试验参数：',
+        singleSelect: true,
+        pagination: false,
+        toolbar: '.sub-price .toolbar',
+        columns: [[
+          { title: 'ID', field: 'id', checkbox: true },
+          { title: '细目名称', field: 'identity' },
+          { title: '单价（元）', field: 'price' },
+          { title: '备注', field: 'remark', width: 80, formatter: applyTitleAttribute }
+        ]],
+        onDblClickRow: function (index, row) {
+          bindDbclickEvent(index, 2, '.btn-4-update-sub-price', $(this));
+        }
+      });
+    }
+
+    /**
+     *  重新加载试验参数子价格datagrid列表
+     */
+    function reloadDataGrid1(goFirstPage) {
+      /*查询条件*/
+      var queryParams = $('.sub-price .search-box form').serializeJSON();
+      /*datagrid标题*/
+      var title = $('.sub-price .search-box input.x-title').data('title');
+      dataGrid1.datagrid('getPanel').panel('setTitle', '试验参数：' + title);
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid1.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid1.datagrid('reload', queryParams);
+      }
+    }
+
+    /**
+     *  清除子价格查询条件
+     */
+    function cleanTestParamSubPriceQuery() {
+      $('.sub-price .search-box form').find(':enabled').val('');
+      $('.sub-price .search-box input.x-title').data('title', '');
+    }
+
+    function initDataGrid2() {
+      dataGrid2 = $('#dataGridOfAdditionalFee').datagrid({
+        url: 'additionalFeeController.do?datagrid',
+        singleSelect: true,
+        pagination: true,
+        toolbar: '.additional-fees .toolbar',
+        fitColumns: true,
+        columns: [[
+          { title: 'ID', field: 'id', checkbox: true },
+          { title: '细目名称', field: 'name', width: 200 },
+          { title: '单价（元）', field: 'price', width: 80 },
+          { title: '单位', field: 'priceUnit', width: 80 },
+          { title: '备注', field: 'remark', width: 200 }
+        ]]
+      });
+    }
+
+    function reloadDataGrid2(goFirstPage) {
+      var queryParams = $('.additional-fees .search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid2.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid2.datagrid('reload', queryParams);
+      }
+    }
+
+    function applyTitleAttribute(value) {
+      return '<span title="' + value + '">' + value + '</span>';
+    }
+
+    //价格和工时修改后，都保存这两个数据到AJAX_PARAMS对象中（可排除重复数据），点击保存后统一提交
+    var AJAX_PARAMS = {};
+    function priceChange(obj) {
+      var input = $(obj);
+      var id = input.attr('rowid');
+      var priceVal = input.val();
+      var timeVal = input.closest('tr').find('.timeclass').val();
+      AJAX_PARAMS[id] = id + ":" + priceVal + ":" + timeVal;
+    }
+    function timeChange(obj) {
+      var input = $(obj);
+      var id = input.attr('rowid');
+      var priceVal = input.closest('tr').find('.priceclass').val();
+      var timeVal = input.val();
+      AJAX_PARAMS[id] = id + ":" + priceVal + ":" + timeVal;
+    }
+
+  </script>
+</div>

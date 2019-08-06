@@ -1,0 +1,111 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+</script>
+
+<form id="form" method="POST"
+  action="consignCustomAttributeController.do?${empty consignCustomAttributeEntity ? 'doAdd' : 'doUpdate'}">
+
+  <input id="id" name="id" type="hidden" value="${consignCustomAttributeEntity.id }">
+  <input id="btn_sub" type="hidden" class="btn-4-submit">
+
+  <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+    <tr>
+      <td align="right" style="width: 130px;">
+        <label class="Validform_label"><span style="color: #F00000">*</span>委托自定义属性名称:</label>
+      </td>
+      <td class="value">
+        <input name="attributeName" class="inputxt" datatype="*" value='${consignCustomAttributeEntity.attributeName}'>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">是否盲样:</label>
+      </td>
+      <td class="value">
+        <select id="isBlind" name="isBlind">
+          <option value="1">是</option>
+          <option value="0">否</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <label class="Validform_label">排序值:</label>
+      </td>
+      <td class="value">
+        <input id="seq" name="seq" class="inputxt" value='${consignCustomAttributeEntity.seq}'>
+      </td>
+    </tr>
+  </table>
+</form>
+<script>
+  $(function () {
+
+    var isBlind = '${consignCustomAttributeEntity.isBlind}';
+    $("#isBlind").find("option[value='" + isBlind + "']").attr("selected", "selected");
+
+    /**
+     * 表单验证提交
+     */
+    
+    var beforeSubmitIndex = '', fristConfirm = true;
+    $("#form").Validform({
+      btnSubmit: ".btn-4-submit",
+      tiptype: 4,
+      ignoreHidden: false,
+      dragonfly: false,
+      tipSweep: false,
+      showAllError: true,
+      postonce: true,
+      ajaxPost: true,
+      beforeSubmit: function (curform) {
+        //在验证成功后，表单提交前执行的函数，curform参数是当前表单对象。
+        //这里明确return false的话表单将不会提交;
+        if (fristConfirm) {
+          fristConfirm = !fristConfirm;
+          beforeSubmitIndex = layer.load(2, {
+            time: 10 * 1000
+          });
+          return true;
+        } else {
+          return false;
+        }
+      },
+      callback: function (data) {
+        layer.close(beforeSubmitIndex);
+        if (data.success) {
+          var index = parent.layer.getFrameIndex(window.name);
+          parent.reloadDataGrid();
+          parent.layer.close(index);
+          parent.layerAlertFun(data.msg, '1');
+        } else {
+          fristConfirm = !fristConfirm;
+          parent.layerAlertFun(data.msg, '2');
+        }
+      }
+    });
+
+  });
+  function openCallback(){
+      $('.btn-4-submit').click()
+    }
+</script>

@@ -1,0 +1,632 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>报告发放列表</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+</head>
+
+<body id="mailList">
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">待发放报告</li>
+      <li>已发放报告</li>
+    </ul>
+    <div id="tableBox" class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="quickQryParam" class="layui-input" placeholder="输入编号、委托单位、工程项目后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs8 senior seniorText" style="display:none;">
+                高级查询
+                <span id="retractIcon" onclick="InitObj.retractFun()">
+                  <i class="layui-icon layui-icon-up"></i>
+                </span>
+              </div>
+              <div class="layui-col-xs4">
+                <span id="searchSwitch">
+                  <a href="###" class="easyui-linkbutton" iconCls="iconfont icon-reload" plain="true">切换到高级查询</a>
+                </span>
+              </div>
+            </div>
+            <div class="senior retract" style="display:none">
+              <div class="layui-form-item">
+                <label class="layui-form-label">报告编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="reportSn" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignSn" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">样品编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="objectSn" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托单位</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignUnit" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">工程项目</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignProject" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">委托日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignDate" id="consignDate" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">报告签发日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="signDate" id="signDate" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item seniorRow" style="display: none">
+                <label class="layui-form-label">发放日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="issueDate" id="issueDate" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">约定发放方式</label>
+                <div class="layui-input-block">
+                  <input class="layui-bg-blue" type="radio" name="appointIssueWay" value="1" title="自取" checked>
+                  <input class="layui-bg-blue" type="radio" name="appointIssueWay" value="3" title="邮寄">
+                  <input class="layui-bg-blue" type="radio" name="appointIssueWay" value="4" title="传真">
+                </div>
+              </div>
+
+              <div class="layui-form-item seniorRow" style="display: none">
+                <label class="layui-form-label">实际发放方式</label>
+                <div class="layui-input-block">
+                  <input class="layui-bg-blue" type="radio" name="issueWay" value="1" title="自取" checked>
+                  <input class="layui-bg-blue" type="radio" name="issueWay" value="3" title="邮寄">
+                  <input class="layui-bg-blue" type="radio" name="issueWay" value="4" title="传真">
+                </div>
+              </div>
+              <div>
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.seniorQuickSearch()">查询</a>
+                <button class="easyui-linkbutton" type="reset" iconCls="iconfont icon-reload" plain="true">重置</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" class="easyui-linkbutton funBtn_addIssue" iconCls="iconfont icon-reload" plain="true">报告发放</a>
+            <a href="#" class="easyui-linkbutton funBtn_printSel" iconCls="iconfont icon-print"
+              plain="true">打印发放登记表（已选）</a>
+            <a href="#" class="easyui-linkbutton funBtn_printAll" iconCls="iconfont icon-print"
+              plain="true">打印发放登记表（全选）</a>
+            <a href="#" class="easyui-linkbutton funBtn_mailPrint" iconCls="iconfont icon-print" plain="true">打印邮寄单</a>
+            <a href="#" style="display:none" class="easyui-linkbutton funBtn_exportExl" iconCls="iconfont icon-redo"
+              plain="true">导出</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+    <iframe id='udrIframe' name='udrIframe' width='0' height='0' frameborder='none' src=''></iframe>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          // layer.close(layer.tips())
+          InitObj.initDataGrid(InitObj.columnsFun(data.index))
+        });
+        laydate.render({
+          elem: '#signDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        laydate.render({
+          elem: '#consignDate'
+          , trigger: 'click'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        laydate.render({
+          elem: '#issueDate'
+          , trigger: 'click'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        InitObj.init(form);
+      })
+
+    })
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', // 默认获取数据url
+      defaultUrl: 'reportIssueController.do?datagrid', // 默认获取数据url
+      issuePageUrl: 'reportIssueController.do?goIssuePage', // 报告发放url页面
+      mailPrintPagePageUrl: 'reportIssueController.do?goMailPrintPage', // 打印邮寄单页面
+      undoIssueUrl: 'reportIssueController.do?undoIssue', //撤销登记
+      saveUrl: 'reportIssueController.do?saveOrUpdate', // 保存打印记录
+      formLayerM: null, // form对象 
+      dataGrid: null, // table对象
+      dataType: 0, // 0:待发放, 1:已发放
+      stateMsg: '', // 状态提示信息
+      addIssue: $('#functionButton .funBtn_addIssue'), // 报告发放
+      printSel: $('#functionButton .funBtn_printSel'), // 打印发放登记表（已选）
+      printAll: $('#functionButton .funBtn_printAll'), // 打印发放登记表（全选）
+      mailPrint: $('#functionButton .funBtn_mailPrint'), // 打印邮寄单
+      exportExl: $('#functionButton .funBtn_exportExl'), // 导出
+      searchType: 1,    // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      searchShow: true, // 普通搜索
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      seniorRow: $('.seniorRow'), // 高级查询显示
+      queryParams: {}, // 查询条件
+      init: function (form) {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun(0))
+        this.commonQryKeyDown()
+        this.styleLayout();
+        this.btnFun(this.addIssue, this.issuePageUrl, '发放报告')
+        this.btnFun(this.printSel, '', '打印发放登记表（已选）')
+        this.btnFun(this.printAll, '', '打印发放登记表（全选）')
+        this.btnFun(this.mailPrint, this.mailPrintPagePageUrl, '打印邮寄单')
+        this.btnFun(this.exportExl, '', '导出')
+        form.render()
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var tipIndex;
+        var url = '${webRoot}';
+        btnName.on('click', function () {
+          var that = InitObj, self = this;
+          var row = that.dataGrid.datagrid('getSelections');
+          var reportIds = "", i = 0, j = 0, getRows = that.dataGrid.datagrid('getRows');
+          if ('打印发放登记表（全选）' === openName) {
+
+            var ids = "";
+            for (var index = 0; index < getRows.length; index++) {
+              if (index == 0) {
+                ids += getRows[index].reportId;
+              } else {
+                ids += "," + getRows[index].reportId;
+              }
+            }
+            var udrCommonPrint = UdrCommonPrint([ids], 'reportGet');
+            udrCommonPrint.printStart();
+            return;
+          } else if ('导出' === openName) {
+            that.exportExcel();
+            return;
+          }
+          if (row.length === 0) {
+            tipIndex = layer.tips('<span class="layui-color-white">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            var rowJson = {}, issueWayValue;
+            for (; i < row.length; i++) {
+              reportIds += (i === 0 ? row[i].reportId : "," + row[i].reportId)
+              if (rowJson[row[i].appointIssueWay]) {
+                rowJson[row[i].appointIssueWay] = 'yes'
+                issueWayValue = row[i].appointIssueWay
+              } else {
+                rowJson[row[i].appointIssueWay] = row[i].appointIssueWay
+              }
+            }
+
+            if ('发放报告' === openName) {
+              var len = Object.getOwnPropertyNames(rowJson).length;
+              if (len === 1 && issueWayValue) {
+                // 去重后只有一种，且值存在
+                len = issueWayValue
+              } else {
+                len = 1
+              }
+              layerOpenFun(openUrl + '&reportId=' + reportIds + '&issueWayLen=' + len, openName, ['90%', '90%'], []);
+            } else if ('打印邮寄单' === openName) {
+              //收集需要的信息,如[{"key":"公司A项目1","id":"id1","sn":"sn1"}...]
+              var objArr = [];
+              for (i = 0; i < row.length; i++) {
+                var unitAndProject = row[i].consignUnitName + row[i].projectName + "";
+                var objj = { key: unitAndProject, reportId: row[i].reportId, reportSn: row[i].reportSn };
+                objArr.push(objj);
+              }
+              var newUrl = openUrl + '&strParam=' + encodeURI(encodeURI(JSON.stringify(objArr)));
+              layerOpenFun(newUrl, openName, ['90%', '90%'], ['确定', '取消']);
+            } else if ('打印发放登记表（已选）' === openName) {
+
+              var ids = "";
+              for (var index = 0; index < row.length; index++) {
+                if (index == 0) {
+                  ids += row[index].reportId;
+                } else {
+                  ids += "," + row[index].reportId;
+                }
+              }
+              var udrCommonPrint = UdrCommonPrint([ids], 'reportGet');
+              udrCommonPrint.printStart();
+              // TODO 记录打印记录
+            }
+            return;
+          }
+        })
+        btnName.mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 打印邮寄单
+      printMailList: function () {
+        var mb = myBrowser();
+        console.log('mb', mb)
+        if ("IE" == mb) {
+          var rows = this.dataGrid.datagrid('getSelections');
+          var reportIds = [];
+          for (var index = 0; index < rows.length; index++) {
+            reportIds.push(rows[index].reportId);
+          }
+          var udrCommonPrint = UdrCommonPrint(reportIds, 'ExpressTable');
+          udrCommonPrint.printStart();
+        } else {
+          //layerAlertFun('IE 浏览器才能实现打印', '5',[])
+          layer.msg('请使用IE浏览器或将浏览器设置为兼容模式！', { icon: 5 });
+        }
+      },
+
+      // 点击进入详情页
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.issuePageUrl + '&issueId=' + did + '&detail=detailPage', openName = '查看详情';
+        layerOpenFun(openUrl, openName, ['90%', '90%'], []);
+      },
+      // 点击重新登记
+      goEdit: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.issuePageUrl + '&issueId=' + did, openName = '重新登记';
+        layerOpenFun(openUrl, openName, ['90%', '90%'], []);
+      },
+      cancelAjaxCallback: function (res) {
+        if (res.success) {
+          layer.msg("撤销登记成功", { icon: 6 });
+          InitObj.reloadDataGrid(false)
+        } else {
+          layer.msg("撤销登记失败", { icon: 5 });
+        }
+      },
+      // 点击撤销登记
+      goCancel: function (did, event) {
+        layui.stope(event)
+        ajaxRequest(this.undoIssueUrl, { issueId: did }, this.cancelAjaxCallback, false, true)
+      },
+      //点击状态弹出框
+      delHsCode: function (index, value, event) {
+        layui.stope(event)
+        var stateObj = { "temporary": "临时报告", "formal": "正式报告" };
+        this.stateMsg = '<span class="layui-color-white">' + stateObj[value] + '</span>';
+        var tipIndex = layer.tips(this.stateMsg, '.delHsCode' + index, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+        $('.delHsCode' + index).mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      // 时间处理函数
+      dateStartEnd: function (queryParams, dataString) {
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams[dataString + 'Start'] = DateArr[0];
+          queryParams[dataString + 'End'] = DateArr[1];
+        } else {
+          queryParams[dataString + 'Start'] = '';
+          queryParams[dataString + 'End'] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function (excel) {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        delete queryParams['quickQryParam'];
+        if (0 === this.dataType) {
+          delete queryParams['issueWay'];
+        } else {
+          if (!isDateStartEnd(queryParams['issueDate'])) {
+            $('#issueDate').val('');
+            queryParams['issueDate'] = '';
+          }
+          queryParams = this.dateStartEnd(queryParams, 'issueDate')
+        }
+        if (!isDateStartEnd(queryParams['signDate'])) {
+          $('#signDate').val('');
+          queryParams['signDate'] = '';
+        }
+        if (!isDateStartEnd(queryParams['consignDate'])) {
+          $('#consignDate').val('');
+          queryParams['consignDate'] = '';
+        }
+        queryParams = this.dateStartEnd(queryParams, 'signDate')
+        queryParams = this.dateStartEnd(queryParams, 'consignDate')
+        delete queryParams['signDate'];
+        delete queryParams['consignDate'];
+        delete queryParams['issueDate'];
+        this.queryParams = queryParams
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function (excel) {
+        var condition = $("input[name='quickQryParam']").val();
+        var queryParams = { 'quickQryParam': condition };
+        this.queryParams = queryParams
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            if (that.searchShow) {
+              that.quickSearch()
+            } else {
+              that.seniorQuickSearch()
+            }
+            return false;
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 导出Excel
+      exportExcel: function () {
+        var queryParams, params = "";
+        // 区分回传的查询条件：1.普通查询     2.高级查询
+        if (this.searchType == 1) {
+          this.quickSearch();
+        } else {
+          this.seniorQuickSearch();
+        }
+        queryParams = this.queryParams
+        for (var key in queryParams) {
+          params += "&" + key + "=" + queryParams[key];
+        }
+        params += "&issueStatus=" + this.dataType;
+        window.location.href = " reportIssueController.do?exportXls" + encodeURI(params);
+      },
+      // 高级查询收起按钮
+      retractFun: function () {
+        if ($('.retract').is(':hidden')) {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i> ')
+        } else {
+          $('#retractIcon').html('<i class="layui-icon layui-icon-down"></i> ')
+
+        }
+        $('.retract').toggle();
+        getTableHeight()
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        this.searchSwitch.click(function () {
+          var that = InitObj;
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+            // that.reloadDataGrid(true, {});
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+            $('#retractIcon').html('<i class="layui-icon layui-icon-up"></i>')
+            // that.reloadDataGrid(true, {});
+          }
+          getTableHeight();
+          that.formLayerM.render();
+        })
+
+      },
+
+      // 各tabs展示数据
+      columnsFun: function (num) {  // 0.待批准报告  1.已批准报告
+        this.dataType = num;
+        if (1 === num) {
+          this.seniorRow.show()
+          this.addIssue.hide(); // 报告发放
+          this.mailPrint.hide(); // 打印邮寄单
+          this.exportExl.show(); // 导出
+        } else {
+          this.seniorRow.hide()
+          this.addIssue.show(); // 报告发放
+          this.mailPrint.show(); // 打印邮寄单
+          this.exportExl.hide(); // 导出
+        }
+        var columns = [];
+        // 1:自取,2:代领,3:邮寄,4:传真  来源于旧代码
+        var issueWay = { '1': '自取', '2': '代领', '3': '邮寄', '4': '传真', 'default': '' }
+        columns.push({ title: "reportId", field: "reportId", checkbox: true });
+        columns.push({
+          title: "标记", field: "reportType", width: 30, formatter: function (value, row, index) {
+            var display = "";
+            var stateObj = {
+              "temporary": { "name": "临", "colors": " layui-color-red " },
+              "formal": { "name": "正", "colors": " layui-color-green " },
+            }
+            if (value && stateObj[value]) {
+              display += '<div class="text-center">'
+              display += ' <span class="delHsCode' + index + ' span-round ' + stateObj[value].colors + '"'
+              display += 'onmouseenter="InitObj.delHsCode(' + index + ',&quot;' + value + '&quot;,event)"'
+              display += '>' + stateObj[value].name + '</span></div>';
+            }
+            return display;
+          }
+        });
+        columns.push({ title: "报告编号", field: "reportSn", width: 90 });
+        columns.push({ title: "委托编号", field: "consignSn", width: 80 });
+        columns.push({
+          title: "约定发放方式", field: "appointIssueWay", width: 50, formatter: function (value, row, index) {
+            return issueWay[value] || issueWay['default'];
+          }
+        });
+        if (1 === num) {
+          columns.push({
+            title: "发放方式", field: "issueWay", width: 50, formatter: function (value, row, index) {
+              return issueWay[value] || issueWay['default'];
+            }
+          });
+          columns.push({ title: "经办人", field: "operatorName", width: 50 });
+        }
+        columns.push({ title: "委托单位", field: "consignUnitName", width: 80 });
+        columns.push({
+          title: "要求报告日期", field: "requireReportDate", width: 50, formatter: function (value) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        if (1 === num) {
+          columns.push({
+            title: "发放日期", field: "issueDate", width: 50, formatter: function (value) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+        }
+        columns.push({
+          title: "更多", field: "more", width: 130,
+          formatter: function (value, row, index) {
+            var more = '' /** "更多项展示内容：工程项目，缴费状态，样品名称，样品编号，委托日期，签发日期；"
+            "只展示有值的内容；样品名称与样品编号一起显示"; */
+            var feeStatusObj = { '0': '已作废', '1': '已结清', '2': '部分缴费', '3': '未缴费', 'default': '' }
+            if (row.projectName) { more += row.projectName + '；' }
+            if (row.feeStatus) { more += feeStatusObj[row.feeStatus] + '；' }
+            if (row.testObjectNames) { more += row.testObjectNames + '；' }
+            if (row.consignDate) { more += row.consignDate + '；' }
+            if (row.signDate) { more += row.signDate + '；' }
+            return more;
+          }
+        });
+        if (1 === num) {
+          columns.push({
+            title: "操作",
+            field: "opt",
+            width: 90,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="查看详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.issueId + '&quot;,event)"><i class="iconfont icon-detail"></i></button>';
+              btns += '<button title="重新登记" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' + row.issueId + '&quot;,event)"><i class="iconfont icon-edit"></i></button>';
+              // 申请类型为【报告修改】且流程状态为审核通过的才显示报告修改  对比按钮
+              btns += '<button title="撤销登记" class="layui-btn layui-btn-sm" onclick="InitObj.goCancel(&quot;' + row.issueId + '&quot;,event)"><i class="iconfont icon-undo1"></i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+      },
+
+      //任务分配界面查询结果集：由当前用户分配的全部任务，创建者是当前登录用户的记录
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&issueStatus=' + this.dataType,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,158 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>重打修改 审核人员</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>审核人员</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+</head>
+
+<body>
+  <div class="height-full">
+    <div id="tb" class="layui-form-box">
+      <div>
+        <p>
+          <input class="userNameLike" type="text" id="userNameLike" oninput="InitObj.doFilter();" name="userNameLike"
+            placeholder="请输入用户/部门">
+        </p>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGridStaff"></table>
+  </div>
+  <script>
+
+    $(function () {
+      layui.use('layer', function () {
+        var layer = layui.layer;
+      });
+      InitObj.init()
+    })
+
+    var InitObj = {
+      treeObj: null, // 树形table返回对象 testInfoTreeGrid
+      staffRowArr: [], // 点击设置人员 当前行的数据 arr 
+      firstLoad: true,// 标识首次加载
+      treeResultStr: '', // 树形结构 对象转换字符串 
+      allData: [], // 搜素数组
+      // staffUrl: '../../data/table/staff.json', // 获取人员列表
+      treeUrl: 'reportCreateController.do?getPersonsForChoose', // 获取人员树形列表 
+      // staffData: JSON.parse(decodeURI(GetQueryString("auditPersonsData"))), // 获取传递的人员列表
+      staffData: parent.InitObj.auditPersonsData, // 获取传递的人员列表
+      // parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function () {
+        this.initStaffTreeData();
+      },
+      // 页面打开回调函数
+      openCallback: function () {
+        var rowArr = this.treeObj.treegrid("getChecked");
+        this.staffData.push({ "userId": rowArr[0].id, "realName": rowArr[0].name })
+        // parent.layer.close(this.parentIndex); //再执行关闭 
+        return this.staffData;
+      },
+      //搜索数据
+      doFilter: function () {
+        //装筛选结果的数组
+        var newData = new Array(), filter = $("#userNameLike").val()
+        if (this.allData.length == 0) {
+          return false;
+        }
+        var dataRows = this.allData.rows;
+        for (var i = 0; i < dataRows.length; i++) {
+          if (dataRows[i].name.indexOf(filter) >= 0) {
+            //先匹配的是部门名字,如果部门匹配上了,直接全部门放到newData里面
+            newData.push(dataRows[i]);
+          } else {
+            //如果部门没有匹配上,继续处理部门下的人员
+            var persons = dataRows[i].children
+            if (persons.length > 0) {
+              for (var j = 0; j < persons.length; j++) {
+                //匹配人名
+                if (persons[j].name.indexOf(filter) >= 0) {
+                  newData.push(persons[j]);
+                }
+              }
+            }
+          }
+        }
+        if (filter == "") {
+          this.treeObj.treegrid('loadData', this.allData);
+        } else {
+          this.treeObj.treegrid('loadData', newData);
+        }
+      },
+      // 初始化人员数据待选择，以树形方式显示 
+      initStaffTreeData: function () {
+        var that = this;
+        this.treeObj = $('#dataGridStaff').treegrid({
+          url: this.treeUrl,
+          idField: 'id',
+          treeField: 'name',
+          singleSelect: true,
+          toolbar: '#tb',
+          method: 'get',
+          fit: true,
+          fitColumns: true,
+          loadMsg: loadMsgDatagrid,
+          columns: [[
+            { title: 'id', field: 'id', checkbox: true },
+            { title: '部门/人员', field: 'name', width: 180 },
+          ]],
+          loadFilter: function (data) {
+            if (that.firstLoad) {
+              that.treeResultStr = JSON.stringify(data.rows); // js对象深度复制成字符串
+              that.allData = data;
+              that.firstLoad = false;
+            }
+            return data;
+          },
+          onLoadSuccess: function (data) {
+          },
+          onSelect: function (rowIndex, rowData) {
+            var arr = that.staffData
+            if (arr.length !== 0) {
+              for (var i = 0; i < arr.length; i++) {
+                if (rowIndex.id === arr[i].userId) {
+                  layer.msg('此人员您已经选择过了', { icon: 2 });
+                  $('#dataGridStaff').treegrid("unselectAll", rowIndex);
+                  return;
+                }
+              }
+            }
+          },
+        })
+      }
+    }
+
+
+
+
+  </script>
+</body>
+
+</html>

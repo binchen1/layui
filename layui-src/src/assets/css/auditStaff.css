@@ -1,0 +1,35 @@
+.btnClose {
+  position: relative;
+  padding:0 20px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  color: #fff ;
+  display:inline-block;
+  margin-right: 15px;
+  background: #690;
+  margin-bottom:10px;
+}
+.btnClose a{
+  position: absolute;
+  right: 2px;
+  top: -9px;
+  font-size:20px;
+  color: #fff ;
+
+}
+.btnClose a:hover{
+  cursor:pointer;
+}
+.auditPersons {
+  min-height: 36px;
+  line-height: 20px;
+  margin-bottom: 10px;
+  height: 100px;
+  padding: 16px 10px;
+  border: 1px solid #b9b5b5;
+}
+
+#auditPersonsBox{
+  display: inline;
+}

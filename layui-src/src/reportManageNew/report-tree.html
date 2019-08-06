@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../css/layui.css">
+  <link rel="stylesheet" href="../assets/css/common.css">
+
+  <script type="text/javascript" src="../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../easyui-1.5.5.2/index.js"></script>
+  <script src="../layui.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <div class="layui-container" style="height:100%">
+    <div class="layui-row layui-col-space20" style="height:100%">
+      <div class="layui-col-xs6" style="height:100%">
+        <!-- 你的内容 9/12 -->
+        <ul id="tt"></ul>
+      </div>
+      <div class="layui-col-xs6" style="height:100%">
+        <!-- 你的内容 3/12 -->
+        <table class="easyui-datagrid" id="dataGridStaff" style="height:100%"></table>
+      </div>
+    </div>
+
+  </div>
+  <script>
+
+    $(function () {
+      var tableData;
+      $.getJSON('../data/table/tree.json', function (data) {
+        console.log('19', data)
+      })
+    })
+    $('#tt').tree({
+      data: [{
+        text: 'Item1',
+        state: 'closed',
+        children: [{
+          text: 'Item11'
+        }, {
+          text: 'Item12'
+        }]
+      }, {
+        text: 'Item2',
+        state: 'closed',
+        children: [{
+          text: 'Item21',
+          state: 'closed',
+          children: [{
+            text: 'Item21'
+          }, {
+            text: 'Item22'
+          }]
+        }, {
+          text: 'Item12'
+        }]
+      }, {
+        text: 'Item3'
+      }]
+    });
+    //  initTestData()
+    initTestData2()
+    // 初始化试验数据；包括样品和参数，以树形方式显示
+    var testInfoTreeGrid;
+    var allParamData;
+    function initTestData2() {
+      testInfoTreeGrid = $('#dataGridStaff').treegrid({
+        url: '../data/table/tree.json',
+        idField: 'id',
+        treeField: 'text',
+        method: 'get',
+        columns: [[
+          { title: 'id', field: 'id', checkbox: true },
+          { title: '部门/人员', field: 'text', width: 180 },
+          { title: '待处理数量',field: 'price',  width: 60, align: 'center' },
+        ]]
+      });
+    }
+    function initTestData() {
+      var firstLoad = true;//标识首次加载
+
+      // var selectedTask = parent.getSelectRows();
+      // console.log(selectedTask);
+      // console.log(objectId);
+      //初始化页面全局变量
+
+      testInfoTreeGrid = $('#dataGridStaff').treegrid({
+        url: '../data/table/tree.json',
+        method: 'get',
+        idField: 'id',
+        treeField: 'displayName',
+        fit: true,
+        loadMsg: " 数据加载中... ",
+        rownumbers: false,
+        singleSelect: false,
+        fitColumns: true,
+        scrollbarSize: 0,
+        striped: true,
+        loadFilter: function (data) {
+          if (firstLoad) {
+            allParamData = JSON.parse(JSON.stringify(data));//js对象深度复制
+            firstLoad = false;
+          }
+          return data;
+        },
+        columns: [[
+          { title: 'id', field: 'id', checkbox: true },
+          { title: '样品id', field: '_parentId', hidden: true },
+          { title: '样品/参数', field: 'type', hidden: true },
+          { title: '样品/参数id', field: 'realId', hidden: true },
+          { title: '名称', field: 'displayName', width: 160 },
+          { title: '数量', field: 'value', width: 160 }
+        ]],
+        onSelect: function (row) {
+
+        },
+        onCheck: function (row) {
+          t = $(this);
+          opts = t.treegrid("options");
+          var idField = opts.idField, id = row[idField];
+          //如果当前节点被勾选,那么勾选该节点的子节点
+          $.each(t.treegrid("getChildren", id), function (i, n) {
+            t.treegrid("select", n[idField]);
+          });
+        },
+        onUncheck: function (row) {
+          t = $(this);
+          opts = t.treegrid("options");
+          var idField = opts.idField, id = row[idField];
+          $.each(t.treegrid("getChildren", id), function (i, n) {
+            t.treegrid("unselect", n[idField]);
+          });
+        },
+        //这个方法在勾选header上的checkbox时触发
+        onCheckAll: function (rows) {
+          t = $(this);
+          var idField = t.treegrid("options").idField;
+          $.each(rows, function (index, roww) {
+            t.treegrid("select", roww[idField]);
+          })
+        }
+      });
+      $('#testInfo').treegrid('getPager').pagination({
+        beforePageText: '',
+        afterPageText: '/{pages}',
+        displayMsg: '{from}-{to}共 {total}条',
+        showPageList: true,
+        showRefresh: true
+      });
+      $('#testInfo').treegrid('getPager').pagination({
+        onBeforeRefresh: function (pageNumber, pageSize) {
+          $(this).pagination('loading');
+          $(this).pagination('loaded');
+        }
+      });
+    }
+
+  </script>
+</body>
+
+</html>

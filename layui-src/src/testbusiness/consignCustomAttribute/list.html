@@ -1,0 +1,209 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>委托自定义属性管理</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+
+  <!-- <script type="text/javascript" src="plug-in/serializejson/jquery.serializejson.min.js"></script> -->
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <style>
+
+  </style>
+</head>
+
+<body>
+
+  <div id="tb" class="tb-box">
+    <div class="search-box tb-box-form">
+      <form id="commonQueryForm" class="layui-form">
+        <div class="layui-row">
+          <div class="layui-col-xs8">
+            <div class="layui-input-inline" style="width:80%">
+              <input name="attributeName" class="layui-input" placeholder="输入自定义属性名称" autocomplete="off">
+            </div>
+            <div class="layui-input-inline">
+              <a href="#" class="easyui-linkbutton btn-4-search" iconCls="iconfont icon-search" plain="true">查询</a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="tb-box-btn" id="functionButton">
+      <span>
+        <a style="display:none" data-funCode="addConsignCustomAttribute" class="easyui-linkbutton btn-4-add"
+          onclick="layerOpenFun('consignCustomAttributeController.do?edit','新增',['60%','50%'],['保存','取消'],'','openCallback')"
+          plain="true" icon="iconfont icon-add">新增</a>
+        <a style="display:none" data-funCode="updateConsignCustomAttribute" class="easyui-linkbutton btn-4-update"
+          plain="true" icon="iconfont icon-edit">修改</a>
+        <a style="display:none" data-funCode="delConsignCustomAttribute" class="easyui-linkbutton btn-4-delete"
+          plain="true" icon="iconfont icon-remove">删除</a>
+      </span>
+    </div>
+  </div>
+  <table class="easyui-datagrid" id="dataGrid"></table>
+
+
+  <script>
+    $(function () {
+
+      layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+      })
+
+      initDataGrid();
+      // 回车事件
+      commonQryKeyDown()
+      // common.js里的此函数是获取按钮或功能权限的 勿删
+      funCode()
+
+      /**
+       * 查询按钮事件
+       */
+      $('.btn-4-search').click(function () {
+        reloadDataGrid(true);
+      });
+
+      // /**
+      //  * 重置按钮事件
+      //  */
+      // $('.btn-4-reset').click(function () {
+      //   $('.search-box form')[0].reset();
+      //   $('.btn-4-search').trigger('click');
+      // });
+
+
+      /**
+       * 修改按钮事件
+       */
+      $('.btn-4-update').click(function () {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          btnTipMsg(event, '请选择需要修改的数据')
+          return;
+        }
+        var url = 'consignCustomAttributeController.do?edit&id=' + row.id;
+
+        // layerCreateWindow('修改', url, ['保存', '取消'], ['40%', '30%'], '.btn-4-submit');
+        layerOpenFun(url, '修改', ['60%', '50%'], ['保存', '取消'], '', 'openCallback')
+      });
+
+      /**
+       * 删除按钮事件
+       */
+      $('.btn-4-delete').click(function () {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          btnTipMsg(event, '请选择需要删除的数据')
+          return;
+        }
+        ajaxRequest('consignCustomAttributeController.do?doDel', { id: row.id }, confirmAndDoReqCallback, false, true)
+        // confirmAndDoReq({
+        //   url: 'consignCustomAttributeController.do?doDel',
+        //   data: {
+        //     id: row.id
+        //   },
+        //   success: function (data) {
+
+        //     if (data.success) {
+        //       layerAlertFun(data.msg, '1');
+        //       reloadDataGrid();
+        //     } else {
+        //       layerAlertFun(data.msg, '2');
+        //     }
+        //   }
+        // });
+
+      });
+    });
+    // 删除数据后回调函数
+    function confirmAndDoReqCallback(res) {
+      if (res.success) {
+        layerAlertFun(res.msg, '1', []);
+        reloadDataGrid();
+      } else {
+        layerAlertFun(res.msg, '2', []);
+      }
+    }
+    // 快速查询input框绑定的回车事件
+    function commonQryKeyDown() {
+      $('#commonQueryForm input').bind('keypress', function (event) {
+        var theEvent = event || window.event;
+        var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+        if (code === 13) {
+          reloadDataGrid();
+          return false;//问题解决关键
+        }
+      });
+    }
+    var dataGrid;
+
+    function initDataGrid() {
+      dataGrid = $('#dataGrid').datagrid({
+        url: 'consignCustomAttributeController.do?datagrid',
+        singleSelect: true,
+        pagination: true,
+        fit: true,
+        fitColumns: true,
+        toolbar: '#tb',
+        sortName: 'seq',
+        sortOrder: 'asc',
+        scrollbarSize: 0,
+        columns: [[
+          { title: "ID", field: "id", checkbox: true },
+          { title: "自定义属性名称", field: "attributeName", width: 120 },
+          {
+            title: "是否盲样", field: "isBlind", width: 120, formatter: function (value) {
+              var res = '否';
+              if (value == '1') {
+                res = '是';
+              }
+              return res;
+            }
+          },
+          { title: "排序值", field: "seq", width: 80, sortable: true },
+          //{title: "是否已删除", field: "contactPerson"},
+          { title: "创建时间", field: "createDate", width: 80 },
+        ]],
+        onDblClickRow: function (index, row) {
+          var url = 'consignCustomAttributeController.do?edit&id=' + row.id;
+          if ($('.btn-4-update').is(':hidden')) {
+            layerAlertFun('您没有修改权限，请添加', '5')
+          } else {
+
+            // layerOpenFun(url, '修改', ['60%', '50%'], ['保存', '取消'], '', 'openCallback', '', '.btn-4-submit')
+            layerOpenFun(url, '修改', ['60%', '50%'], ['保存', '取消'], '', 'openCallback')
+          }
+        },
+        onLoadSuccess: function (data) {
+          getPagerFun('#dataGrid')
+        }
+      });
+    }
+
+    function reloadDataGrid(goFirstPage) {
+      var queryParams = $('.search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid.datagrid('reload', queryParams);
+      }
+    }
+  </script>
+</body>
+
+</html>

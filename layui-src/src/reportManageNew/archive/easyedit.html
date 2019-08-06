@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+</head>
+
+<body>
+  <h2>Cell Editing in DataGrid</h2>
+  <p>Click a cell to start editing.</p>
+  <div style="margin:20px 0;"></div>
+
+  <table id="tt" class="easyui-datagrid"></table>
+  <div onclick="initObjadd()">添加</div>
+
+  <script type="text/javascript">
+   var tableData, addNumber = 1;
+    // $(function () {
+     
+      getData();
+      function getData() {
+        var that = this
+        $.getJSON('../../data/table/demo1.json', function (data) {
+          console.log('19', data)
+          tableData = data;
+          init(data)
+        })
+      }
+
+      function init(data) {
+        $('#tt').datagrid({
+          title: 'Editable DataGrid',
+          iconCls: 'icon-edit',
+          width: '100%',
+          // height: 250,
+          singleSelect: true,
+          idField: 'id',
+          method: 'get',
+          data: data,
+          // url: '../../data/table/demo1.json',
+          columns: [[
+            { field: 'id', title: 'Item ID', width: 60 },
+            { field: 'sign', title: 'List Price', width: 80, align: 'right', editor: { type: 'numberbox', options: { precision: 1 } } },
+            { field: 'experience', title: 'Unit Cost', width: 80, align: 'right', editor: 'numberbox' },
+            { field: 'ip', title: 'Attribute', width: 50, editor: 'text' },
+            {
+              field: 'number', title: 'Status', width: 50, align: 'center',
+            },
+            {
+              field: 'opt', title: 'Action', width: 190, align: 'center',
+              formatter: function (value, row, index) {
+                if (row.editing) {
+                  var s = '<a href="#" onclick="saverow(this)">Save</a> ';
+                  var c = '<a href="#" onclick="cancelrow(this)">Cancel</a>';
+                  return s + c;
+                } else {
+                var e = '<a href="#" onclick="editrow(this)">Edit</a> ';
+                var d = '<a href="#" onclick="deleterow(this)">Delete</a> ';
+                // var s = '<a href="#" onclick="saverow(this)">Save</a> ';
+                var s = '';
+                return e + d + s;
+                }
+              }
+            }
+          ]],
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            // getPagerFun('#dataGrid')
+            console.log('关联检测任务', data)
+          },
+          onBeforeEdit: function (index, row) {
+            row.editing = true;
+            updateActions(index);
+          },
+          onAfterEdit: function (index, row) {
+            row.editing = false;
+            updateActions(index);
+          },
+          onCancelEdit: function (index, row) {
+            row.editing = false;
+            updateActions(index);
+          }
+        });
+      }
+      function initObjadd() {
+      var data= new Date(new Date()).Format("yyyy-MM-dd")
+       console.log(data)
+      var name = "张红" + addNumber++
+      tableData.push({ "address": '请输入归档地址', "configureDate": data, "typeName": name })
+      init(tableData)
+    }
+    // });
+  
+    function updateActions(index) {
+      $('#tt').datagrid('updateRow', {
+        index: index,
+        row: {}
+      });
+    }
+
+
+    function getRowIndex(target) {
+      var tr = $(target).closest('tr.datagrid-row');
+      return parseInt(tr.attr('datagrid-row-index'));
+    }
+    function editrow(target) {
+      $('#tt').datagrid('beginEdit', getRowIndex(target));
+    }
+    function deleterow(target) {
+      $.messager.confirm('Confirm', 'Are you sure?', function (r) {
+        if (r) {
+          $('#tt').datagrid('deleteRow', getRowIndex(target));
+        }
+      });
+    }
+    function saverow(target) {
+      $('#tt').datagrid('endEdit', getRowIndex(target));
+    }
+    function cancelrow(target) {
+      $('#tt').datagrid('cancelEdit', getRowIndex(target));
+    }
+  </script>
+</body>
+
+</html>

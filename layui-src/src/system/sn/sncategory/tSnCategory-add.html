@@ -1,0 +1,502 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<html>
+
+<head>
+  <title>编号种类</title>
+  <script type="text/javascript">
+    //获得根目录
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var path = prePath;
+    var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+    var basePath = prePath + postPath;
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+  </script>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <style type="text/css">
+    .combo_self {
+      height: 22px !important;
+      width: 150px !important;
+    }
+
+    .layout-header .btn {
+      margin: 0;
+      float: none !important;
+    }
+
+    .btn-default {
+      height: 35px;
+      line-height: 35px;
+      font-size: 14px;
+    }
+  </style>
+
+  <script type="text/javascript">
+    $(function () {
+      $(".combo").removeClass("combo").addClass("combo combo_self");
+      $(".combo").each(function () {
+        $(this).parent().css("line-height", "0px");
+      });
+    });
+
+    /**树形列表数据转换**/
+    function convertTreeData(rows, textField) {
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        row.text = row[textField];
+        if (row.children) {
+          row.state = "open";
+          convertTreeData(row.children, textField);
+        }
+      }
+    }
+    /**树形列表加入子元素**/
+    function joinTreeChildren(arr1, arr2) {
+      for (var i = 0; i < arr1.length; i++) {
+        var row1 = arr1[i];
+        for (var j = 0; j < arr2.length; j++) {
+          if (row1.id == arr2[j].id) {
+            var children = arr2[j].children;
+            if (children) {
+              row1.children = children;
+            }
+
+          }
+        }
+      }
+    }
+  </script>
+  <script type="text/javascript">
+//编写自定义JS代码
+  </script>
+  <script type="text/javascript">
+    var dic = new Object();
+    $(document).ready(function () {
+      var _list = [];
+      _list.push("@bpm_status@");
+      _list.push("@sf_yn@");
+      _list.push("@SNType@");
+      _list.push("@SNStatus@");
+      if (_list.length > 0) {
+        var json = new Object();
+        ;
+        json["list"] = JSON.stringify(_list);
+        $.ajax({
+          url: basePath + '/systemController.do?getDictContent',
+          data: json,
+          dataType: "json",
+          type: "POST",
+          contentType: "application/x-www-form-urlencoded",
+          //traditional: true,  
+          success: function (responseJSON) {
+            dic = responseJSON.attributes;
+            getSearchFormInfo();
+            var id = GetQueryString('id');
+            if (id && id != '' && id != 'null') {
+              InitFormData(id);
+              InitSubTabs(id)
+              $("#formobj").attr("action", basePath + "/tSnCategoryController.do?doUpdate");
+            } else {
+              InitSubTabs(null);
+              $("#formobj").attr("action", basePath + "/tSnCategoryController.do?doAdd");
+            }
+          }
+        });
+      }
+      $('#tt').tabs({
+        onSelect: function (title) {
+          $('#tt .panel-body').css('width', 'auto');
+        }
+      });
+
+      $(".tabs-wrap").css('width', '100%');
+    });
+    //	< !--初始化select，radio，list，checkbox-- >
+    var getSearchFormInfo = function () {
+
+      var sb = '';
+      var item = dic['sf_yn'];
+      for (var h = 0; h < item.length; h++) {
+        if (item[h].typecode == '') {
+          sb += '<input type="radio" name="isDefault"  width="30" style="width: 30px" value="' + item[h].typecode + '" checked="checked">' + item[h].typename + '</input>';
+        } else if (item[h].typecode == 'N') {
+
+          sb += '<input type="radio" name="isDefault"  width="30" style="width: 30px" value="' + item[h].typecode + '" checked="checked">' + item[h].typename + '</input>';
+        } else {
+          sb += '<input type="radio" name="isDefault"  width="30" style="width: 30px" value="' + item[h].typecode + '" >' + item[h].typename + '</input>';
+        }
+      }
+      $('#complexInputisDefault').html(sb);
+      $("input[name='isDefault']").show();
+
+      var sb = '';
+      // sb += '<select id="type" name="type" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+      sb += '<select id="type" name="tSnModelList[#index#].type" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+      var item = dic['SNType'];
+      for (var h = 0; h < item.length; h++) {
+        if (item[h].typecode == '') {
+          sb += '<option value="' + item[h].typecode + '" selected="selected">' + item[h].typename + '</option> ';
+        } else {
+          sb += '<option value="' + item[h].typecode + '">' + item[h].typename + '</option> ';
+        }
+      }
+      sb += '</select>';
+      $('#complexInputTSnModeltype').html(sb);
+      var sb = '';
+      // sb += '<select id="status" name="status" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+      sb += '<select id="status" name="tSnModelList[#index#].status" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+      var item = dic['SNStatus'];
+      for (var h = 0; h < item.length; h++) {
+        if (item[h].typecode == '') {
+          sb += '<option value="' + item[h].typecode + '" selected="selected">' + item[h].typename + '</option> ';
+        } else {
+          sb += '<option value="' + item[h].typecode + '">' + item[h].typename + '</option> ';
+        }
+      }
+      sb += '</select>';
+      $('#complexInputTSnModelstatus').html(sb);
+    }
+    //  < !--查询传入静态参数的方法-->
+    function GetQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) return unescape(r[2]);
+      return null;
+    }
+    //   < !--针对update，填充表单对象的数据-- >
+    function InitFormData(id) {
+      $.ajax({
+        url: basePath + '/rest/tSnCategoryController/' + id,
+        type: "GET",
+        //traditional: true,  
+        success: function (res) {
+          var data = JSON.parse(res);
+          //对属性赋值
+
+          $("#id").val(data.id);
+
+          $("#createName").val(data.createName);
+
+          $("#createBy").val(data.createBy);
+          if (data.createDate && data.createDate != '' && data.createDate != 'null') {
+            if (typeof data.createDate == 'number') {
+              var newDate = new Date();
+              newDate.setTime(data.createDate);
+              $("#createDate").val(DateFormat(newDate, 'yyyy-MM-dd'));
+            } else {
+              $("#createDate").val(data.createDate);
+            }
+          }
+
+          $("#updateName").val(data.updateName);
+
+          $("#updateBy").val(data.updateBy);
+          if (data.updateDate && data.updateDate != '' && data.updateDate != 'null') {
+            if (typeof data.updateDate == 'number') {
+              var newDate = new Date();
+              newDate.setTime(data.updateDate);
+              $("#updateDate").val(DateFormat(newDate, 'yyyy-MM-dd'));
+            } else {
+              $("#updateDate").val(data.updateDate);
+            }
+          }
+
+          $("#sysOrgCode").val(data.sysOrgCode);
+
+          $("#sysCompanyCode").val(data.sysCompanyCode);
+
+          $("#bpmStatus").val(data.bpmStatus);
+
+          $("#name").val(data.name);
+
+          $("#remarks").val(data.remarks);
+
+          $("#pid").val(data.pid);
+          if (data.isDefault == 'Y') {
+            $("[name='isDefault']:even").attr("checked", 'true');//选中所有奇数   
+          } else {
+            $("[name='isDefault']:odd").attr("checked", 'true');//选中所有奇数   
+          }
+        }
+      });
+    }
+    function InitSubTabs(id) {
+      $('#tt').tabs('add', {
+        id: "tSnModel",
+        title: '编号',
+        href: basePath + "/tSnCategoryController.do?goTSnModel&id=" + id,
+        icon: "icon-search",
+        closable: true,
+        tools: [{
+          /* 		iconCls:'icon-mini-refresh',
+              handler:function(){
+              	
+              } */
+        }]
+      });
+    }
+    /**
+     * 获取
+     * @return 父表名称
+     */
+    function getParentName() {
+      return 'tSnCategory';
+    }
+  </script>
+</head>
+
+<body>
+  <form id="formobj" name="formobj" method="post">
+    <input type="hidden" id="btn_sub" class="btn_sub">
+    <input id="id" name="id" type="hidden" />
+    <input id="createName" name="createName" type="hidden" />
+    <input id="createBy" name="createBy" type="hidden" />
+    <input id="createDate" name="createDate" type="hidden" />
+    <input id="updateName" name="updateName" type="hidden" />
+    <input id="updateBy" name="updateBy" type="hidden" />
+    <input id="updateDate" name="updateDate" type="hidden" />
+    <input id="sysOrgCode" name="sysOrgCode" type="hidden" />
+    <input id="sysCompanyCode" name="sysCompanyCode" type="hidden" />
+    <input id="bpmStatus" name="bpmStatus" type="hidden" />
+    <input id="isDelete" name="isDelete" type="hidden" value="0" />
+
+    <table style="width: 600px;" cellpadding="0" cellspacing="1" class="formtable">
+      <tr>
+        <td align="right"><label class="Validform_label"> <span class="layui-color-red">*</span>名称: </label>
+        </td>
+        <td class="value"><input id="name" name="name" type="text" style="width: 150px" class="inputxt" datatype="*"
+            ignore="ignore" />
+          <span class="Validform_checktip"></span> <label class="Validform_label" style="display: none;">名称</label></td>
+
+      </tr>
+
+      <tr>
+        <td align="right"><label class="Validform_label"> 备注: </label>
+        </td>
+        <td class="value"><input id="remarks" name="remarks" type="text" style="width: 150px" class="inputxt"
+            ignore="ignore" />
+          <span class="Validform_checktip"></span> <label class="Validform_label" style="display: none;">备注</label></td>
+
+      </tr>
+
+      <!-- <tr>
+        <td align="right"><label class="Validform_label"> 上级目录:
+          </label></td>
+        <td class="value"><input id="pid" name="pid" type="text" style="width: 150px" class="inputxt easyui-combotree"
+            ignore="ignore" data-options="panelHeight:'220',
+				            url: basePath+'/tSnCategoryController.do?datagrid&field=id,name',  
+				                    loadFilter: function(data) {
+				                    	var rows = data.rows || data;
+				                    	var win =parent;
+				                    	var listRows = win.getDataGrid().datagrid('getData');
+				                    	joinTreeChildren(rows, listRows);
+				                    	convertTreeData(rows, 'name');
+				                    	return rows; 
+				                    },
+				                    onLoadSuccess: function() {
+				                    	var win =parent;
+				                    	var currRow = win.getDataGrid().datagrid('getSelected');
+				                    	if(!'${tSnCategoryPage.id}') {
+				                    		//增加时，选择当前父菜单
+				                    		if(currRow) {
+				                    			$('#pid').combotree('setValue', currRow.id);
+				                    		}
+				                    	}else {
+				                    		//编辑时，选择当前父菜单
+				                    		if(currRow) {
+				                    			$('#pid').combotree('setValue', currRow.pid);
+				                    		}
+				                    	}
+				                    }">
+          <span class="Validform_checktip"></span> <label class="Validform_label" style="display: none;">上级目录</label>
+        </td>
+      </tr> -->
+
+      <tr>
+        <td align="right"><label class="Validform_label"> 默认: </label>
+        </td>
+        <td class="value">
+          <span id="complexInputisDefault"></span>
+          <span class="Validform_checktip"></span>
+          <label class="Validform_label" style="display: none;">默认</label>
+        </td>
+
+      </tr>
+
+    </table>
+    <div style="width: auto;height: 200px;">
+      <!-- 增加一个div，用于调节页面大小，否则默认太小 -->
+      <div style="width:800px;height:1px;"></div>
+      <div id="tt" tabposition="top" border="flase" style="margin:0px;padding:0px;overflow-x:hidden;width:auto;"
+        class="easyui-tabs" fit="false">
+        <!-- <div title="many子表" href="../../../../tTestOneController.do?tTestManyList&amp;id=402882105e27b648015e27bb1c660003" style="margin:0px;padding:0px;overflow-x:hidden;overflow-y:auto;width=auto;">
+	  			 </div>-->
+      </div>
+    </div>
+  </form>
+  <!-- 添加 附表明细 模版 -->
+  <table style="display:none">
+    <tbody id="add_tSnModel_table_template">
+      <tr>
+        <td align="center" style="width: 35px;">
+          <div style="width: 34px;" name="xh"></div>
+        </td>
+        <td align="center" style="width:35px;">
+          <input style="width: 34px;" type="checkbox" name="ck" />
+        </td>
+        <td align="left" style="width:126px;">
+          <input name="tSnModelList[#index#].name" maxlength="500" type="text" class="inputxt" style="width:125px;"
+            ignore="checked" datatype="*">
+          <input name="tSnModelList[#index#].isDelete" type="hidden">
+          <label class="Validform_label" style="display: none;">名称</label>
+        </td>
+        <td align="left" style="width:126px;">
+          <span id="complexInputTSnModeltype"></span>
+          <label class="Validform_label" style="display: none;">用途</label>
+        </td>
+        <td align="left" style="width:86px;">
+          <input name="tSnModelList[#index#].remarks" maxlength="2000" type="text" class="inputxt" style="width:85px;"
+            ignore="ignore">
+          <label class="Validform_label" style="display: none;">备注</label>
+        </td>
+        <td align="left" style="width:66px;">
+          <input name="tSnModelList[#index#].version" maxlength="32" type="text" class="inputxt" style="width:65px;"
+            ignore="ignore" datatype="n">
+          <label class="Validform_label" style="display: none;">版本</label>
+        </td>
+        <td align="left" style="width:126px;">
+          <span id="complexInputTSnModelstatus"></span>
+          <label class="Validform_label" style="display: none;">状态</label>
+        </td>
+        <td align="left" style="width:126px;">
+          <input name="tSnModelList[#index#].startTime" maxlength="32" ignore="ignore" type="text" class="Wdate"
+            onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:125px;">
+          <label class="Validform_label" style="display: none;">启用时间</label>
+        </td>
+        <td align="left" style="width:126px;">
+          <input name="tSnModelList[#index#].endTime" maxlength="32" ignore="ignore" type="text" class="Wdate"
+            onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:125px;">
+          <label class="Validform_label" style="display: none;">停用时间</label>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+<script type="text/javascript">
+  function submitSave() {}
+  $("#formobj").Validform({
+    tiptype: 4,
+    btnSubmit: "#btn_sub",
+    btnReset: "#btn_reset",
+    ajaxPost: true,
+    beforeCheck: function (curform) {
+      //在表单提交执行验证之前执行的函数，curform参数是当前表单对象。
+      //这里明确return false的话将不会继续执行验证操作;  
+      return dataRequired()
+    },
+    usePlugin: {
+      passwordstrength: {
+        minLen: 6,
+        maxLen: 18,
+        trigger: function (obj, error) {
+          if (error) {
+            obj.parent().next().find(".Validform_checktip").show();
+            obj.find(".passwordStrength").hide();
+          } else {
+            $(".passwordStrength").show();
+            obj.parent().next().find(".Validform_checktip").hide();
+          }
+        }
+      }
+    },
+    callback: function (data) {
+      var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+      if (data.success) {
+        parent.layer.close(index); //再执行关闭  
+        parent.layerAlertFun(data.msg, 6, [])
+        parent.reloadDataGrid();
+      } else {
+        if (data.responseText == '' || data.responseText == undefined) {
+          layerAlertFun(data.msg, 5, [])
+          $.Hidemsg();
+        } else {
+          try {
+            var emsg = data.responseText.substring(data.responseText.indexOf('错误描述'), data.responseText.indexOf('错误信息'));
+            layerAlertFun(emsg, 5, [])
+            $.Hidemsg();
+          } catch (ex) {
+            layerAlertFun(data.responseText + "", 5, [])
+            $.Hidemsg();
+          }
+        }
+        return false;
+      }
+      // var win = frameElement.api.opener;
+      // if (data.success == true) {
+      //   frameElement.api.close();
+      //   win.tip(data.msg);
+      // } else {
+      //   if (data.responseText == '' || data.responseText == undefined) {
+      //     $.messager.alert('错误', data.msg);
+      //     $.Hidemsg();
+      //   } else {
+      //     try {
+      //       var emsg = data.responseText.substring(data.responseText.indexOf('错误描述'), data.responseText.indexOf('错误信息'));
+      //       $.messager.alert('错误', emsg);
+      //       $.Hidemsg();
+      //     } catch (ex) {
+      //       $.messager.alert('错误', data.responseText + "");
+      //       $.Hidemsg();
+      //     }
+      //   }
+      //   return false;
+      // }
+
+      // win.reloadTable();
+    }
+  });
+  function dataRequired() {
+    var formdata = $('#formobj').serializeJSON();
+    if (!formdata.name) {
+      formTipFun('名称不能为空', $('input[name="name"]'))
+      return false
+    }
+    var len = $('#add_tSnModel_table tr').length;
+    if (len > 0) {
+      var objArr = formdata.tSnModelList;
+      var newName = '';
+      for (var i = 0; i < len; i++) {
+        if (!objArr[i + '.name']) {
+          formTipFun('编号类型中名称不能为空', $('input[name="tSnModelList[' + i + '].name"]'))
+          return false;
+        }
+        if (newName === objArr[i + '.name']) {
+          formTipFun('编号类型中名称不能重复', $('input[name="tSnModelList[' + i + '].name"]'))
+          return false;
+        } else {
+          newName = objArr[i + '.name']
+        }
+        if (!objArr[i + '.type']) {
+          formTipFun('编号类型中用途不能为空', $('select[name="tSnModelList[' + i + '].type"]'))
+          return false;
+        }
+        if (!objArr[i + '.status']) {
+          formTipFun('编号类型中状态不能为空', $('select[name="tSnModelList[' + i + '].status"]'))
+          return false;
+        }
+      }
+    }
+    return true
+  }
+</script>
+<script type="text/javascript">
+  document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/system/sn/sncategory/tSnCategory.js'><\/script>");
+</script>
+
+</html>

@@ -1,0 +1,43 @@
+<!-- <!--[if lte IE 9]> -->
+<style>
+  ._ie9-placeholder {
+    color: #666;
+  }
+</style>
+<script>
+  // 解决ie9及以下，input的placeholder失效的问题，用js模拟placeholder
+  //判断placeholder属性是否可以使用的方法
+  function placeholderSupport() {
+    return 'placeholder' in document.createElement('input');
+  }
+
+  $(function () {
+    if (!placeholderSupport()) {   // 判断浏览器是否支持 placeholder 不支持则执行一下自定义代码
+      $('[placeholder]').focus(function () {
+        var input = $(this);
+        //判断如果你密码框，获取焦点之后属性修改为密码框 如果没有密码框此处判断可以删除 一下同理
+        if (input[0].id == 'password') {
+          input.prop('type', 'password');
+        }
+        if (input.val() == input.attr('placeholder')) {
+          input.val('');
+          input.removeClass('_ie9-placeholder');
+        }
+      }).blur(function () {
+        var input = $(this);
+        if (input.val() == '' || input.val() == input.attr('placeholder')) {
+          //将所有input置为文本框  主要为了重置密码框
+          input.prop('type', 'text');
+          input.addClass('_ie9-placeholder');
+          input.val(input.attr('placeholder'));
+        } else {
+          //密码框填写密码后 密码后恢复 密码框
+          if (input[0].id == 'password') {
+            input.prop('type', 'password');
+          }
+        }
+      }).blur();
+    };
+  })
+</script>
+<!-- <![endif]--> -->

@@ -1,0 +1,239 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%-- <%@include file="/context/layuiCommon.jsp" %> --%>
+<!DOCTYPE html>
+<style>
+  .layui-form-label {
+    float: none;
+  }
+
+  .layui-input-block textarea {
+    overflow-y: auto;
+  }
+
+  .layui-input {
+    height: 30px;
+    margin-bottom: 5px;
+  }
+</style>
+
+
+<body>
+  <div class="layui-container" style="width: 100%;">
+    <input type="hidden" name="testTaskId" value="${testTask.id}" />
+    <form id="testConclusion" class="layui-form" lay-filter="form" style="width: 100%;padding-right: 0px;"
+      method="post">
+      <div class="layui-form-item" style="padding:10 0 0 0">
+        <div class="layui-input-block">
+          <a title="填写试验结论" name="editTestConclusion" class="layui-btn layui-btn-xs" value="${testTask.id}">
+            填写试验结论
+          </a>
+          <a title="取消" name="cancelTestConclusion" class="layui-btn layui-btn-xs layui-hide" value="${testTask.id}">
+            取消
+            <!-- <i class="layui-icon">&#xe642;</i> -->
+          </a>
+          <a title="保存" name="saveTestConclusion" class="layui-btn layui-btn-xs layui-hide" value="${testTask.id}">
+            保存
+            <!-- <i class="layui-icon">&#xe642;</i> -->
+          </a>
+        </div>
+      </div>
+      <div class="layui-form-item" style="padding:0 0 0 0">
+        <label class="layui-form-label layui-text" style="text-align:left;padding:0 0 0 0;">检测时间：</label>
+        <div class="layui-input-block">
+          <input type="text" title="" class="layui-input" name="testStartDate" id="testStartDate" disabled=""
+            placeholder="试验开始时间" />
+          <input type="text" title="" class="layui-input" name="testEndDate" id="testEndDate" disabled=""
+            placeholder="试验结束时间" />
+        </div>
+      </div>
+      <div class="layui-form-item" style="padding:0 0 0 0">
+        <label class="layui-form-label layui-text" style="text-align:left;padding:0 0 0 0;">是否合格：</label>
+        <div class="layui-input-block">
+          <input type="radio" title="合格" lay-filter="testConclusionRadio" name="testConclusionRadio" value="1"
+            disabled="" />
+          <input type="radio" title="不合格" lay-filter="testConclusionRadio" name="testConclusionRadio" value="0"
+            disabled="" />
+          <input type="radio" title="不判定" lay-filter="testConclusionRadio" name="testConclusionRadio" value="2"
+            disabled="" />
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label layui-text" style="text-align:left;padding:0 0 0 0;">检验结论：</label>
+      </div>
+      <div class="layui-form-item" style="padding:0 0 0 0">
+        <div class="layui-input-block">
+          <textarea placeholder="" class="layui-textarea" name="testConclusion" rows="2" disabled=""></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label layui-text" style="text-align:left;padding:0 0 0 0;">备注：</label>
+      </div>
+      <div class="layui-form-item" style="padding:0 0 0 0">
+        <div class="layui-input-block">
+          <textarea placeholder="" class="layui-textarea" name="testConclusionRemark" rows="2" disabled=""></textarea>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script>
+
+
+    $(function () {
+      var isQualified = '${testTask.isQualified}';
+      var testConclusion = '${testTask.testConclusion}';
+      var testConclusionRemark = '${testTask.testConclusionRemark}';
+      var testObjects = eval('${testObjects}');
+      var formM = null, laydateM = null;
+      layui.use(['form', 'laydate'], function () {
+        var $ = layui.$;
+        laydateM = layui.laydate
+        formM = layui.form;
+
+        // 页面初始化时，设置测验检测结论的值
+        setTestTaskConclusion(formM, laydateM, testObjects);
+        // 编辑试验检测结论
+        $("a[name='editTestConclusion']").on('click', function () {
+          editTestConclusion(formM);
+        });
+
+        // 取消试验检测结论的编辑
+        $("a[name='cancelTestConclusion']").on('click', function () {
+          cancelTestConclusionEdit(formM);
+        });
+
+        laydateM.render({
+          elem: '#testStartDate',
+          type: 'datetime'
+        });
+
+        laydateM.render({
+          elem: '#testEndDate',
+          type: 'datetime'
+        });
+
+      });
+
+      // 保存试验检测结论
+      $("a[name='saveTestConclusion']").on('click', function () {
+        var testTaskId = $("input[name='testTaskId']").val();
+        var isQualified = $(":checked[name='testConclusionRadio']").val();
+        var testConclusion = $("textarea[name='testConclusion']").val();
+        var testConclusionRemark = $("textarea[name='testConclusionRemark']").val();
+        var testStartDate = $("#testStartDate").val();
+        var testEndDate = $("#testEndDate").val();
+        var saveConclusionMaskIndex;
+        $.ajax({
+          url: basePath + '/testTaskController.do?doSaveTestTaskConclusion'
+          , data: {
+            testTaskId: testTaskId
+            , testObjectId: currentSelectedTestObjectId	// 这个参数是从 testSampleDetail.jsp里取的
+            , isQualified: isQualified
+            , testConclusion: testConclusion
+            , testConclusionRemark: testConclusionRemark
+            , testStartDate: testStartDate
+            , testEndDate: testEndDate
+          }
+          , dataType: "json"
+          , type: "post"
+          , beforeSend: function () {
+            saveConclusionMaskIndex = SHOW_LOAD_LAYER('正在处理...');
+          }
+          , success: function (res) {
+            CLOSE_LOAD_LAYER(saveConclusionMaskIndex);
+            cancelTestConclusionEdit(formM);
+            layer.alert(res.msg, {
+              title: '提示'
+            });
+          }
+        });
+      });
+
+
+    });
+
+    // 设置试验检测结论的值
+    function setTestTaskConclusion(formM, laydateM, testObjects) {
+      for (var i = 0; i < testObjects.length; i++) {
+        if (testObjects[i].id == currentSelectedTestObjectId) {	// 这个值是从样品页面取的  currentSelectedTestObjectId   -- testSampleDetail.jsp
+          $(":radio[name='testConclusionRadio'][value='0']")[0].checked = false;
+          $(":radio[name='testConclusionRadio'][value='1']")[0].checked = false;
+          $(":radio[name='testConclusionRadio'][value='2']")[0].checked = false;
+          if (testObjects[i].isQualified) {
+            $(":radio[name='testConclusionRadio'][value='" + testObjects[i].isQualified + "']")[0].checked = true;
+          }
+          $("textarea[name='testConclusion']").val(testObjects[i].testVerdict);
+          $("textarea[name='testConclusionRemark']").val(testObjects[i].testVerdictRemark);
+          laydateM.render({
+            elem: '#testStartDate',
+            type: 'datetime',
+            value: testObjects[i].testStartDate ? new Date(testObjects[i].testStartDate) : ''
+          });
+          laydateM.render({
+            elem: '#testEndDate',
+            type: 'datetime',
+            value: testObjects[i].testEndDate ? new Date(testObjects[i].testEndDate) : ''
+          });
+
+          // 重新渲染radio
+          formM.render();
+        }
+      }
+    }
+
+    /**
+    *
+    * 打开UDR模板
+    */
+    /* function openUDRFile(testTaskId, testTaskAttachmentId) {
+      var url = 'testTaskController.do?goTestTaskUdrContainer';
+      url += '&id=' + testTaskId;
+      url += '&testTaskAttachmentId=' + testTaskAttachmentId;
+      url += '&rand=' + Math.random();
+      alert(url);
+      window.open(url, "_blank");
+    } */
+
+    // 取消试验检测结论编辑
+    function cancelTestConclusionEdit(formM) {
+      $("a[name='editTestConclusion']").removeClass("layui-hide");
+      $("a[name='saveTestConclusion']").addClass("layui-hide");
+      $("a[name='cancelTestConclusion']").addClass("layui-hide");
+      $("#testConclusion").find(":radio, textarea, #testStartDate, #testEndDate").attr("disabled", "");
+      formM.render();
+    }
+
+    /**
+    *
+    * 编辑试验检测结论
+    * 如果含有UDR模板，则打开；没有则在当前页直接编辑
+    */
+    function editTestConclusion(formM) {
+      var testTaskId = $("input[name='testTaskId']").val();// 任务ID
+      $.ajax({
+        url: basePath + '/testTaskAttachmentController.do?getUdrAttachment'
+        , data: {
+          testTaskId: testTaskId
+        }
+        , dataType: "json"
+        , type: "post"
+        , beforeSend: function () {
+        }
+        , success: function (data) {
+          var attach = data.obj;
+          if (data.success) {
+            openUDRFile(testTaskId, attach.id);
+          } else {
+            $("a[name='editTestConclusion']").addClass("layui-hide");
+            $("a[name='saveTestConclusion']").removeClass("layui-hide");
+            $("a[name='cancelTestConclusion']").removeClass("layui-hide");
+            $("#testConclusion").find(":radio, textarea, #testStartDate, #testEndDate").removeAttr("disabled");
+            formM.render();
+          }
+        }
+      });
+
+    }
+
+  </script>
+</body>

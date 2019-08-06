@@ -1,0 +1,663 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>设备检校录入</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <script src="./add.js"></script> -->
+  <style>
+    body {
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-form-item">
+      <label class="layui-form-label">设备编号：</label>
+      <div class="layui-input-block">
+        <span name="equipmentSn"></span>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">设备名称：</label>
+      <div class="layui-input-block">
+        <span name="name"></span>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">设备科室：</label>
+      <div class="layui-input-block">
+        <span name="eqDepartName"></span>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">设备使用人：</label>
+      <div class="layui-input-block">
+        <span name="userName"></span>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">计划检校时间：</label>
+      <div class="layui-input-block">
+        <span name="nextCheckDate"></span>
+      </div>
+    </div>
+    <div class="layui-form-item" id="equipmentBtn" style="display: none">
+      <label class="layui-form-label"></label>
+      <div class="layui-input-block">
+        <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+          onclick="InitObj.equipmentSel()">选择设备</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校单位：</label>
+      <div class="layui-input-block">
+        <input type="text" name="checkUnit" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校时间：</label>
+      <div class="layui-input-block">
+        <input type="text" name="checkTime" id="checkTime" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校有效期：</label>
+      <div class="layui-input-block">
+        <input type="text" name="validityDate" id="validityDate" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校证书编号：</label>
+      <div class="layui-input-block">
+        <input type="text" name="certificateSn" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校结论：</label>
+      <div class="layui-input-block">
+        <input type="text" name="verdict" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校依据：</label>
+      <div class="layui-input-block">
+        <input type="text" name="gist" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校备注：</label>
+      <div class="layui-input-block">
+        <input type="text" name="remark" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检校证书：</label>
+      <div class="layui-input-block" id="reportFileIdsDiv">
+        <input type="hidden" name="1" class="layui-input" autocomplete="off">
+        <span class="layui-color-blue choiceShow"></span>
+        <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">其他附件：</label>
+      <div class="layui-input-block">
+        <input type="hidden" name="0" class="layui-input" autocomplete="off">
+        <span class="layui-color-blue choiceShow"></span>
+        <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label"></label>
+      <div class="layui-input-block">
+        <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+          onclick="InitObj.eqCheckParm()">引用设备的检校参数</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <table class="easyui-datagrid" id="dataGridBottom" style="min-height:200px"></table>
+      <!-- <table class="easyui-datagrid" id="dataGridBottom" ></table> -->
+    </div>
+  </form>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        var upload = layui.upload;
+        var that = InitObj;
+        that.init(form, laydate)
+        if (!that.detail) {
+          laydate.render({ elem: '#checkTime', format: 'yyyy-MM-dd', trigger: 'click' })
+          laydate.render({ elem: '#validityDate', format: 'yyyy-MM-dd', trigger: 'click' })
+        }
+      })
+    })
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': []
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      console.log('uploadCallBack', res)
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+    }
+
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      for (var i = 0; i < filesObj.files.length; i++) {
+        if (accessoryId === filesObj.files[i].id) {
+          filesObj.files.splice(i, 1);
+          break;
+        }
+      }
+      InitObj.addToForm(filesObj.files)
+    }
+
+    var InitObj = {
+      formLayerM: null, // form对象 
+      laydateLayerM: null, // form对象 
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      equipmentId: GetQueryString("equipmentId"), // 设备id
+      saveUrl: 'checkController.do?saveCheck',
+      // detailaddUrl: 'equipmentNewController.do?getById', // 新增设备信息
+      detailEditUrl: 'checkController.do?getById', // 指定检校计划
+      detailEditTableUrl: 'checkController.do?getCheckedItemByCheckId', // 指定检校计划明细
+      dataGridData: null, // 底部table
+      bottomInput: null, // 脚部table
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      fileGroup: { "0": { "tEqFileVos": [], "files": [] }, "1": { "tEqFileVos": [], "files": [], "numbers": 1 } },
+      // fileGroup: [{ "relationFunctionFileType": "0", "tEqFileVos": [] }, { "relationFunctionFileType": "1", "tEqFileVos": [] }],
+      fileU: null,
+      fileName: '',
+      checkTimeEle: $('input[name="checkTime"]'),
+      init: function (form, laydate) {
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.styleLayout(form);
+        this.initDataGrid(this.columnsFun());
+        if (this.editId) {
+          this.detailEdit();
+        } else {
+          $('#equipmentBtn').show();
+          // ajaxRequest(this.detailaddUrl, { "id": this.equipmentId }, this.detailEditCallback, true, true);
+        }
+        $('.uploadA').bind('click', function () {
+          var names = that.fileName = $(this).siblings('input').attr('name');
+          that.fileU = $(this).siblings('.choiceShow');
+          filesObj.files = that.fileGroup[names + ''].files;
+          filesObj.numbers = that.fileGroup[names + ''].numbers;
+          // fileUpload.js中的方法
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArrs) {
+        console.log('filesArr', filesArr)
+        if (filesObj.numbers) {
+          var filesArr = filesArrs.slice(-filesObj.numbers);
+        } else {
+          var filesArr = filesArrs;
+        }
+        var html = '';
+        this.fileGroup[this.fileName + ''].files = filesArr;
+        this.fileGroup[this.fileName + ''].tEqFileVos = [];
+        for (var i = 0; i < filesArr.length; i++) {
+          this.fileGroup[this.fileName + ''].tEqFileVos.push({ "attachmentId": filesArr[i].id })
+          html += '<u><a class="attachmentA layui-color-blue" target="_blank" href="' + filesArr[i].realpath +
+            '">' + filesArr[i].attachmenttitle + '</a></u>&nbsp;&nbsp;'
+        }
+        this.fileU.html(html);
+      },
+      // 新增时选择设备
+      equipmentSel: function () {
+        layerOpenFun('equipmentNewController.do?goEquipmentList',
+          "选择设备", ['80%', '100%'], ['确定', '取消'], this.equipmentSelLayerCall);
+      },
+      equipmentSelLayerCall: function (res, index) {
+        layer.close(index);
+        console.log('res', res)
+        InitObj.detailEditData(res[0]);
+      },
+      // 引用设备的检校参数
+      eqCheckParm: function () {
+        layerOpenFun('checkItemController.do?goCheckItemList' + "&objId=" + this.equipmentId,
+          "检校参数", ['80%', '100%'], ['确定', '取消'], this.eqCheckParmLayerCall);
+      },
+      eqCheckParmLayerCall: function (res, index) {
+        layer.close(index);
+        console.log('res', res)
+        var that = InitObj;
+        for (var i = 0; i < res.length; i++) {
+          res[i].useEquipment = '';
+          res[i].checkTime = that.checkTimeEle.val();
+          res[i].nextCheckTime = '';
+          res[i].checkPeriod = res[i].checkPeriod;
+          res[i].checkPeriodUnit = res[i].checkPeriodUnit;
+        }
+        that.tableRenderFun(res)
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          console.log('处理详情')
+          $('a').hide();
+          $("input").attr('readonly', true).removeClass('layui-input').css({ 'border': 'none', 'background-color': 'transparent' });
+        }
+      },
+      fileGroupFun: function () {
+        console.log('fileGroup', this.fileGroup)
+        var fileGroupArr = [];
+        for (var key in this.fileGroup) {
+          fileGroupArr.push({ "relationFunctionFileType": key, "tEqFileVos": this.fileGroup[key].tEqFileVos })
+        }
+        console.log('fileGroupArr', fileGroupArr)
+        return JSON.stringify(fileGroupArr)
+      },
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              if (this.editId) {
+                saveParam.id = this.editId;
+              }
+              saveParam.equipmentId = this.equipmentId;
+              saveParam.fileGroupStr = this.fileGroupFun();
+              delete saveParam['0'];
+              delete saveParam['1'];
+              ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true)
+            }
+            return true;
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+      },
+
+      detailEditData: function (data) {
+        console.log('detailEditData', data)
+        // var equipment = data;
+        if (this.editId) {
+          // equipment = data.equipment;
+          console.log('detailEditData', data.eqDepartName)
+          $('span[name="equipmentSn"]').html(data.equipment.equipmentSn);
+          $('span[name="name"]').html(data.equipment.name);
+          $('span[name="eqDepartName"]').html(data.eqDepartName);
+          $('span[name="userName"]').html(data.equipment.userName);
+          var nextCheckDate = data.equipment.nextCheckDate ? new Date(data.equipment.nextCheckDate).Format("yyyy-MM-dd") : '';
+          $('span[name="nextCheckDate"]').html(nextCheckDate);
+          $('input[name="checkUnit"]').val(data.check.checkUnit);
+          var checkTime = data.check.checkTime ? new Date(data.check.checkTime).Format("yyyy-MM-dd") : '';
+          $('input[name="checkTime"]').val(checkTime);
+          var validityDate = data.check.validityDate ? new Date(data.check.validityDate).Format("yyyy-MM-dd") : '';
+          $('input[name="validityDate"]').val(validityDate);
+          $('input[name="certificateSn"]').val(data.check.certificateSn);
+          $('input[name="verdict"]').val(data.check.verdict);
+          $('input[name="gist"]').val(data.check.gist);
+          $('input[name="remark"]').val(data.check.remark);
+          this.detailDisplay();
+        } else {
+          $('span[name="equipmentSn"]').html(data.equipmentSn);
+          $('span[name="name"]').html(data.name);
+          $('span[name="eqDepartName"]').html(data.departName);
+          $('span[name="userName"]').html(data.userName);
+          var nextCheckDate = data.nextCheckDate ? new Date(data.nextCheckDate).Format("yyyy-MM-dd") : '';
+          $('span[name="nextCheckDate"]').html(nextCheckDate);
+          this.equipmentId = data.id;
+          console.log('this.equipmentId', this.equipmentId)
+        }
+
+
+        this.formLayerM.render();
+      },
+      // 查看报告详情ajax回调
+      filesCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          if ( res.obj.length > 0) {
+            console.log(res)
+            var filesArr = res.obj;
+            for (var i = 0; i < filesArr.length; i++) {
+              var files = [];
+              that.fileName = filesArr[i].relationFunctionFileType;
+              that.fileU = $('input[name="' + that.fileName + '"]').siblings('.choiceShow')
+              for (var j = 0; j < filesArr[i].tEqFileVos.length; j++) {
+                files.push({
+                  'id': filesArr[i].tEqFileVos[j].attachmentId,
+                  'realpath': filesArr[i].tEqFileVos[j].url || '',
+                  'attachmenttitle': filesArr[i].tEqFileVos[j].name || ''
+                })
+              }
+              that.addToForm(files)
+            }
+          }
+          return;
+        }
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          that.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailEditUrl, { "id": this.editId }, this.detailEditCallback, true, true);
+        ajaxRequest(this.detailEditTableUrl, { "checkId": this.editId }, this.tableRenderFun, true, true);
+        ajaxRequest('eqFileController.do?getFileGroupByRelationEntityId', { "relationEntityId": this.editId }, this.filesCallback, false, true);
+      },
+      tableRenderFun: function (res, index) {
+        console.log('res210', res)
+        var that = InitObj;
+        that.dataGridData = res.obj || res || [];
+        console.log('that.dataGridData', that.dataGridData)
+        var existTableObjs = that.dataGridBottom.datagrid('getData');
+        console.log('existTableObjs', existTableObjs)
+        existTableObjs.total = that.dataGridData.length;
+        existTableObjs.rows = that.dataGridData;
+        that.dataGridBottom.datagrid('loadData', existTableObjs);
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        console.log('dataRequired', queryParams)
+        // if (!queryParams.planYear) {
+        //   queryParams.msg = '计划年份不能为空';
+        //   queryParams.element = '';
+        //   return false;
+        // }
+        // if (!queryParams.planMouth) {
+        //   queryParams.msg = '计划月份不能为空';
+        //   queryParams.element = '';
+        //   return false;
+        // }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var saveParam = this.saveDataObj(formdata), checkedItemStr = [];
+          console.log('saveParam', saveParam)
+          for (var i = 0; i < saveParam.length; i++) {
+            var checkItemIdIndex = '', idIndex = '';
+            if (saveParam[i].checkItemId) { // 编辑
+              checkItemIdIndex = saveParam[i].checkItemId;
+              idIndex = saveParam[i].id;
+            } else { // 引用的数据
+              checkItemIdIndex = saveParam[i].id;
+              idIndex = '';
+            }
+            checkedItemStr.push({
+              "id": idIndex, "checkItemId": checkItemIdIndex, "useEquipment": saveParam[i].useEquipment,
+              "lastCheckTime": saveParam[i].preCheckDate, "checkTime": saveParam[i].checkTime,
+              "nextCheckTime": saveParam[i].nextCheckTime
+
+            })
+          }
+          console.log('checkedItemStr', checkedItemStr)
+          formdata.checkedItemStr = JSON.stringify(checkedItemStr);
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 删除
+      goDetele: function (did, event) {
+        console.log('点击了删除', did, event)
+        layui.stope(event);
+        // layerOpenFun(openUrl, "新增设备", ['90%', '80%'], ['确定', '取消']);
+        var existTableObjs = this.dataGridBottom.datagrid('getData');
+        for (var i = 0; i < existTableObjs.rows.length; i++) {
+          if (did === existTableObjs.rows[i].id) {
+            existTableObjs.rows.splice(i, 1);
+            break;
+          }
+        }
+        this.dataGridBottom.datagrid('loadData', existTableObjs);
+      },
+
+      bottomTableRender: function () {
+        that.bottomInput.find('input').attr('disabled', false).css('border-color', '#ccc');
+      },
+      submitData: function (data, key, value, strKey) {
+        var num = key.split(strKey);
+        data[num[1]][strKey] = value;
+      },
+      saveDataObj: function (queryParams) {
+        if (this.dataGridBottom) {
+          var dataObjs = this.dataGridBottom.datagrid('getData');
+          console.log('dataObjs', dataObjs)
+          if (dataObjs.rows && dataObjs.rows.length > 0) {
+            for (var key in queryParams) {
+              if (key.indexOf('nextCheckDate') > -1) {
+                this.submitData(dataObjs.rows, key, queryParams[key], 'nextCheckDate');
+                delete queryParams[key];
+              }
+              if (key !== 'checkTime' && key.indexOf('checkTime') > -1) {
+                this.submitData(dataObjs.rows, key, queryParams[key], 'checkTime');
+                delete queryParams[key];
+              }
+              if (key.indexOf('nextCheckTime') > -1) {
+                this.submitData(dataObjs.rows, key, queryParams[key], 'nextCheckTime');
+                delete queryParams[key];
+              }
+              if (key.indexOf('useEquipment') > -1) {
+                this.submitData(dataObjs.rows, key, queryParams[key], 'useEquipment');
+                delete queryParams[key];
+              }
+            }
+          }
+          return dataObjs.rows;
+        } else {
+          return [];
+        }
+      },
+      nextCheckFun: function (checkTime, checkPeriod, checkPeriodUnit) {
+        // checkPeriodUnit Y:年,M:月,D:日
+        console.log(checkTime, checkPeriod, checkPeriodUnit)
+        var time = new Date(checkTime), nextTime;
+        console.log('455', checkTime, time)
+        if ('Y' === checkPeriodUnit) {
+          nextTime = time.setFullYear((time.getFullYear() + Number(checkPeriod)));
+        } else if ('M' === checkPeriodUnit) {
+          nextTime = time.setMonth((time.getMonth() + Number(checkPeriod)));
+        } else {
+          nextTime = time.setDate((time.getDate() + Number(checkPeriod)));
+        }
+        console.log('nextTime', new Date(nextTime).Format("yyyy-MM-dd"))
+        return new Date(nextTime).Format("yyyy-MM-dd");
+      },
+      applyTitleAttribute: function (value, row, index, field) {
+        var values = value || '';
+        return '<input type="text"  autocomplete="off" name="' + field + index + '" class="layui-input" id="" value="' + values + '">';
+        // return '<input type="text" disabled="" autocomplete="off" name="' + field + index + '" class="layui-input" id="" value="' + values + '">';
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = []; that = this;
+        columns.push({ title: "ID", field: "id", hidden: true })
+        columns.push({
+          title: "检校项目/参数", field: "name", width: 35, formatter: function (value, row, index) {
+            return row.name || row.checkItemName;
+          }
+        });
+        columns.push({ title: "技术要求", field: "skillLimit", width: 35 });
+        columns.push({ title: "备注说明", field: "remark", width: 35 });
+        columns.push({
+          title: "检校用设备", field: "useEquipment", width: 35,
+          formatter: function (value, row, index) {
+            return that.applyTitleAttribute(value, row, index, 'useEquipment')
+          }
+        });
+        columns.push({
+          title: "前次检校时间", field: "preCheckDate", width: 35, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          }
+        })
+        columns.push({ title: "检校时间", field: "checkPeriod", hidden: true });
+        columns.push({ title: "检校时间单位", field: "checkPeriodUnit", hidden: true });
+        columns.push({
+          title: "本次检校时间", field: "checkTime", width: 35, formatter: function (value, row, index) {
+            var values = (value ? new Date(value).Format("yyyy-MM-dd") : '');
+            // return '<input type="text" class="layui-input" autocomplete="off" name="checkTime' + index + '" disabled id="checkTime' + index + '" value="' + values + '">';
+            return '<input type="text" class="layui-input" autocomplete="off" name="checkTime' + index + '"  id="checkTime' + index + '" value="' + values + '">';
+          }
+        });
+        columns.push({
+          title: "下次检校时间", field: "nextCheckTime", width: 35, formatter: function (value, row, index) {
+            console.log('nextCheckTime', row.nextCheckTime)
+            // 自动根据本次检校时间加上检校周期
+            if (row.nextCheckTime) { // 编辑
+              var str = new Date(row.nextCheckTime).Format("yyyy-MM-dd");
+            } else { // 选择
+              var str = that.nextCheckFun(row.checkTime, row.checkPeriod, row.checkPeriodUnit);
+            }
+            var html = '<input type="hidden" class="layui-input" name="nextCheckTime' + index + '" value="' + str + '">'
+            return html + '<span>' + str + '</span>';
+          }
+        });
+        columns.push({
+          title: "操作", field: "opt", width: 35,
+          formatter: function (value, row, index) {
+            var btns =
+              '<a  title="删除" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetele(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-delete"></i></a>';
+            return btns;
+          }
+        })
+        return [columns];
+      },
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGridBottom = $('#dataGridBottom').datagrid({
+          data: this.dataGridData,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('onLoadSuccess', data)
+            that.bottomInput = $('#dataGridBottom').siblings('.datagrid-view2').find('.datagrid-body');
+            if (!that.detail) {
+              // that.bottomTableRender();
+            } else {
+              that.detailDisplay();
+            }
+            for (var i = 0; i < data.rows.length; i++) {
+              // that.laydateLayerM.render({
+              //   elem: '#nextCheckDate' + i, //指定元素
+              //   trigger: 'click'
+              // });
+              that.laydateLayerM.render({
+                elem: '#checkTime' + i, //指定元素
+                trigger: 'click',
+                done: function (value, date, endDate) {
+                  var inputEle = $(this)[0].elem.selector;
+                  var tdEle = $(inputEle).parent().parent();
+                  var checkPeriod = tdEle.siblings('[field="checkPeriod"]').find('div').html();
+                  var checkPeriodUnit = tdEle.siblings('[field="checkPeriodUnit"]').find('div').html();
+                  var checkPeriodUnit = tdEle.siblings('[field="checkPeriodUnit"]').find('div').html();
+                  var nextCheckTimeEle = tdEle.siblings('[field="nextCheckTime"]');
+                  var nextCheckTime = that.nextCheckFun(value, checkPeriod, checkPeriodUnit);
+                  nextCheckTimeEle.find('span').html(nextCheckTime).siblings('input').val(nextCheckTime);
+                }
+              });
+              // that.laydateLayerM.render({
+              //   elem: '#nextCheckTime' + i, //指定元素
+              //   trigger: 'click'
+              // });
+            }
+            that.formLayerM.render()
+          }
+        });
+
+      },
+
+      // js行为交互
+      styleLayout: function (form) {
+        var that = this;
+
+      }
+    }
+
+  </script>
+</body>
+
+</html>

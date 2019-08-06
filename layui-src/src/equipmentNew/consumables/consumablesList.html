@@ -1,0 +1,182 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>低值易耗品</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+</head>
+
+<body>
+  <div id="tableBox" class="height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-form">
+        <form id="commonQueryForm" class="layui-form">
+          <div class="layui-row">
+            <div class="layui-col-xs8">
+              <div class="layui-input-inline" style="width:98%">
+                <input type="text" name="quickQryParam" class="layui-input" placeholder="请输入低值易耗品名称、分类、简码、规格型号后回车即可查询"
+                  autocomplete="off">
+              </div>
+            </div>
+            <div class="layui-col-xs4">
+              <div class="layui-input-inline">
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.quickSearch()">查询</a>
+                <button class="easyui-linkbutton" type="reset" iconCls="iconfont icon-refresh" plain="true">重置</button>
+                <a href="#" style="display:inline-block" data-funCode="" class="easyui-linkbutton funBtn_addSupplier"
+                  iconCls="iconfont icon-navicon-dbd" plain="true">新增供应商</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+      })
+      InitObj.init();
+    })
+    var InitObj = {
+      defaultUrl: 'supplierController.do?datagrid', //默认获取数据url
+      addSupplier: $('.funBtn_addSupplier'), // 新增供应商
+      init: function () {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.initDataGrid(this.columnsFun())
+        this.commonQryKeyDown()
+        this.styleLayout();
+        this.btnFun(this.addSupplier, 'supplierController.do?goSupplierEdit', '新增供应商')
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        btnName.on('click', function () {
+          if ('新增供应商' === openName) {
+            layerOpenFun(openUrl, "新增供应商", ['90%', '80%'], ['确定', '取消']);
+            return;
+          }
+        })
+      },
+      // 删除
+      goDetele: function (id) {
+        console.log('点击了删除(补)')
+      },
+      // 编辑
+      goEdit: function (id, eqName, isDetail, isCompleteTip) {
+        console.log('点击了编辑(补)')
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var queryParams = {
+          'quickQryParam': $("input[name='quickQryParam']").val()
+        };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var that = InitObj;
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            that.quickSearch()
+            return false;
+          }
+        });
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [];
+        columns.push({ title: "id", field: "id", checkbox: true });
+        columns.push({ title: "供应商名称", field: "name", width: 80 });
+        columns.push({ title: "联系地址", field: "site", width: 110 });
+        columns.push({ title: "邮编", field: "postcode", width: 110 });
+        columns.push({ title: "联系电话", field: "tel", width: 80 });
+        columns.push({ title: "联系人", field: "contacts", width: 80 });
+        columns.push({ title: "手机号码", field: "mobile", width: 80 });
+        columns.push({ title: "经营内容", field: "operationContent", width: 80 });
+        columns.push({ title: "综合评价得分(10分)(补)", field: "quantity", width: 150 });
+        columns.push({ title: "备注", field: "remark", width: 150 });
+        columns.push({
+          title: "标记", field: "isDeleted", width: 150, formatter: function (value) {
+            var statusObj = { "0": "否", "1": "是" };
+            return statusObj[value] || '';
+          }
+        });
+        columns.push({
+          title: "操作", field: "opt", width: 120,
+          formatter: function (value, row, index) {
+            var btns =
+              '<button title="删除(补)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetele(&quot;' +
+              row.id + '&quot;,&quot;' + row.eqName +
+              '&quot;,true)" ><i class="iconfont icon-delete"></i></button>';
+            btns += '<button title="评价(补)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' +
+              row.id + '&quot;,&quot;' + row.eqName +
+              '&quot;,false)" ><i class="iconfont icon-edit"></i></button>';
+            btns += '<button title="编辑(补)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' +
+              row.id + '&quot;,&quot;' + row.eqName +
+              '&quot;,false)" ><i class="iconfont icon-edit"></i></button>';
+
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'createDate', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            funCode();
+            getTableHeight()
+          }
+        });
+      },
+
+      // 样式布局控制
+      styleLayout: function () {
+      }
+    }
+  </script>
+</body>
+
+</html>

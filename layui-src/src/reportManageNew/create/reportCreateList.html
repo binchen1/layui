@@ -1,0 +1,384 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>编制报告</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">报告编制中</li>
+      <li>报告审批中</li>
+      <li>报告已批准</li>
+      <li>报告已作废</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <div class="layui-input-inline" style="width:80%">
+              <input type="text" name="quickQryParam" class="layui-input" placeholder="输入编号/委托单位/工程项目后回车即可查询"
+               title="输入编号/委托单位/工程项目后回车即可查询" autocomplete="off">
+            </div>
+            <div class="layui-input-inline">
+              <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                onclick="InitObj.quickSearch()">查询</a>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <a href="#" style="display:none" data-funCode="createReport" class="easyui-linkbutton funBtn_add"
+            iconCls="iconfont icon-add" plain="true">创建报告</a>
+          <a href="#" style="display:none" data-funCode="editReport" class="easyui-linkbutton funBtn_edit"
+            iconCls="iconfont icon-edit" plain="true">编辑报告</a>
+          <a href="#" style="display:none" data-funCode="viewReport" class="easyui-linkbutton funBtn_detail"
+            iconCls="iconfont icon-remove" plain="true">查看报告</a>
+          <a href="#" style="display:none" data-funCode="modifyReportSn" class="easyui-linkbutton funBtn_editCode"
+            iconCls="iconfont icon-edit" plain="true">修改报告编号</a>
+          <a href="#" style="display:none" data-funCode="discardReport" class="easyui-linkbutton funBtn_cancel"
+            iconCls="iconfont icon-cancel" plain="true">作废报告</a>
+          <a href="#" style="display:none" data-funCode="recoverReport" class="easyui-linkbutton funBtn_undo"
+            iconCls="iconfont icon-undo" plain="true">撤回报告</a>
+          <a href="#" style="display:none" data-funCode="createTempReport" class="easyui-linkbutton funBtn_add_temp"
+            iconCls="iconfont icon-add" plain="true">创建临时报告</a>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          InitObj.isBtnFun(data.index)
+        });
+      })
+      InitObj.init()
+    })
+
+    var InitObj = {
+      defaultUrl: 'reportCreateController.do?datagrid',
+      goEditPageUrl: 'reportCreateController.do?goEditPage',
+      dataGrid: null, // table返回对象
+      dataType: 'compile', // 编制中:compile,审批中:audit,已批准:approved,已作废:invalid
+      dataNum: 0, // 编制中:compile,审批中:audit,已批准:approved,已作废:invalid
+      stateMsg: '', //状态提示信息
+      add: $('#functionButton .funBtn_add'),  // 功能按钮 创建报告
+      edit: $('#functionButton .funBtn_edit'),  // 功能按钮 编辑/查看报告
+      editCode: $('#functionButton .funBtn_editCode'), // 功能按钮 修改报告编号
+      cancel: $('#functionButton .funBtn_cancel'), // 功能按钮 作废报告
+      undo: $('#functionButton .funBtn_undo'), // 功能按钮 撤回报告
+      detail: $('#functionButton .funBtn_detail'), // 功能按钮 撤回报告
+      addTemp: $('#functionButton .funBtn_add_temp'),//创建临时报告
+      layerIndex: '',
+      init: function () {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.commonQryKeyDown()
+        this.btnFun(this.add, this.goEditPageUrl, '创建报告')
+        this.btnFun(this.edit, this.goEditPageUrl, '编辑报告')
+        this.btnFun(this.editCode, 'reportCreateController.do?modifyReportSn', '修改报告编号')
+        this.btnFun(this.cancel, 'reportCreateController.do?discardReport', '作废报告')
+        this.btnFun(this.undo, 'reportCreateController.do?recoverReport', '撤回报告')
+        this.btnFun(this.detail, this.goEditPageUrl, '报告详情');
+        this.btnFun(this.addTemp, this.goEditPageUrl, '创建临时报告')
+        this.isBtnFun(0)
+      },
+      // 功能按钮操作
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, row = $('#dataGrid').datagrid('getSelections');
+          if ('创建报告' === openName) {
+            window.open(that.goEditPageUrl, '创建报告')
+          }
+          if (!row || row.length === 0) {
+            tipIndex = layer.tips('<span class="layui-color-white">请选择一条记录</span>', self, {
+              tips: 3,
+              skin: 'tips-msg',
+              time: 20000
+            });
+            return;
+          } else {
+            if ('作废报告' === openName) {
+              that.cancelFun(row[0].id, openUrl)
+            } else if ('撤回报告' === openName) {
+              that.undoFun(row[0].id, openUrl)
+            } else if ('修改报告编号' === openName) {
+              that.editCodeFun(row[0].id, openUrl, row[0].reportSn)
+            } else if ('报告详情' === openName) {
+              layerOpenFun(openUrl + '&reportId=' + row[0].id + '&detail=detailPage', openName, ['90%', '90%'], []);
+            } else if ('编辑报告' === openName) {
+              window.open(openUrl + '&reportId=' + row[0].id, openName)
+            } else if ('创建临时报告' === openName) {
+              var reportType = row[0].reportType;
+              if(reportType === 'formal' || reportType === 'synthesis'){
+                window.open(openUrl + '&formalId=' + row[0].id, openName)              
+              }else{
+                layer.msg("请选择正式报告来创建关联临时报告!");
+              }
+            }
+
+          }
+        })
+        btnName.mouseleave(function () {
+          layer.close(tipIndex)
+        });
+      },
+      // 刷新页面关闭弹出层
+      layerIndexClose: function (res) {
+        var that = InitObj;
+        if (res.success) {
+          layer.msg(res.msg, { icon: 6 })
+          that.reloadDataGrid(false)
+        } else {
+          layer.msg(res.msg, { icon: 5 })
+        }
+        layer.close(that.layerIndex)
+      },
+      // 修改报告编号回调
+      editCodeCallback: function (res) { },
+      // 修改报告编号
+      editCodeFun: function (rowId, url, code) {
+        var that = this;
+        layer.prompt({
+          formType: 2,
+          value: code,
+          title: '请输入新编号',
+          area: ['300px', '50px'] //自定义文本域宽高
+        }, function (value, index, elem) {
+          ajaxRequest(url, { 'reportId': rowId, 'newReportSn': value }, that.layerIndexClose, false, true)
+          that.layerIndex = index;
+        });
+      },
+      // 作废报告回调
+      cancelCallback: function (res) { },
+      // 作废报告
+      cancelFun: function (rowId, url) {
+        var that = this;
+        layer.prompt({
+          formType: 2,
+          //  value : '请输入作废原因',
+          title: '作废原因',
+          area: ['300px', '50px'] //自定义文本域宽高
+        }, function (value, index, elem) {
+          ajaxRequest(url, { 'reportId': rowId, 'reason': value }, that.layerIndexClose, false, true)
+          that.layerIndex = index;
+        });
+
+      },
+      // 撤回报告回调
+      undoCallback: function (res) { },
+      // 撤回报告
+      undoFun: function (rowId, url) {
+        var that = this;
+        layer.confirm('是否将当前报告取消作废？', {
+          icon: 3,
+          title: '提示'
+        }, function (index) {
+          ajaxRequest(url, { 'reportId': rowId }, that.layerIndexClose, false, true)
+          that.layerIndex = index;
+        });
+
+      },
+      //点击状态弹出框
+      delHsCode: function (index, value, event) {
+        layui.stope(event)
+        var stateObj = { "back": "报告打印退回", "modify": "本报告需修改" };
+        this.stateMsg = '<span class="layui-color-white">' + stateObj[value] + '</span>';
+        var tipIndex = layer.tips(this.stateMsg, '.delHsCode' + index, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+        $('.delHsCode' + index).mouseleave(function () {
+          setTimeout(function () {
+            layer.close(tipIndex)
+          }, 500)
+        });
+      },
+      //快速查询
+      quickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, queryParams);
+      },
+      //快速查询input框绑定的回车事件
+      commonQryKeyDown: function () {
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        // 编制中:compile,审批中:audit,已批准:approved,已作废:invalid
+        var columns = [];
+        columns.push({ title: "id", field: "id", checkbox: true });
+        if ('compile' === this.dataType || 'audit' === this.dataType) { // 除报告审批中 // 除报告已作废
+          columns.push({
+            title: "标记", field: "tipsIcon", width: 30, formatter: function (value, row, index) {
+              var display = "";
+              var stateObj = {
+                "back": { "name": "退", "colors": " layui-color-red " },
+                "modify": { "name": "改", "colors": " layui-color-red " },
+              }
+              if (value) {
+                display += '<div class="text-center">'
+                display += ' <span class="delHsCode' + index + ' span-round ' + stateObj[value].colors + '"'
+                display += 'onmouseenter="InitObj.delHsCode(' + index + ',&quot;' + value + '&quot;,event)"'
+                display += '>' + stateObj[value].name + '</span></div>';
+              }
+            }
+          })
+        }
+        columns.push({ title: "报告编号", field: "reportSn", width: 100 });
+        columns.push({ title: "委托单位", field: "unitName", width: 120 });
+        columns.push({ title: "工程项目", field: "projectName", width: 90 });
+        columns.push({
+          title: "报告创建日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        });
+        if ('audit' === this.dataType || 'approved' === this.dataType) { // 报告审批中 // 报告已批准
+          columns.push({
+            title: "报告提交时间", field: "submitDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          })
+        }
+        columns.push({
+          title: "人员", field: "createPerson", width: 150,
+          formatter: function (value, row, index) {
+            var persons = "";
+            if (row.createPerson) {
+              persons += "报告创建人：" + row.createPerson + ";";
+            }
+            if (row.dutyPerson) {
+              persons += "报告负责人：" + row.dutyPerson + ";";
+            }
+            if (row.compilePerson) {
+              persons += "编写：" + row.compilePerson + ";";
+            }
+            if (row.auditPerson) {
+              persons += "审核：" + row.auditPerson + ";";
+            }
+            if (row.approvePerson) {
+              persons += "批准：" + row.approvePerson + ";";
+            }
+            return persons;
+          }
+        });
+
+        return [columns];
+      },
+      isBtnFun: function (num) {
+        var codes = 'createReport,editReport,viewReport,modifyReportSn,discardReport,createTempReport';
+        var dataTypeObj = { "0": "compile", "1": "audit", "2": "approved", "3": "invalid" }
+        this.dataType = dataTypeObj[num + ""];
+        this.dataNum = num;
+        if (this.dataNum === 1) { // 报告批准中
+          this.add.hide();
+          this.edit.hide();
+          this.editCode.hide();
+          codes = 'viewReport,discardReport,recoverReport';
+        } else if (this.dataNum === 2) { // 报告已批准
+          this.add.hide();
+          this.edit.hide();
+          this.editCode.hide();
+          this.cancel.hide();
+          this.undo.hide();
+          codes = 'viewReport';
+        } else if (this.dataNum === 3) { // 报告已作废
+          this.add.hide();
+          this.edit.hide();
+          this.editCode.hide();
+          this.cancel.hide();
+          codes = 'viewReport,recoverReport';
+        } else { // 报告编制中
+          this.undo.hide();
+        }
+        funCode(codes, this.funCodeComplete);
+      },
+      funCodeComplete: function (isShow) {
+        var that = InitObj;
+        if (isShow) {
+          that.initDataGrid(that.columnsFun());
+        }
+      },
+      // table展示
+      initDataGrid: function (columns) {
+        var that = InitObj;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&reportStatus=' + this.dataType,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            //禁用表头的全选框(需求如此)
+            $(".datagrid-header-check").html("");
+            console.log('获取数据成功', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid');
+          }
+        });
+      }
+    }
+
+  </script>
+</body>
+
+</html>

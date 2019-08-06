@@ -1,0 +1,442 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<t:base type="jquery,easyui,tools" />
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<script src="plug-in/serializejson/jquery.serializejson.min.js"></script>
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<div class="easyui-layout" fit="true" id="content-wrapper">
+
+  <%--单位大类div--%>
+  <div class="big-category self-noscroll" data-options="region: 'west', title: '编号管理', split: true, collapsible: false"
+    style="width:202px; background:#EEE; padding: 2px;">
+    <div class="search-box">
+      <form>
+        <!-- 查询框 -->
+
+      </form>
+    </div>
+    <div style="margin-top: 20px;">
+      <table class="easyui-treegrid" id="treeGridOfSNCategory" style="margin-top: 10px;"></table>
+    </div>
+  </div>
+  <%--单位大类div--%>
+
+
+  <%--试验参数div--%>
+  <div class="test-param self-noscroll" data-options="region: 'center', title: '编号配置'" style="padding:5px;">
+    <div class="toolbar" style="padding: 3px">
+
+      <div class="datagrid-toolbar">
+        <span style="float:left; height: auto;">
+          <a class="easyui-linkbutton btn-4-quote" plain="true" icon="icon-add">添加</a>
+          <a class="easyui-linkbutton btn-4-update" plain="true" icon="icon-edit">修改</a>
+        </span>
+        <span style="float:right; height: auto;" class="layui-color-red">
+          <!--    <span class="panel-title">名称：</span>  -->
+          <!-- 	<input class="inputxt" name="name"> -->
+          <!-- 	<a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a> -->
+          编号预览：<span id="snPreview"></span>
+        </span>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="tSnTermList"></table>
+  </div>
+  <%--试验参数div--%>
+
+  <script>
+    var dic = new Object(); //数据字典的集合
+    /**初始化数据字典，和权限**/
+    $(document).ready(function () {
+      var _list = [];
+      _list.push("@bpm_status@");
+      _list.push("@SNTermType@");
+      _list.push("@sf_yn@");
+      var json = new Object(); //临时对象
+      json["list"] = JSON.stringify(_list);
+      json["author"] = "402882105e26b888015e27a541d40007";
+      $.ajax({
+        url: basePath + '/systemController.do?getDictContent',
+        data: json,
+        dataType: "json",
+        type: "POST",
+        contentType: "application/x-www-form-urlencoded",
+        //traditional: true,  
+        success: function (responseJSON) {
+          dic = responseJSON.attributes;
+          init();
+        }
+      });
+
+    });
+    /*初始化方法*/
+    var init = function () {
+      /**
+       *隐藏easyui面板的折叠按钮
+       */
+      $('#content-wrapper a[class*=layout-button-]').hide();
+
+      initSNCategory();
+      reloadTable();
+
+      /**
+       *  查询按钮事件
+       **/
+      $('#content-wrapper .btn-4-search').click(function () {
+        reloadTable();
+      });
+
+      /**
+       *  添加按钮事件
+       **/
+      $('#content-wrapper .btn-4-quote').click(function () {
+        var node = $('#treeGridOfSNCategory').treegrid('getSelected');
+        if (!node) {
+          tip('请选择编号');
+          return;
+        }
+        //必须是叶子节点
+        // createwindow('添加编号格式项', 'tSnTermController.do?goAdd&id=' + node.id, 600, 300);
+        layerOpenFun('tSnTermController.do?goAdd&id=' + node.id, '添加编号格式项', ['600', 300], ['确定', '取消'], '',
+          'submitSave')
+
+      });
+
+      /**
+       *  修改按钮事件
+       **/
+      $('#content-wrapper .btn-4-update').click(function () {
+        var row = $('#tSnTermList').datagrid('getSelected');
+        if (!row) {
+          tip('请选择编号格式项');
+          return;
+        }
+        // update("修改", 'tSnTermController.do?goUpdate' , 'tSnTermList',600,300);
+        layerOpenFun('tSnTermController.do?goUpdate&id=' + row.id, '修改', ['600', 300], ['确定', '取消'], '',
+          'submitSave')
+      });
+
+      /**
+       *  设置附加费用按钮点击事件
+       **/
+      $('#content-wrapper .btn-4-additional-fees').click(function () {
+        var row = $('#tSnTermList').datagrid('getSelected');
+        if (!row) {
+          tip('请选择试验参数');
+          return;
+        }
+        createwindow('试验参数：' + row.displayName + '附加费用管理',
+          'additionalFeesController.do?testParamFees&testParamId=' + row.id);
+      });
+
+      /**
+       *  资质下拉菜单改变事件
+       **/
+      $('#content-wrapper .big-category .search-box select').combobox({
+        onChange: function () {
+          $('#content-wrapper .test-param .search-box input[name="bigCategory.id"]').val('');
+          $('#tSnTermList').datagrid('loadData', {
+            total: 0,
+            rows: []
+          });
+          initSNCategory();
+        }
+      });
+    };
+
+    /**
+     *  初始化编号类别树
+     **/
+    function initSNCategory() {
+      //查询条件
+      var queryParams = $('#content-wrapper .big-category .search-box form').serializeJSON();
+
+      $('#treeGridOfSNCategory').treegrid({
+        url: 'tSnModelController.do?treegrid',
+        idField: 'id',
+        fitColumns: true,
+        scrollbarSize: 0,
+        treeField: 'name',
+        scrollbarSize: 0, //去除滚动条，否则右边最后一列会自动多处一块
+        rownumbers: false, //是否加行号
+        queryParams: queryParams,
+        columns: [
+          [{
+              title: 'ID',
+              field: 'id',
+              hidden: true,
+            },
+            {
+              title: '名称',
+              field: 'name',
+              width: 160
+            }
+          ]
+        ],
+        onSelect: function (row) { //选中的方法
+          // var SNId = $('#content-wrapper .test-param .search-box input[name="bigCategory.id"]').val();
+          //$('#content-wrapper .test-param .search-box input[name="bigCategory.id"]').val(row.id);
+          //拼装查询条件
+          var queryParams = $('#tSnTermList').datagrid('options').queryParams;
+          queryParams["SNId"] = row.id;
+
+          /*编号改变时，将分页页码设置为1*/
+          $('#tSnTermList').datagrid('options').pageNumber = 1;
+          reloadTable(); // 加载编号构成项table
+        }
+      });
+    }
+
+    /**
+     *  加载编号组成项列表
+     **/
+    function reloadTable() {
+      //查询条件
+      //var queryParams = $('#content-wrapper .test-param .search-box form').serializeJSON();
+      $('#tSnTermList').datagrid({
+        url: 'tSnModelController.do?tSnTermList',
+        singleSelect: true,
+        pagination: false,
+        fit: true,
+        fitColumns: true,
+        scrollbarSize: 0,
+        remoteSort: false, //后台返回数据没排序，但是因为数据少，所以暂时处理方式是，为本页排序
+        //queryParams: queryParams,
+        toolbar: '#content-wrapper .test-param .toolbar',
+        columns: [
+          [{
+              title: 'ID',
+              field: 'id',
+              hidden: true,
+            },
+            {
+              title: '名称',
+              field: 'name'
+            },
+            {
+              title: '类型',
+              field: 'type',
+              formatter: function (value, rec, index) {
+                if (value == undefined) return '';
+                var valArray = value.split(',');
+                var item = dic['SNTermType'];
+                if (valArray.length > 1) {
+                  var checkboxValue = '';
+                  for (var k = 0; k < valArray.length; k++) {
+                    for (var h = 0; h < item.length; h++) {
+                      if (valArray[k] == item[h].typecode) {
+                        checkboxValue = checkboxValue + item[h].typename + ',';
+                      }
+                    }
+                  }
+                  return checkboxValue.substring(0, checkboxValue.length - 1);
+                } else {
+                  for (var c = 0; c < item.length; c++) {
+                    if (value == item[c].typecode) {
+                      return item[c].typename;
+                    }
+                  }
+                }
+              }
+            },
+            {
+              title: '是否参与自增',
+              field: 'isAssociateSequence',
+              sortable: true,
+              formatter: function (value, rec, index) {
+                if (value == undefined) return '';
+                var valArray = value.split(',');
+                var item = dic['sf_yn'];
+                if (valArray.length > 1) {
+                  var checkboxValue = '';
+                  for (var k = 0; k < valArray.length; k++) {
+                    for (var h = 0; h < item.length; h++) {
+                      if (valArray[k] == item[h].typecode) {
+                        checkboxValue = checkboxValue + item[h].typename + ',';
+                      }
+                    }
+                  }
+                  return checkboxValue.substring(0, checkboxValue.length - 1);
+                } else {
+                  for (var c = 0; c < item.length; c++) {
+                    if (value == item[c].typecode) {
+                      return item[c].typename;
+                    }
+                  }
+                }
+              }
+            },
+            {
+              title: '数字位数',
+              field: 'serialNoBit'
+            },
+            {
+              title: '排序号',
+              field: 'orderNo',
+              align: 'center',
+              sortable: true,
+            },
+            {
+              field: 'opt',
+              title: '操作',
+              width: 160,
+              formatter: function (value, rec, index) {
+                // 一般缺陷 #19523 当类型为【资质类型】，【检测大类】，【检测科室】，【检测类别】，【检测参数】时显示“编辑/查看内容”按钮，其余不显示
+                var type = {
+                  'TermQualification': true,
+                  'TermTestCategories': true,
+                  'TermTestOrg': true,
+                  'TermTestType': true,
+                  'TermTestParams': true,
+                  'TermText': true,
+                  'default': false
+                }
+                if (!rec.id) {
+                  return '';
+                }
+                var href = '';
+                href += "<a href='#'   class='ace_button'  onclick=delObj('" + basePath +
+                  "/tSnTermController.do?doDel&id=" + rec.id +
+                  "','tSnTermList')>  <i class=' fa fa-trash-o'></i> ";
+                href += "删除</a>&nbsp;";
+                if (type[rec.type]) {
+                  var width = 500,
+                    height = 400;
+                  if ("TermText" === rec.type) {
+                    width = 500;
+                    height = 100;
+                  }
+                  href += "<a href='#'   class='ace_button'  onclick=createwindow('编辑内容','" + basePath +
+                    "/tSnTermcontentController.do?goTermContent&id=" + rec.id + "','" + width + "','" + height +
+                    "')>  <i class=' fa fa-trash-o'></i> ";
+                  href += "编辑/查看内容</a>&nbsp;";
+                }
+
+                var buttons = dic['buttons'];
+                if (buttons)
+                  for (var i = 0; i < buttons.length; i++) {
+                    href += "<a href='#'   class='ace_button'  onclick=doPpp('func','" + index +
+                      "')>  <i class=' fa fa-wrench'></i>";
+                    href += buttons[i].buttonName + "</a>&nbsp;";
+                  }
+                return href;
+              }
+            }
+          ]
+        ],
+        onLoadSuccess: function (data) {
+          if (data.rows && data.rows.length > 0) {
+            snPreviewFun(data.rows)
+          } else {
+            $('#snPreview').html('')
+          }
+
+        }
+      });
+
+      $('#tSnTermList').datagrid('getPager').pagination({
+        beforePageText: '',
+        afterPageText: '/{pages}',
+        displayMsg: '{from}-{to}共 {total}条',
+        showPageList: true,
+        showRefresh: true
+      });
+      $('#tSnTermList').datagrid('getPager').pagination({
+        onBeforeRefresh: function (pageNumber, pageSize) {
+          $(this).pagination('loading');
+          $(this).pagination('loaded');
+        }
+      });
+    }
+    // 显示编号预览
+    function snPreviewFun(rowData) {
+      var html = '';
+      var type = {
+        'TermQualification': '资质类型',
+        'TermTestCategories': '检测大类',
+        'TermTestOrg': '检测科室',
+        'TermTestProject': '检测项目',
+        'TermTestType': '检测类别',
+        'TermTestParams': '检测参数'
+      }
+      //	'TermYear':'年份','TermMonth':'月份','TermDay':'日','TermSerialNumber':'自增长数字',	'TermText': '固定字符',
+      var typeChange = {
+        'TermYear': true,
+        'TermMonth': true,
+        'TermDay': true,
+        'TermSerialNumber': true,
+        'TermText': true,
+        'default': false
+      }
+      for (var i = 0; i < rowData.length; i++) {
+        var typeI = rowData[i].type;
+        if (typeChange[typeI]) {
+          var date = new Date();
+          var serialNoBit = rowData[i].serialNoBit;
+          if ('TermText' === typeI) {
+            html += rowData[i].textTermValue ? (rowData[i].textTermValue) : '';
+          }
+          if ('TermYear' === typeI) {
+            var TermYear = date.getFullYear();
+            if (serialNoBit > 2) {
+              html += TermYear;
+
+            } else {
+              html += (TermYear + '').slice(2, 4);
+            }
+
+          }
+          if ('TermMonth' === typeI) {
+            var TermMonth = date.getMonth() + 1;
+            html += (TermMonth > 9 ? TermMonth : ('0' + TermMonth));
+          }
+          if ('TermDay' === typeI) {
+            var TermDay = date.getDate()
+            html += (TermDay > 9 ? TermDay : ('0' + TermDay));
+          }
+          if ('TermSerialNumber' === typeI) {
+            var str = '';
+            // 默认5位
+            for (var noBitI = 0; noBitI < serialNoBit; noBitI++) {
+              if (noBitI === serialNoBit - 1) {
+                str += '1';
+              } else {
+                str += '0';
+              }
+            }
+
+            html += (str ? str : '00001');
+          }
+        } else {
+          html += '[' + type[typeI] + ']';
+        }
+
+      }
+
+      $('#snPreview').html(html)
+    }
+    /**
+     *formatter ： 单选框的形式
+     */
+    function oneZero2CN(value, row) {
+      return '<input style="cursor: pointer;" type="checkbox" ' + (value == 1 ? 'checked' : '') +
+        ' data-id="' + row.id + '" onclick="updateField(this)">';
+    }
+
+    function updateField(th) {
+      var id = $(th).data('id');
+      var qualificationType = $(th).closest('td').attr('field');
+      var result = $(th).prop('checked');
+      var param = 'id=' + id + '&' + qualificationType + '=' + (result ? '1' : '0');
+      ajaxSubmitResponseJSON({
+        method: 'POST',
+        url: 'testParamController.do?doUpdate',
+        data: param,
+        success: function (data) {
+          if (!data.success) {
+            $(th).prop('checked', !result);
+          }
+        }
+      });
+    }
+  </script>
+</div>

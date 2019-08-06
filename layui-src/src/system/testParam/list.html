@@ -1,0 +1,389 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<style>
+  input {
+    height: 24px;
+  }
+
+  .combobox-item-hover {
+    cursor: pointer;
+  }
+
+  .panel-body {
+    overflow-x: hidden;
+  }
+</style>
+<div class="easyui-layout" fit="true">
+
+  <%--单位大类div--%>
+  <div class="big-category self-noscroll" data-options="region: 'west', title: '单位大类', split: true"
+    style="width: 202px; background:#EEE; padding: 2px;">
+    <div class="search-box">
+      <form>
+        <select class="easyui-combobox" name="qualificationTypeId" style="width: 190px">
+          <c:forEach items="${qualificationTypes}" var="item">
+            <option value="${item.id}">${item.name}</option>
+          </c:forEach>
+        </select>
+      </form>
+    </div>
+    <table id="treeGridOfBigCategory"></table>
+  </div>
+  <%--单位大类div--%>
+
+  <%--试验参数div--%>
+  <div class="test-param self-noscroll" data-options="region: 'center', title: '试验参数列表'">
+    <div class="toolbar">
+      <div class="search-box">
+        <form class="formtable">
+          <input type="hidden" name="bigCategory.id">
+          <table>
+            <tr>
+              <td>参数名称：</td>
+              <td>
+                <input name="name" style="line-height:24px; border:1px solid #ccc">
+              </td>
+              <td>参数显示名称：</td>
+              <td>
+                <input name="displayName" style="line-height:24px; border:1px solid #ccc">
+              </td>
+            </tr>
+            <span style="float:right; height: auto;">
+              <a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+              <a class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+            </span>
+          </table>
+        </form>
+      </div>
+      <div class="datagrid-toolbar">
+        <span style="float:left; height: auto;">
+          <a class="easyui-linkbutton btn-4-quote" plain="true" icon="icon-add">引用系统参数</a>
+          <a class="easyui-linkbutton btn-4-update" plain="true" icon="icon-edit">修改</a>
+          <a class="easyui-linkbutton" plain="true" icon="icon-remove"
+            onclick="layerDeleteALLSelect('删除确认','testParamController.do?doDel','dataGridOfTestParam');">批量删除</a>
+        </span>
+      </div>
+    </div>
+    <table id="dataGridOfTestParam"></table>
+  </div>
+  <%--试验参数div--%>
+
+  <script>
+    var treeGrid;
+    var dataGrid;
+
+    $(function () {
+      /**
+       *隐藏easyui面板的折叠按钮
+       */
+      $('a[class*=layout-button-]').hide();
+
+      initTreeGridOfBigCategory();
+      initDataGridOfTestParam();
+
+      /**
+       *  查询按钮事件
+       **/
+      $('.btn-4-search').click(function () {
+        reloadTestParam(true);
+      });
+
+      /**
+       *  重置按钮事件
+       **/
+      $('.btn-4-reset').click(function () {
+        $('.test-param .search-box form').find('input[type != hidden]').val('');
+        $('.btn-4-search').trigger('click');
+      });
+
+      /**
+       *  引用系统参数按钮事件
+       **/
+      $('.btn-4-quote').click(function () {
+        var node = treeGrid.treegrid('getSelected');
+        if (!node) {
+          tip('请选择单位大类');
+          return;
+        }
+        var children = treeGrid.treegrid('getChildren', node.id);
+        if (children && children.length > 0) {
+          tip('试验参数只能关联最下级大类');
+          return;
+        }
+        var url = 'testParamController.do?quoteSystemTestParam&bigCategoryId=' + node.id;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '引用系统参数',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['90%', '90%'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       *  修改按钮事件
+       **/
+      $('.btn-4-update').click(function () {
+        var rows = dataGrid.datagrid('getSelections');
+        if (rows.length === 0) {
+          tip('请选择试验参数');
+          return;
+        }
+        if (rows.length > 1) {
+          tip('请选择一条试验参数');
+          return;
+        }
+        var url = 'testParamController.do?edit&id=' + rows[0].id;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '修改',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['65%', '70%'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /**
+       * 删除按钮事件
+       */
+      // $('.btn-4-delete').click(function () {
+      //   var row = dataGrid.datagrid('getSelected');
+      //   if (!row) {
+      //     tip('请选择试验参数');
+      //     return;
+      //   }
+      //   confirmAndDoReq({
+      //     url: 'testParamController.do?doDel&id=' + row.id,
+      //     success: function (data) {
+      //       if (data.success) {
+      //         reloadTestParam();
+      //         tip(data.msg);
+      //       }
+      //     }
+      //   });
+      // });
+
+      /**
+       *  资质下拉菜单改变事件
+       **/
+      $('.big-category .search-box select').combobox({
+        onChange: function () {
+
+          initTreeGridOfBigCategory();
+
+          cleanTestParamQuery();
+          reloadTestParam();
+        }
+      });
+    });
+
+    /**
+     *  初始化单位大类树
+     **/
+    function initTreeGridOfBigCategory() {
+      var queryParams = $('.big-category .search-box form').serializeJSON();
+      treeGrid = $('#treeGridOfBigCategory').treegrid({
+        url: 'bigCategoryController.do?datagrid',
+        idField: 'id',
+        treeField: 'name',
+        queryParams: queryParams,
+        toolbar: '.big-category .search-box',
+        fit: true,
+        fitColumns: true,
+        columns: [
+          [{
+            title: 'ID',
+            field: 'id',
+            checkbox: true
+          },
+          {
+            title: '大类名称',
+            field: 'name',
+            width: 160
+          }
+          ]
+        ],
+        onLoadSuccess: function () {
+          //禁用表头的全选框(需求如此)
+          $(".big-category .datagrid-header-check").html("");
+        },
+        onSelect: function (row) {
+          var bigCategoryId = $('.test-param .search-box input[name="bigCategory.id"]').val();
+          if (row.id != bigCategoryId) {
+            $('.test-param .search-box input[name="bigCategory.id"]').val(row.id);
+            /*大类改变时，将分页页码设置为1*/
+            dataGrid.datagrid('options').pageNumber = 1;
+            reloadTestParam();
+          }
+        }
+      });
+    }
+
+    /**
+     *  初始化试验参数列表
+     **/
+    function initDataGridOfTestParam() {
+      dataGrid = $('#dataGridOfTestParam').datagrid({
+        url: 'testParamController.do?datagrid',
+        pagination: true,
+        rownumbers: true,
+        fit: true,
+        fitColumns: true,
+        scrollbarSize: 0,
+        toolbar: '.test-param .toolbar',
+        striped: true,
+        frozenColumns: [
+          [{
+            field: 'ck',
+            checkbox: 'true'
+          }]
+        ],
+        columns: [
+          [{ title: 'ID', field: 'id', hidden: true },
+          { title: '试验项目名称', field: 'testItemName', hidden: true, width: 120, formatter: applyTitleAttribute },
+          { title: '试验参数系统名称', field: 'name', width: 120, formatter: applyTitleAttribute },
+          { title: '试验参数显示名称', field: 'displayName', width: 120, formatter: applyTitleAttribute },
+          { title: '是否禁用', field: 'isDeleted', align: 'center', formatter: oneZero2CN },
+          {
+            title: '是否临时参数', field: 'isTempParam', align: 'center', formatter: function (value) {
+              var valueCN = '否';
+              if (value == '1') {
+                valueCN = '是';
+              }
+              return valueCN;
+            }
+          },
+          { title: 'CMA', field: 'supportCMA', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '公路综合', field: 'supportJC', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '桥隧专项', field: 'supportQSZX', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '交通工程专项', field: 'supportJTGCZX', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '建筑', field: 'supportJZ', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '水运', field: 'supportSY', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '水运结构', field: 'supportSYJG', hidden: true, align: 'center', formatter: oneZero2CN },
+          { title: '备注', field: 'remark', width: 120, formatter: applyTitleAttribute }
+          ]
+        ],
+        onLoadSuccess: function (data) {
+          // isRefreshFristPage此函数勿删，在common.js中
+          if (isRefreshFristPage('#dataGridOfTestParam', data)) {
+            reloadTestParam(true);
+          }
+          /*数据加载完成后，隐藏本单位不支持的资质类型*/
+          showUnitQualificationTypesOnly();
+        },
+        onDblClickRow: function (index, row) {
+          bindDbclickEvent(index, 2, '.btn-4-update', $(this));
+        }
+      });
+    }
+
+    function showUnitQualificationTypesOnly() {
+      ajaxSubmitResponseJSON({
+        url: 'testParamController.do?getUnitQualificationTypes',
+        success: function (data) {
+          if (data.success) {
+            var row = data.obj;
+            if (!row.CMA) {
+              dataGrid.datagrid('hideColumn', 'supportCMA');
+            }
+            if (!row.JC) {
+              dataGrid.datagrid('hideColumn', 'supportJC');
+            }
+            if (!row.QSZX) {
+              dataGrid.datagrid('hideColumn', 'supportQSZX');
+            }
+            if (!row.JTGCZX) {
+              dataGrid.datagrid('hideColumn', 'supportJTGCZX');
+            }
+            if (!row.JZ) {
+              dataGrid.datagrid('hideColumn', 'supportJZ');
+            }
+            if (!row.SY) {
+              dataGrid.datagrid('hideColumn', 'supportSY');
+            }
+            if (!row.SYJG) {
+              dataGrid.datagrid('hideColumn', 'supportSYJG');
+            }
+          }
+        }
+      });
+    }
+
+    /**
+     *  清空试验参数查询条件
+     */
+    function cleanTestParamQuery() {
+      $('.test-param .search-box input[name="bigCategory.id"]').val('');
+    }
+
+    /**
+     * 重新加载试验参数列表
+     */
+    function reloadTestParam(goFirstPage) {
+      var queryParams = $('.test-param .search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid.datagrid('reload', queryParams);
+      }
+    }
+
+    function reloadTable() {
+      reloadTestParam();
+    }
+
+    function oneZero2CN(value, row) { 
+      return '<input type="checkbox" ' + (value == 1 ? 'checked' : '') + ' data-id="' + row.id +
+        '" disabled="disabled">';
+    }
+
+    function updateField(th) {
+      var id = $(th).data('id');
+      var qualificationType = $(th).closest('td').attr('field');
+      var result = $(th).prop('checked');
+      var param = 'id=' + id + '&' + qualificationType + '=' + (result ? '1' : '0');
+      ajaxSubmitResponseJSON({
+        method: 'POST',
+        url: 'testParamController.do?doUpdate',
+        data: param,
+        success: function (data) {
+          if (!data.success) {
+            $(th).prop('checked', !result);
+          }
+        }
+      });
+    }
+
+    function applyTitleAttribute(value) { 
+      return '<span title="' + value + '">' + value + '</span>';
+    }
+  </script>
+</div>

@@ -1,0 +1,166 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>设备检校参数设置</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+</head>
+
+<body>
+  <div id="tableBox" class="height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" style="display:inline-block" data-funCode="" class="easyui-linkbutton funBtn_addPlan"
+            iconCls="iconfont icon-add" plain="true">新增检校参数</a>
+        </span>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'layer'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        InitObj.init();
+      })
+    })
+    var InitObj = {
+      defaultUrl: 'checkItemController.do?datagrid', //默认获取数据url
+      detailEditPage: 'checkItemController.do?goCheckItemEdit',
+      addPlan: $('.funBtn_addPlan'), // 新增检校参数
+      objId: GetQueryString("objId"), // 设备id
+      dataGrid: null,
+      checkTypeObj: {},
+      init: function () {
+        /** common.js中引入函数, 勿删 getPagerFun() funCode() getTableHeight()*/
+        this.initDataGrid(this.columnsFun())
+        this.styleLayout();
+        this.btnFun(this.addPlan, this.detailEditPage, '新增检校参数')
+        // getListByGroupId('402882cd5f998a58015f998cea300000', this.dictGroupCallback, 'checkType')
+      },
+      openCallback: function () {
+        var rows = this.dataGrid.datagrid('getSelections')
+        return rows;
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('新增检校参数' === openName) {
+            layerOpenFun(openUrl + '&objId=' + that.objId, "新增检校参数", ['90%', '80%'], ['确定', '取消']);
+            return;
+          }
+        })
+      },
+      dictGroupCallback: function (res, names) {
+        var that = InitObj, checkTypeObj = {};
+        if (res.success && res.obj) {
+          for (var i = 0; i < res.obj.length; i++) {
+            checkTypeObj[res.obj[i].typecode] = res.obj[i].typename
+          }
+          that.checkTypeObj = checkTypeObj;
+          that.initDataGrid(that.columnsFun())
+        }
+      },
+      // 删除
+      goDetele: function (id, event) {
+        console.log('点击了删除(补)')
+        layui.stope(event);
+        // layerOpenFun(openUrl, "新增设备", ['90%', '80%'], ['确定', '取消']);
+      },
+      // 编辑
+      goEdit: function (id, event) {
+        console.log('点击了编辑')
+        layui.stope(event);
+        layerOpenFun(this.detailEditPage + '&editId=' + id + '&objId=' + this.objId, "编辑检校计划", ['90%', '80%'], ['确定', '取消']);
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        var columns = [], that = this;
+        columns.push({ title: "id", field: "id", hidden: true });
+        columns.push({ title: "设备编号", field: "equipmentSn", width: 80 });
+        columns.push({ title: "设备名称", field: "equipmentName", width: 110 });
+        columns.push({ title: "所属科室", field: "departName", width: 80 });
+        columns.push({ title: "检校项目/参数", field: "name", width: 80 });
+        columns.push({ title: "技术要求", field: "skillLimit", width: 80 });
+        columns.push({ title: "备注说明", field: "remark", width: 80 });
+        columns.push({
+          title: "前次检校时间", field: "preCheckDate", width: 80, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          }
+        });
+        columns.push({
+          title: "下次检校时间", field: "nextCheckDate", width: 110, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : '';
+          }
+        });
+        columns.push({ title: "检校类型", field: "checkType", width: 150 });
+        columns.push({
+          title: "操作", field: "opt", width: 120,
+          formatter: function (value, row, index) {
+            var btns =
+              '<button title="删除(补)" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goDetele(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-delete"></i></button>';
+            btns += '<button title="编辑" style="display:inline-block"  data-funCode="" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' +
+              row.id + '&quot;,event)" ><i class="iconfont icon-edit"></i></button>';
+
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&objId=' + this.objId,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'createDate', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data144', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          }
+        });
+      },
+      // 样式布局控制
+      styleLayout: function () {
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,246 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .tips-form {
+      background: #f8f8f8;
+    }
+
+    .tips-form .layui-form-item {
+      margin: 5px auto;
+    }
+
+    .tips-form .layui-form-radio {
+      color: black;
+    }
+
+    .tips-msg.layui-layer-tips .layui-layer-content {
+      border-radius: 13px;
+      background: #f8f8f8;
+    }
+
+    .layui-btn:hover {
+      background: #C6E4FE;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief height-full">
+    <div id="tb" class="tb-box">
+      <div class="tb-box-form">
+        <form class="layui-form" id="commonQueryForm">
+          <div class="layui-row">
+            <div class="layui-col-xs8">
+              <div class="layui-input-inline" style="width:80%">
+                <input type="text" name="quickQryParam" class="layui-input" placeholder="输入模块名称、事项名称即可查询" autocomplete="off">
+              </div>
+              <div class="layui-input-inline">
+                <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.quickSearch()">查询</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <table class="easyui-datagrid" id="dataGrid"></table>
+
+  </div>
+
+  <script>
+    $(function () {
+      // tabTableHeight('.layui-tab', '.layui-tab-content')
+      layui.use(['table', 'element', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var form = layui.form;
+        InitObj.init(form);
+      })
+
+    })
+    var InitObj = {
+      defaultUrl: '../../data/table/demo1.json', // 默认获取数据url
+      defaultUrl: 'backlogController.do?datagrid', // 默认获取数据url
+      priorityUrl: 'backlogController.do?modifyPriority', // 优先级修改
+      dataGrid: null,
+      tipIndex: 0, // 弹出层序列号
+      rowValue: '', // 修改待保存的优先级的值
+      formLayerM: null,
+      init: function (form) {
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun())
+        this.commonQryKeyDown()
+      },
+
+      //点击状态弹出框
+      delHsCode: function (rowIndex, value, rowId) {
+        console.log('value rowId', value, rowId)
+        this.rowIndex = rowIndex;
+        var html = ' <form class="layui-form tips-form">'
+        html += ' <div class="layui-form-item "> '
+        html += ' <input type="radio" name="priority" value="H" title="高级">'
+        html += ' </div>'
+        html += ' <div class="layui-form-item">'
+        html += ' <input type="radio" name="priority" value="M" title="中级" checked>'
+        html += ' </div>'
+        html += ' <div class="layui-form-item">'
+        html += ' <input type="radio" name="priority" value="L" title="低级">'
+        html += ' </div>'
+        html += ' <div class="layui-form-item">'
+        html += '<a class="layui-btn" onclick="InitObj.save(' + rowId + ')">确定</a>'
+        html += ' <a type="reset" class="layui-btn" onclick="InitObj.cancel()">取消</a>'
+        html += ' </div>'
+        html += '</form>'
+        this.tipIndex = layer.tips(html, '.delHsCode' + rowIndex, {
+          tips: 1,
+          skin: 'tips-msg',
+          time: 20000
+        });
+
+        $('input[value="' + value + '"]').attr('checked', 'true').siblings().attr('checked', 'false')
+        this.formLayerM.render()
+      },
+      priorityAjaxCallback: function (res) {
+        console.log('res', res)
+        var that = InitObj;
+        if (res.success) {
+          layer.msg(res.msg, { icon: 6 })
+          that.dataGrid.datagrid('updateRow', {
+            index: that.rowIndex,
+            row: {
+              priority: that.rowValue
+            }
+          });
+        } else {
+          layer.msg(res.msg, { icon: 5 })
+        }
+        layer.close(that.tipIndex)
+      },
+      save: function (rowId) {
+        this.rowValue = $("input[name='priority']:checked").val();
+        ajaxRequest(this.priorityUrl, { 'id': rowId, 'priority': this.rowValue }, this.priorityAjaxCallback, false, true)
+
+      },
+      cancel: function () {
+        layer.close(this.tipIndex)
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var queryParams = $("input[name='quickQryParam']").val();
+        console.log('queryParams', queryParams)
+        this.reloadDataGrid(true, { 'quickQryParam': queryParams });
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false; //问题解决关键
+          }
+        });
+      },
+      // 各tabs展示数据
+      columnsFun: function () {  // 查询类型: 0:待归档, 1:已归档
+        var columns = [];
+        columns.push({ title: "id", field: "id", hidden: true })
+        columns.push({ title: "模块名称", field: "moduleName", width: 100 });
+        columns.push({ title: "事项名称", field: "name", width: 100 });
+        columns.push({ title: "说明", field: "backlogExplain", width: 90 });
+        columns.push({
+          title: "优先级", field: "priority", width: 90,
+          formatter: function (value, row, index) {
+            console.log(value)
+            var priorityArr = { "H": "高级", "M": "中级", "L": "低级", "default": "低级" };
+            var btns = '<div class="text-center">'
+            btns += '<span class="delHsCode' + index + '" onclick="InitObj.delHsCode(' + index + ',&quot;' + value + '&quot;,&quot;' + row.id + '&quot;)">'
+            btns += priorityArr[value] + ' <i class="layui-icon">&#xe625;</i></span>'
+            btns += ' </div>';
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          toolbar: '#tb',
+          // method: 'GET',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+
+    }
+  </script>
+</body>
+
+</html>

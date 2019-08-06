@@ -1,0 +1,432 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+  .datagrid-btable .datagrid-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  input {
+    height: 24px;
+  }
+</style>
+<div class="easyui-layout" fit="true">
+
+  <div class="dataGrid self-noscroll" data-options="region: 'center'">
+    <div class="toolbar">
+
+      <div class="search-box">
+        <form class="formtable">
+          <table>
+            <tr>
+              <td>送样人姓名：</td>
+              <td>
+                <input name="name" style="line-height:24px; border:1px solid #ccc">
+              </td>
+              <td>联系电话：</td>
+              <td>
+                <input name="contactPhone" style="line-height:24px; border:1px solid #ccc">
+              </td>
+              <span style="float:right; height: auto;">
+                <a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+                <a class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+              </span>
+            </tr>
+          </table>
+        </form>
+      </div>
+
+      <div class="datagrid-toolbar">
+        <span style="float:left; height: auto;">
+          <a class="easyui-linkbutton btn-4-add" onclick="" plain="true" icon="icon-add">新增</a>
+          <a class="easyui-linkbutton btn-4-update" plain="true" icon="icon-edit">修改</a>
+          <a class="easyui-linkbutton btn-4-delete" plain="true" icon="icon-remove">删除</a>
+          <a class="easyui-linkbutton btn-4-resetPassword" plain="true" icon="icon-remove">重置密码</a>
+          <a class="easyui-linkbutton btn-4-lock" plain="true" icon="icon-lock">锁定</a>
+          <a class="easyui-linkbutton btn-4-unLock" plain="true" icon="icon-un-lock">解锁</a>
+        </span>
+      </div>
+    </div>
+    <table id="dataGrid"></table>
+  </div>
+
+  <div data-options="region: 'east',title: '送样人员关联的委托单位列表',split: true" class="self-noscroll" style="width: 300px;">
+    <div class="toolbar">
+      <div class="datagrid-toolbar">
+        <span style="float:left; height: auto;">
+          <a class="easyui-linkbutton btn-4-add-relationship" plain="true" icon="icon-reload">关联</a>
+          <a class="easyui-linkbutton btn-4-delete-relationship" plain="true" icon="icon-remove">取消关联</a>
+        </span>
+      </div>
+    </div>
+    <table id="dataGrid0"></table>
+  </div>
+</div>
+
+<script>
+  $(function () {
+
+    /**
+     *隐藏easyui面板的折叠按钮
+     */
+    $('a[class*=layout-button-]').hide();
+
+    initDataGrid();
+    initDataGrid0();
+
+    /**
+     * 查询按钮事件
+     */
+    $('.btn-4-search').click(function () {
+      reloadDataGrid();
+    });
+
+    /**
+     * 重置按钮事件
+     */
+    $('.btn-4-reset').click(function () {
+      $('.search-box form')[0].reset();
+      $('.btn-4-search').trigger('click');
+    });
+
+    /**
+     * 新增按钮事件
+     */
+    $('.btn-4-add').click(function () {
+      var layerIndex = layerCreateWindow('新增送样人', 'sampleSenderController.do?edit', ['保存', '取消'], ['60%', '40%'], '.btn-4-submit', '', 2, function () {
+        //提交签名（有变化值判断，避免重复提交）
+        var _this = this;
+        _this.saveSignature();
+        _this.initValidForm({
+          btnSubmit: "#btn_sub",
+          tiptype: 4,
+          ignoreHidden: false,
+          dragonfly: false,
+          tipSweep: false,
+          showAllError: true,
+          postonce: true,
+          ajaxPost: true,
+          callback: function (data) {
+            if (data.success) {
+              reloadDataGrid();
+              reloadDataGrid0();
+              layer.close(layerIndex);
+              tip(data.msg);
+            } else {
+              tip(data.msg);
+            }
+          }
+        });
+        $(this.document).find('#btn_sub').trigger('click');
+      });
+    });
+
+    /**
+     * 修改按钮事件
+     */
+    $('.btn-4-update').click(function () {
+      var row = dataGrid.datagrid('getSelected');
+      if (!row) {
+        tip('请选择送样人员');
+        return;
+      }
+      var url = 'sampleSenderController.do?edit&id=' + row.id;
+      var layerIndex = layerCreateWindow('修改送样人员信息', url, ['保存', '取消'], ['60%', '40%'], '.btn-4-submit', '', 2, function () {
+        var _this = this;
+        //提交签名（有变化值判断，避免重复提交）
+        _this.saveSignature();
+        _this.initValidForm({
+          btnSubmit: "#btn_sub",
+          tiptype: 4,
+          ignoreHidden: false,
+          dragonfly: false,
+          tipSweep: false,
+          showAllError: true,
+          postonce: true,
+          ajaxPost: true,
+          callback: function (data) {
+            if (data.success) {
+              reloadDataGrid();
+              reloadDataGrid0();
+              layer.close(layerIndex);
+              tip(data.msg);
+            } else {
+              tip(data.msg);
+            }
+          }
+        });
+        $(this.document).find('#btn_sub').trigger('click');
+      });
+
+
+    });
+
+    /**
+     * 删除按钮事件
+     */
+    $('.btn-4-delete').click(function () {
+      var row = dataGrid.datagrid('getSelected');
+      if (!row) {
+        tip('请选择送样人员');
+        return;
+      }
+      confirmAndDoReq({
+        url: 'sampleSenderController.do?doDel',
+        data: {
+          id: row.id
+        },
+        success: function (data) {
+          tip(data.msg);
+          if (data.success) {
+            reloadDataGrid();
+          }
+        }
+      });
+    });
+
+    /**
+     * 重置密码按钮事件
+     */
+    $('.btn-4-resetPassword').click(function () {
+      var row = dataGrid.datagrid('getSelected');
+      if (!row) {
+        tip('请选择送样人员');
+        return;
+      }
+      confirmAndDoReq({
+        title: '提示信息',
+        content: '确认重置密码',
+        url: 'sampleSenderController.do?doResetPassword',
+        data: {
+          id: row.id
+        },
+        success: function (data) {
+          tip(data.msg);
+        }
+      });
+    });
+
+    /**
+     * 锁定按钮事件
+     */
+    $('.btn-4-lock').click(function () {
+      if (!$(this).linkbutton('options').disabled) {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          tip('请选择送样人员');
+          return;
+        }
+        confirmAndDoReq({
+          title: '提示信息',
+          content: '确认锁定？',
+          url: 'sampleSenderController.do?doLockOrUnLock',
+          data: {
+            id: row.id,
+            result: 1
+          },
+          success: function (data) {
+            reloadDataGrid();
+            tip(data.msg);
+          }
+        });
+      }
+    });
+
+    /**
+     * 解锁按钮事件
+     */
+    $('.btn-4-unLock').click(function () {
+      if (!$(this).linkbutton('options').disabled) {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          tip('请选择送样人员');
+          return;
+        }
+        confirmAndDoReq({
+          title: '提示信息',
+          content: '确认解锁？',
+          url: 'sampleSenderController.do?doLockOrUnLock',
+          data: {
+            id: row.id,
+            result: 0
+          },
+          success: function (data) {
+            reloadDataGrid();
+            tip(data.msg);
+          }
+        });
+      }
+    });
+
+    /**
+     *  关联委托单位
+    */
+    $('.btn-4-add-relationship').click(function () {
+      var row = dataGrid.datagrid('getSelected');
+      if (!row) {
+        tip('请选择送样人员');
+        return;
+      }
+      var url = 'projectController.do?editRelationship';
+      layerCreateWindow('委托单位', url, ['保存', '取消'], ['70%', '80%'], '.btn-4-submit')
+    });
+
+    /**
+     * 取消委托单位关联
+     */
+    $('.btn-4-delete-relationship').click(function () {
+      var rows = dataGrid0.datagrid('getSelections');
+      if (!rows || rows.length == 0) {
+        tip('请选择需要删除的数据');
+        return;
+      }
+
+      var projectRow = dataGrid.datagrid('getSelected');
+
+      var consignUnitIds = [];
+      for (var i in rows) {
+        consignUnitIds.push(rows[i].id);
+      }
+      confirmAndDoReq({
+        url: 'sampleSenderController.do?doDeleteRelationship',
+        data: {
+          sampleSenderId: projectRow.id,
+          consignUnitIds: consignUnitIds.join(',')
+        },
+        success: function (data) {
+          tip(data.msg);
+          if (data.success) {
+            reloadDataGrid0(true, projectRow);
+          }
+        }
+      });
+    });
+  });
+
+  var dataGrid;
+  var dataGrid0;
+  var moduleName='sampleSender'; // 关联委托单位子页面需要判断 是人员模块
+
+  function initDataGrid() {
+    dataGrid = $('#dataGrid').datagrid({
+      url: 'sampleSenderController.do?datagrid',
+      toolbar: '.dataGrid .toolbar',
+      singleSelect: true,
+      pagination: true,
+      fit: true,
+      fitColumns: true,
+      scrollbarSize: 0,
+      columns: [[
+        { title: "ID", field: "id", checkbox: true },
+        { title: "账号", field: "account", width: 120 },
+        { title: "姓名", field: "name", width: 120 },
+        { title: "联系电话", field: "contactPhone", width: 120 },
+        { title: "联系地址", field: "contactAddress", width: 120 },
+        {
+          title: "是否锁定", field: "status", align: 'center',
+          formatter: function (value) {
+            var valueCN = '是';
+            if (value == '0') {
+              valueCN = '否';
+            }
+            return valueCN;
+          }
+        },
+        {
+          title: "审核状态", field: "verifyStatus", align: 'center',
+          formatter: function (value) {
+            var valueCN = '待审核';
+            if (value == '10') {
+              valueCN = '审核不通过';
+            } else if (value == '20') {
+              valueCN = '审核通过';
+            }
+            return valueCN;
+          }
+        },
+        { title: "创建时间", field: "createDate" }
+      ]],
+      onSelect: function (index, row) {
+        reloadDataGrid0(true, row);
+
+        /*锁定与解锁按钮可用状态处理*/
+        if (row.status == '0') {
+          $('.btn-4-unLock').linkbutton('disable');
+          $('.btn-4-lock').linkbutton('enable');
+        } else {
+          $('.btn-4-unLock').linkbutton('enable');
+          $('.btn-4-lock').linkbutton('disable');
+        }
+      },
+      onDblClickRow: function (index, row) {
+        bindDbclickEvent(index, 2, '.btn-4-update');
+      },
+      onLoadSuccess: function (data) {
+        console.log('获取数据成功', data)
+        $('.btn-4-unLock').linkbutton('enable');
+        $('.btn-4-lock').linkbutton('enable');
+      }
+    });
+  }
+
+  function reloadDataGrid(goFirstPage) {
+    var queryParams = $('.search-box form').serializeJSON();
+    if (goFirstPage) {
+      /*从第一页开始显示*/
+      dataGrid.datagrid('load', queryParams);
+    } else {
+      /*停留在当前页面*/
+      dataGrid.datagrid('reload', queryParams);
+    }
+  }
+
+  function initDataGrid0() {
+    dataGrid0 = $('#dataGrid0').datagrid({
+      url: 'sampleSenderController.do?getSampleSenderConsignUnits',
+      singleSelect: false,
+      fit: true,
+      fitColumns: true,
+      scrollbarSize: 0,
+      columns: [[
+        { title: "ID", field: "id", checkbox: true },
+        { title: "委托单位名称", field: "name", width: 130, formatter: applyTitleAttribute },
+        // { title: "项目标段名称", field: "projectTenderName", width: 130, formatter: applyTitleAttribute }
+      ]]
+    });
+  }
+
+  function reloadDataGrid0(goFirstPage, row) {
+    if (row) {
+      var params = {
+        id: row.id
+      };
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid0.datagrid('load', params);
+      } else {
+        /*停留在当前页面*/
+        dataGrid0.datagrid('reload', params);
+      }
+    } else {
+      dataGrid0.datagrid('loadData', { total: 0, rows: [] });
+    }
+  }
+
+  function applyTitleAttribute(value) {
+    return '<span title="' + value + '">' + value + '</span>';
+  }
+</script>

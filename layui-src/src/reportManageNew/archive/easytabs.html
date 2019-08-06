@@ -1,0 +1,545 @@
+<!-- <%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title></title>
+<link rel="stylesheet" type="text/css"
+  href="plug-in/assets/css/common.css" />
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script> -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+
+  <style>
+    .datagrid-cell,
+    /* .datagrid-cell-group,
+    .datagrid-header-rownumber,
+    .datagrid-cell-rownumber {
+      white-space: normal;
+    }
+
+
+    div.layui-layer-tips .layui-layer-content {
+      background-color: #fff;
+      top: 10px;
+      left: 16px;
+    }
+
+    div.layui-layer-tips .layui-layer-content span {
+      color: #000 !important;
+    }
+
+    div.layui-layer-tips i.layui-layer-TipsT,
+    div.layui-layer-tips i.layui-layer-TipsR,
+    div.layui-layer-tips i.layui-layer-TipsL,
+    div.layui-layer-tips i.layui-layer-TipsB {
+      display: none;
+    }
+
+    .layui-row {
+      margin: 8px auto;
+    }
+
+    .layui-input {
+      display: inline-block;
+      width: 83%;
+    }
+
+    button[type="reset"] {
+      outline: none;
+    }
+
+    .seniorText {
+      height: 30px;
+      line-height: 30px;
+      padding-left: 36px;
+      font-weight: bold;
+    } */
+  </style>
+</head>
+
+<body>
+    <div class="easyui-layout" fit="true" style="overflow-x:hidden">
+        <div region="center" style="padding:0px;border:0px">
+          <div id="tabs-container">
+            <div class="tabs-header tabs-header-noborder no-print">
+              <div class="tabs-wrap"
+                style="margin-left: 0px; margin-right: 0px; width: 100%;">
+                <ul class="tabs">
+                  <li id="tab_index_1" class="tabs-selected">
+                    <a href="javascript:void(0)" class="tabs-inner">
+                      <span class="tabs-title">未收费</span> <span class="tabs-icon"></span>
+                    </a>
+                  </li>
+                  <li id="tab_index_2" class="">
+                    <a href="javascript:void(0)" class="tabs-inner">
+                      <span class="tabs-title">部分收费</span> <span class="tabs-icon"></span>
+                    </a>
+                  </li>
+                  <li id="tab_index_3" class="">
+                    <a href="javascript:void(0)" class="tabs-inner">
+                      <span class="tabs-title">已结清</span> <span class="tabs-icon"></span>
+                    </a>
+                  </li>
+                  <li id="tab_index_4" class="">
+                    <a href="javascript:void(0)" class="tabs-inner">
+                      <span class="tabs-title">全部</span> <span class="tabs-icon"></span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="tabs-panels tabs-panels-noborder tab-contents">
+              <div id="cont_index_1" class="panel"
+                style="display: block; width: 100%;">
+                <div title=""
+                  style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+                  class="panel-body panel-body-noheader panel-body-noborder">
+                  <div style="width: 100%; height: 100%">
+                    <iframe name="waitAssign" width="100%" height="100%"
+                      frameborder="none"
+                      src="feeModelController.do?listByStatus&status=3"></iframe>
+                  </div>
+                </div>
+              </div>
+              <div id="cont_index_2" class="panel" style="display: none; ">
+                <div title=""
+                  style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+                  class="panel-body panel-body-noheader panel-body-noborder">
+                  <div style="width: 100%; height: 100%">
+                    <iframe name="myAssigned" width="100%" height="100%"
+                      frameborder="none"
+                      src="feeModelController.do?listByStatus&status=2"></iframe>
+                  </div>
+                </div>
+              </div>
+              <div id="cont_index_3" class="panel" style="display: none; ">
+                <div title=""
+                  style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+                  class="panel-body panel-body-noheader panel-body-noborder">
+                  <div style="width: 100%; height: 100%">
+                    <iframe name="myAssigned" width="100%" height="100%"
+                      frameborder="none"
+                      src="feeModelController.do?listByStatus&status=1"></iframe>
+                  </div>
+                </div>
+              </div>
+              <div id="cont_index_4" class="panel" style="display: none; ">
+                <div title=""
+                  style="margin: 0px; padding: 0px; overflow: hidden;  width: 100%; height: 100%;"
+                  class="panel-body panel-body-noheader panel-body-noborder">
+                  <div style="width: 100%; height: 100%">
+                    <iframe name="myAssigned" width="100%" height="100%"
+                      frameborder="none"
+                      src="feeModelController.do?listByStatus&status=1,2,3"></iframe>
+                  </div>
+                </div>
+              </div>
+      
+            </div>
+          </div>
+        </div>
+        <!--    <input type="hidden" id="actTaskId" value="${actTaskId }"> -->
+      </div>
+  <!-- <div id="tt2" class="easyui-tabs">
+    <div title="Shirt1" style="padding:20px;">
+      1111
+    </div>
+    <div title="Shirt2" style="padding:20px;">
+      222
+    </div>
+    <div title="Shirt3" style="padding:20px;">
+      333
+    </div>
+  </div> -->
+
+  <script>
+
+    /**
+ * tabs
+ */
+var tabs = $("#tabs-container").children(".tabs-header").find("li");
+var tab_contents = $("#tabs-container").children(".tab-contents").children(".panel");
+$.each(tabs,function(){
+	$(this).click(function(){
+		if(!$(this).hasClass("tabs-selected")){
+			$("#tabs-container").children(".tabs-header").find("li.tabs-selected").removeClass("tabs-selected");
+			$.each(tab_contents,function(){
+				$(this).css("display","none");
+			});
+			var tab_id = $(this).attr("id");
+			$("#tabs-container").children(".tab-contents").find("#cont"+tab_id.substring(3,tab_id.length)).css("display","block");
+			$(this).addClass("tabs-selected");
+		}
+	})
+});
+    // $('#tt2').tabs({
+    //   onSelect: function (title,i) {
+    //     console.log('dianji',title,i)
+    //     // if (title == "交货安排") {
+    //     //   selectDS();
+    //     // }
+    //   }
+    // })
+
+
+
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          layer.close(layer.tips())
+          // InitObj.initDataGrid(InitObj.columnsFun(data.index))
+        });
+        laydate.render({
+          elem: '#signDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        laydate.render({
+          elem: '#consignDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        laydate.render({
+          elem: '#issueDate'
+          , range: '~'
+          , format: 'yyyy-MM-dd'
+        })
+        // InitObj.init(form);
+      })
+
+    })
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      defaultUrl: 'reportPrintController.do?datagridPrint', //默认获取数据url
+      addPageUrl: './reportArchiveAdd.html', // 报告发放url页面
+      formLayerM: null, // form对象 
+      dataType: 1, // 1.待打印 2.已打印
+      stateMsg: '', // 状态提示信息
+      addFile: $('#functionButton .funBtn_1'), // 归档
+      exportExl: $('#functionButton .funBtn_2'), // 导出
+      // isShow: $('#functionButton .funBtn_8'),  // 是否显示其他按钮 
+      // isHide: true,
+      searchType: 1,    // 导出数据时区分查询条件：1.普通查询   2.高级查询
+      isHideSpan: $('#isHideSpan'),
+      searchShow: true, // 高级搜索隐藏 
+      searchSwitch: $('#searchSwitch'), // 搜素按钮
+      senior: $('.senior'), // 高级搜素
+      ordinary: $('.ordinary'), // 普通搜索
+      seniorRow: $('.seniorRow'), // 高级查询显示
+      init: function (form) {
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun(0))
+        this.commonQryKeyDown()
+
+        // 导出Excel
+        this.exportExl.on('click', function () {
+          // that.exportExcel();
+        });
+        this.styleLayout();
+        // this.btnFun(this.reload, 'reportPrintController.do?goReportPrintConfig', '发放报告')
+        this.btnFun(this.addFile, this.addPageUrl, '资料归档')
+        // this.btnFun(this.mailingList, './reportProvidePrint.html', '打印邮寄单')
+        form.render()
+      },
+      sendReceiveNoticeCallBack: function (res) {
+        if (res.success) {
+          layer.msg("通知成功", { icon: 6 });
+        } else {
+          layer.msg("通知失败", { icon: 5 });
+        }
+      },
+      // 打印设置回调
+      printCallback: function (res) {
+        console.log('打印设置回调', res)
+      },
+      // 打印邮寄单回调layer
+      addFileLayerCallback: function (res) {
+        console.log('资料归档回调 layer', res)
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          var that = this, row = $('#dataGrid').datagrid('getSelections');
+          // if (!row || row.length === 0) {
+          //   console.log('if', btnName)
+          //   layer.tips('<span style="color:#fff">请选择一条记录</span>', that, {
+          //     tips: 3,
+          //     time: 20000
+          //   });
+          //   return;
+          // } else {
+
+          var reportIds = "";
+          for (var i = 0; i < row.length; i++) {
+            if (i == 0) {
+              reportIds += row[i].id;
+            } else {
+              reportIds += "," + row[i].id;
+            }
+          }
+          var that = InitObj;
+          if ('资料归档' === openName) {
+            layerOpenFun(openUrl, openName, that.addFileLayerCallback);
+          } else if ('打印邮寄单' === openName) {
+
+          } else {
+            console.log(openName)
+          }
+          return;
+          // }
+        })
+        btnName.mouseleave(function () {
+          layer.close(layer.tips())
+        });
+      },
+
+      // 样式布局控制
+      styleLayout: function () {
+        // this.isShow.click(function (e) {
+        //   var that = InitObj;
+        //   if (that.isHide) {
+        //     that.isHideSpan.show();
+        //     that.isHide = !that.isHide;
+        //     $(this).removeClass("show"); //移除
+        //   } else {
+        //     that.isHideSpan.hide();
+        //     that.isHide = !that.isHide;
+        //     $(this).addClass("show"); // 追加样式
+        //   }
+        // })
+        this.searchSwitch.click(function () {
+          var that = InitObj;
+          console.log('点击查询', that.searchShow)
+          if (that.searchShow) {
+            that.searchType = 2;
+            that.senior.show();
+            that.ordinary.hide();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到普通查询"); //移除
+
+          } else {
+            that.searchType = 1;
+            that.senior.hide();
+            that.ordinary.show();
+            that.searchShow = !that.searchShow;
+            $(this).find('.l-btn-text').text("切换到高级查询"); // 追加样式
+          }
+          that.formLayerM.render();
+        })
+
+      },
+      // 打印设置
+      setPrint: function (arr) { },
+      // 各tabs展示数据
+      columnsFun: function (num) {  // 0.待批准报告  1.已批准报告
+        console.log(num)
+        console.log(typeof num)
+        this.dataType = num + 1;
+        if (1 === num) {
+          this.seniorRow.show()
+          this.addFile.hide(); // 报告发放
+          // this.mailingList.hide(); // 打印邮寄单
+          this.exportExl.show(); // 导出
+        } else {
+          this.seniorRow.hide()
+          this.addFile.show(); // 报告发放
+          // this.mailingList.show(); // 打印邮寄单
+          this.exportExl.hide(); // 导出
+        }
+        var columns = [];
+        if (num === 1) { // 0:审核中, 1:审核完成
+          columns.push({ title: "id", field: "id", hidden: true })
+        } else {
+
+          columns.push({ title: "id", field: "id", checkbox: true, width: 30 })
+        }
+        columns.push({ title: "报告编号", field: "reportCode", width: 80 });
+        columns.push({ title: "委托编号", field: "consignCode", width: 90 });
+        if (num === 1) {
+          columns.push({ title: "报告档案编号", field: "consignCode2", width: 90 });
+          columns.push({ title: "报告档案地址", field: "consignCode3", width: 90 });
+          columns.push({ title: "归档日期", field: "consignCode4", width: 90 });
+          columns.push({ title: "归档人员", field: "consignCode5", width: 90 });
+        }
+        columns.push({ title: "委托单位", field: "consignUnit", width: 80 });
+        columns.push({ title: "工程项目", field: "signDate1", width: 80 });
+        columns.push({ title: "委托日期", field: "signDate2", width: 80 });
+        columns.push({ title: "签发日期", field: "signDate3", width: 80 });
+        if (1 === num) {
+          columns.push({
+            title: "操作",
+            field: "opt",
+            width: 150,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="查看详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+              btns += '<button title="重新编辑" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe9aa;</i></button>';
+              return btns;
+            }
+          });
+        }
+        return [columns];
+
+      },
+      // 点击进入详情页
+      goDetail: function (did, event) {
+        layui.stope(event)
+        console.log('打开详情窗口，内容同资料归档窗口，不可编辑', did)
+        var openUrl = this.addPageUrl + '&auditId=' + did + '&detail=' + false, openName = '查看详情';
+        layerOpenFun(openUrl, openName, this.addLayerCallback)
+      },
+      // 点击重新提交，调用新增申请窗口
+      goEdit: function (did, event) {
+        layui.stope(event)
+        console.log('打开资料归档窗口，内容默认为归档时填写的内容', did)
+        var openUrl = this.addPageUrl + '&auditId=' + did, openName = '重新编辑';
+        layerOpenFun(openUrl, openName, this.addLayerCallback)
+      },
+      // 时间处理函数
+      dateStartEnd: function (queryParams, dataString) {
+        if (queryParams[dataString]) {
+          var DateArr = queryParams[dataString].split(' ~ ')
+          queryParams[dataString + 'Start'] = DateArr[0];
+          queryParams[dataString + 'End'] = DateArr[1];
+        } else {
+          queryParams[dataString + 'Start'] = '';
+          queryParams[dataString + 'End'] = '';
+        }
+        return queryParams;
+      },
+      // 高级查询
+      seniorQuickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        console.log('queryParams 高级', queryParams)
+        delete queryParams['queryCondition'];
+        if (1 === this.dataType) {
+          delete queryParams['issueWay'];
+        } else {
+          queryParams = this.dateStartEnd(queryParams, 'issueDate')
+        }
+        queryParams = this.dateStartEnd(queryParams, 'signDate')
+        queryParams = this.dateStartEnd(queryParams, 'consignDate')
+        delete queryParams['signDate'];
+        delete queryParams['consignDate'];
+        delete queryParams['issueDate'];
+        console.log('queryParams 高级2', this.dataType)
+        console.log('queryParams 高级2', queryParams)
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        //var queryParams = $('#commonQueryForm').serializeJSON();
+        var condition = $("input[name='queryCondition']").val();
+        var queryParams = { 'queryCondition': condition };
+        console.log('queryParams', queryParams)
+        this.reloadDataGrid(true, queryParams);
+      },
+      // 导出Excel
+      exportExcel: function () {
+        var queryParams;
+        //console.info("this.searchType",this.searchType);
+        // 区分回传的查询条件：1.普通查询     2.高级查询
+        if (this.searchType == 1) {
+          var condition = $("input[name='queryCondition']").val();
+          queryParams = { 'queryCondition': condition };
+        } else {
+          queryParams = $('#commonQueryForm').serializeJSON();
+          delete queryParams['queryCondition'];
+        }
+        var params = "";
+        for (var key in queryParams) {
+          console.info(key + " " + queryParams[key]);
+          params += "&" + key + "=" + queryParams[key];
+        }
+        params += "&dataType=" + this.dataType;
+        window.location.href = "reportPrintController.do?exportXls" + encodeURI(params);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          if (event.keyCode == "13") {
+            InitObj.quickSearch();
+          }
+        });
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      //任务分配界面查询结果集：由当前用户分配的全部任务，创建者是当前登录用户的记录
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&dataType=' + this.dataType,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            // 重新渲染列表中 图标
+            $("a[name='reload']").linkbutton({
+              plain: true,
+              iconCls: 'icon-reload'
+            });
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+            if (field !== 'state' || !value) {
+              layer.close(layer.tips())
+            }
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      }
+
+    }
+  </script>
+</body>
+
+</html>

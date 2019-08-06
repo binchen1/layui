@@ -1,0 +1,1185 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/system/log/logProcess.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    body {
+      background: #EFF3F4;
+    }
+
+    .functionButton {
+      border-bottom: 1px solid #D7D7D7;
+      padding: 5px 10px;
+    }
+
+    .layui-form-item {
+      height: 34px;
+    }
+
+    .layui-form-item.tempReportIdsDiv,
+    .layui-form-item.tempReportIdsDiv,
+    .layui-form-item.textarea-boxs {
+      height: auto;
+    }
+
+    .choiceShow {
+      line-height: 20px;
+    }
+
+    .commonQueryForm {
+      margin: 5px auto 15px;
+      padding: 0px 10px;
+    }
+
+    .commonQueryForm label {
+      text-align: left;
+      width: auto;
+    }
+
+    .commonQueryForm .layui-input-block {
+      margin-left: auto;
+    }
+
+    #reportPersons {
+      /* padding-left: 35px;
+      min-height: 36px;
+      line-height: 20px;
+      margin-bottom: 10px; */
+    }
+
+    .report-info {
+      background: #fff;
+      padding: 5px 0px;
+    }
+
+    .commonQueryForm .report-info label {
+      text-align: right;
+      width: 60px;
+    }
+
+    .commonQueryForm .report-info .textarea-box-text {
+      margin-left: 70px;
+      padding: 5px 0px;
+    }
+
+    .layui-textarea {
+      min-height: 60px;
+    }
+
+    .testTaskIds-title {
+      padding: 0px 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="height:100%;">
+    <div style="display: none;" id="functionButton" class="functionButton">
+      <a href="#" class="easyui-linkbutton funBtn_1" iconCls="iconfont icon-redo" plain="true">提交报告</a>
+      <a href="#" class="easyui-linkbutton funBtn_2" lay-submit lay-filter="formDemo" iconCls="iconfont icon-save"
+        plain="true">保存</a>
+      <a href="#" class="easyui-linkbutton funBtn_3" iconCls="iconfont icon-reload" plain="true">关联检测任务</a>
+      <a href="#" class="easyui-linkbutton funBtn_4" iconCls="iconfont icon-add" plain="true">添加临时报告</a>
+      <a href="#" class="easyui-linkbutton funBtn_5" iconCls="iconfont icon-remove" plain="true"
+        onclick="showProcessLog()">查看日志</a>
+    </div>
+    <form class="layui-form commonQueryForm" id="commonQueryForm">
+      <!-- <div class="layui-form-item">
+        <div id="reportPersons">
+          <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+          报告创建人：
+          <i style="font-style:normal;" id="userName">${LOCAL_CLINET_USER.realName}</i>；
+          <span> </span> <a href="#" class="layui-color-blue">>>>设置人员</a>
+        </div>
+      </div> -->
+
+      <div class="layui-form-item" id="reportPersons">
+        <label class="layui-form-label font-weight">报告创建人：</label>
+        <div class="layui-input-block">
+          <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+          <i style="font-style:normal;" class="choiceShow" id="userName">${LOCAL_CLINET_USER.realName}</i>；
+          <span class="choiceShow"></span>
+          <a href="javascript:void(0);" class="layui-color-blue">>>>设置人员</a>
+        </div>
+      </div>
+      <!-- <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label font-weight">报告编号1：</label>
+          <div class="layui-inline">
+            <div class="layui-input-inline">
+              <input type="text" value="${defaultSn}" id="reportNumberInput" name="reportNumber" class="layui-input"
+                disabled placeholder="请输入报告编号">
+            </div>
+          </div>
+          <span id="reportCodeBtnSpan"> <a onclick="reportCodeObj.sureModifyReportCode()" class="layui-btn layui-bg-blue layui-btn-xs">确定</a>
+            <a onclick="reportCodeObj.cancelModifyReportCode()" class="layui-btn layui-bg-blue layui-btn-xs">取消</a>
+          </span>
+          <a id="reportCodeA" class="layui-color-blue" href="javascript:void(0);" onclick="reportCodeObj.preModifyReportCode()">>>>修改</a>
+        </div>
+      </div> -->
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label font-weight">报告编号：</label>
+          <div class="layui-inline">
+            <div class="layui-input-inline">
+              <input type="text" class="layui-input" id="reportNumberInput" name="reportNumber" placeholder="请输入报告编号">
+            </div>
+            <!-- <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);" onclick="InitObj.reportNumberFun()">生成编号</a> -->
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label font-weight">编号类别：</label>
+          <div class="layui-input-inline">
+            <select name="city" lay-verify="required" id="snTypeId"></select>
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item" id="consignUnitNameDiv">
+        <label class="layui-form-label font-weight">委托单位：</label>
+        <div class="layui-input-block">
+          <span class="choiceShow"></span>
+          <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+            onclick="InitObj.consignUnitFun()">选择</a>
+        </div>
+        <div class="layui-inline" style="display:none">
+          <div class="layui-input-inline">
+            <input type="text" name="consignUnitId" class="layui-input" disabled>
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item" id="consignProjectNameDiv">
+        <label class="layui-form-label font-weight">工程项目：</label>
+        <div class="layui-input-block">
+          <span class="choiceShow"></span> <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+            onclick="InitObj.consignProjectFun()">选择</a>
+        </div>
+        <div class="layui-inline" style="display:none">
+          <div class="layui-input-inline">
+            <input type="text" name="consignProjectId" class="layui-input" disabled>
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item" id="qualificationDiv">
+        <label class="layui-form-label font-weight">资质类型：</label>
+        <div class="layui-input-block">
+          <span class="choiceShow"></span>
+          <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);"
+            onclick="InitObj.qualificationFun()">选择</a>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label font-weight">报告份数：</label>
+          <div class="layui-inline">
+            <div class="layui-input-inline">
+              <input type="text" class="layui-input" name="copies" placeholder="请输入报告份数">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item formalReportIdsDiv" id="formalReportIdsDiv" style="display:none">
+        <div class="layui-inline">
+          <label class="layui-form-label font-weight">正式报告：</label>
+          <div class="layui-inline">
+            <ul class="layui-ul"> </ul>
+          </div>
+        </div>
+      </div>
+      <div class="layui-form-item tempReportIdsDiv" id="tempReportIdsDiv" style="display:none">
+        <div class="layui-inline">
+          <label class="layui-form-label font-weight">临时报告：</label>
+          <div class="layui-inline" id="tempUl"></div>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label font-weight">报告信息：</label>
+      </div>
+      <div class="report-info">
+        <div class="layui-form-item">
+          <div class="layui-inline">
+            <label class="layui-form-label">检测时间：</label>
+            <div class="layui-inline">
+              <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="testTime" placeholder=" ~ " readonly autocomplete="off">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item" id="reportFileIdsDiv">
+          <label class="layui-form-label">报告文件：</label>
+          <div class="layui-inline">
+            <u class="layui-color-blue choiceShow"></u>
+            <a id="uploadA" class="layui-btn layui-bg-blue layui-btn-xs">选择</a>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">是否合格：</label>
+          <div class="layui-input-block" id="isQualifiedDiv">
+            <input class="layui-bg-blue" type="radio" name="isQualified" value="1" title="合格" checked>
+            <input class="layui-bg-blue" type="radio" name="isQualified" value="0" title="不合格">
+            <input class="layui-bg-blue" type="radio" name="isQualified" value="2" title="不判定">
+          </div>
+        </div>
+        <div class="layui-form-item textarea-boxs">
+          <label class="layui-form-label">检测结论：</label>
+          <div class="layui-input-block textarea-box-text">
+            <!-- <input type="text" name="verdict" placeholder="请输入检测结论" class="layui-input"> -->
+            <textarea name="verdict" rows="3" placeholder="请输入检测结论" class="layui-textarea"></textarea>
+          </div>
+        </div>
+        <div class="layui-form-item textarea-boxs">
+          <label class="layui-form-label">备注：</label>
+          <div class="layui-input-block textarea-box-text">
+            <!-- <input type="text" name="verdictRemark" placeholder="备注：" class="layui-input"> -->
+            <textarea name="verdictRemark" rows="3" placeholder="备注：" class="layui-textarea"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </form>
+    <div id="testTaskIdstable" style="display:none">
+      <!-- <div class="layui-form-item">
+        <label class="layui-form-label font-weight">关联检测任务：</label>
+      </div> -->
+      <div class="font-weight testTaskIds-title">
+        关联检测任务：
+      </div>
+      <div style="height:60%;margin-top: 10px;">
+        <table class="easyui-datagrid" id="dataGrid"></table>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    //展示流转日志
+    function showProcessLog() {
+      var reportIdForLog = GetQueryString("reportId");
+      showLogs('3', reportIdForLog, true);
+    }
+
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form', 'upload'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var upload = layui.upload;
+        laydate.render({
+          elem: '#testTime',
+          trigger: 'click',
+          range: '~',
+          format: 'yyyy-MM-dd'
+        });
+
+        InitObj.init(form, upload)
+      })
+      reportCodeObj.init()
+    })
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': [],
+      'numbers': 1
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+    }
+
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      InitObj.addToForm(filesObj.files)
+    }
+    // 报告编码设置对象
+    var reportCodeObj = {
+      reportCodeA: null,
+      reportCodeInput: null,
+      reportCodeBtnSpan: null,
+      nowCode: '',
+      defaultCode: '',
+      init: function () {
+        this.reportCodeA = $("#reportCodeA");
+        this.reportCodeInput = $('#reportNumberInput');
+        this.reportCodeBtnSpan = $("#reportCodeBtnSpan");
+        this.defaultCode = this.reportCodeInput.val();
+        this.closeReportCodeBtnSpan()
+      },
+      preModifyReportCode: function () { // 设置
+        this.reportCodeInput.attr("disabled", false) //去除input元素的disabled属性
+        this.reportCodeInput.css("border", "1px solid");
+        this.reportCodeA.hide()
+        this.reportCodeBtnSpan.show()
+      },
+      sureModifyReportCode: function () { // 确定
+        this.defaultCode = this.nowCode = $("#reportNumberInput").val()
+        this.reportCodeInput.attr("disabled", true).css("border", "none") //将input元素设置为disabled 　　 
+        this.closeReportCodeBtnSpan()
+      },
+      cancelModifyReportCode: function () { // 取消
+        this.reportCodeInput.val(this.defaultCode);
+        this.reportCodeInput.attr("disabled", true).css("border", "none") //将input元素设置为disabled 　　 
+        this.closeReportCodeBtnSpan()
+      },
+      closeReportCodeBtnSpan: function () {
+        this.reportCodeA.show();
+        this.reportCodeBtnSpan.hide();
+      }
+    }
+
+    var InitObj = {
+      reportId: GetQueryString("reportId"), // 获取父页面传递过来的编辑id
+      formalId: GetQueryString("formalId"), // 临时报告关联正式报告id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      // interimReport: GetQueryString("interimReport"), // 添加临时报告页面
+      // tempRptId: GetQueryString("tempRptId"), // 添加临时报告返回的id
+      userId: $('#userId'), //报告创建人Id  // 职责类型0:报告负责人, 1:报告创建人, 2:报告编写人, 3:复核人, 4:审核人, 5:批准人, 6:检测人
+      defaultUrl: '../../data/table/demo1.json', // 默认获取数据url
+      detailUrl: 'reportCreateController.do?getReportDetail', // 查看报告详情
+      taskUrl: 'reportCreateController.do?getTaskByReportId', // 检测任务
+      personUrl: 'reportCreateController.do?goPersonChoosePage', // 设置人员
+      qualificationsUrl: 'reportController.do?getReportQualification', // 获取资质类型
+      filesUrl: 'reportController.do?getReportAttachmentList', // 获取上传文件
+      formalReportUrl: 'reportController.do?getTempReport', // 获取临时报告
+      tempReportUrl: 'reportController.do?getFormalReport', // 获取正式报告
+      redo: $('#functionButton .funBtn_1'), // 功能按钮 提交报告
+      save: $('#functionButton .funBtn_2'), // 功能按钮 保存
+      reload: $('#functionButton .funBtn_3'), // 功能按钮 关联检测任务
+      add: $('#functionButton .funBtn_4'), // 功能按钮 添加临时报告
+      viewlog: $('#functionButton .funBtn_5'), // 功能按钮 查看日志
+      functionButton: $('#functionButton'),
+      addPersons: $('#reportPersons a'), // 点击设置人员
+      reportNumber: $('#reportNumberInput'), // 报告编号
+      consignUnitName: $('#consignUnitNameDiv'), // 委托单位 id
+      consignProjectName: $('#consignProjectNameDiv'), // 工程项目 id
+      qualificationDiv: $('#qualificationDiv'), // 资质类型
+      qualificationTypeIds: [], // 资质类型提交数据
+      qualificationTypeIdsData: [], // 资质类型临时数据
+      copies: $('input[name="copies"]'), // 报告分数 id
+      testTime: $('#testTime'), // 检测时间 testTimeBegin testTimeEnd
+      isQualified: $('#isQualifiedDiv'), // 是否合格(0:不合格,1合格,2不做判定)
+      verdict: $('textarea[name="verdict"]'), // 检测结论
+      verdictRemark: $('textarea[name="verdictRemark"]'), // 备注
+      reportPersonsDiv: $('#reportPersons'), // 设置人员
+      formalReportIdsDiv: $('#formalReportIdsDiv'), // 正式报告id集合
+      tempReportIdsDiv: $('#tempReportIdsDiv'), // 临时报告id集合
+      reportFileIdsDiv: $('#reportFileIdsDiv'), // 报告文件集合,这里传commonAttachmentId
+      testTaskIdsDiv: $('#testTaskIdstable'), // 报告关联的检测任务 id集合
+      snTypeId: $('#snTypeId'), // 编号类别
+      moduleParamStr: null, // 提交数据
+      staffData: [], // 存放设置人员临时数据
+      tempReportIds: [], // 提交数据  临时报告id集合
+      formalReportId: '', // 提交数据 关联的正式报告id
+      testTaskIds: [], // 提交数据 报告关联的任务id集合
+      testTaskIdsData: [], // 提交数据 报告关联的任务临时数据
+      reportFileIds: [], // 提交数据 报告文件集合,这里传commonAttachmentId
+      staffDataSubmit: [], // 提交数据  存放设置人员
+      formLayerM: null, // form对象 
+      uploadLayerM: null, // upload对象 
+      dataGrid: null, // 试验检测任务对象data
+      isSubmit: false, // 是否点击提交
+      isSubmitData: [], // 是否点击提交 返回参数
+      statusArr: {
+        '9': '（报告编制中)',
+        '10': '（报告未审批)',
+        '15': '（报告复核通过)',
+        '20': '（报告审核通过)',
+        '30': '（报告批准通过)'
+      }, //报告状态
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form, upload) {
+        if (this.formalId) {
+          // 处理临时报告页面 ,保存成功后到正式报告页面
+          this.add.hide()
+          this.formalReportId = this.formalId
+        }
+        this.formLayerM = form;
+        this.uploadLayerM = upload;
+        this.initSnType()
+        // this.uploadFun(this.uploadLayerM)
+        this.btnFun(this.redo, 'reportCreateController.do?goReportCommitPage', '提交报告')
+        this.btnFun(this.save, 'reportCreateController.do?saveReport', '保存')
+        this.btnFun(this.reload, 'reportCreateController.do?goRelationTaskChoosePage&testTaskIdsData=', '关联检测任务')
+        this.btnFun(this.add, 'reportCreateController.do?goEditPage', '添加临时报告')
+        this.btnFun(this.viewlog, '', '查看日志')
+        this.staffData = [{
+          "id": "10001",
+          "staffname": [],
+          "typename": "报告负责人",
+          "type": '0'
+        },
+        {
+          "id": "10002",
+          "staffname": [],
+          "typename": "报告编写",
+          "type": '2'
+        },
+        {
+          "id": "10003",
+          "staffname": [],
+          "typename": "审核",
+          "type": '4'
+        },
+        {
+          "id": "10004",
+          "staffname": [],
+          "typename": "批准",
+          "type": '5'
+        }
+        ]
+        this.btnFun(this.addPersons, 'reportCreateController.do?goPersonChoosePage&staffData=', '设置人员')
+        //  this.qualifications();
+        if (this.reportId) {
+          // 处理报告详情及检测任务
+          this.detailEdit();
+          // 关联检测任务
+          this.taskData()
+          // 获取临时报告
+          this.formalReportData()
+          // 获取关联的正式报告
+          this.tempReportData()
+          // 获取上传文件
+          this.filesData()
+          // 获取资质类型
+          this.qualificationData();
+        } else {
+          this.functionButton.show()
+        }
+        form.render();
+        $('#uploadA').bind('click', function () {
+          // fileUpload.js中的方法
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArrs) {
+        console.log('filesArrs', filesArrs)
+        var filesArr = filesArrs.slice(-filesObj.numbers);
+        var html = '';
+        this.reportFileIds = [];
+        for (var i = 0; i < filesArr.length; i++) {
+          this.reportFileIds.push(filesArr[i].id)
+          html += ' <u><a class="attachmentA layui-color-blue" target="_blank" href="' + filesArr[i].realpath +
+            '">' + filesArr[i].attachmenttitle + '</a> </u>'
+        }
+        console.log('this.reportFileIds', this.reportFileIds)
+        this.reportFileIdsDiv.find('.choiceShow').html(html);
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务 
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[id='testTime']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        } else {
+          this.functionButton.show()
+        }
+      },
+      // 生成报告编号
+      reportNumberFun: function () {
+        if (this.reportId) {
+          ajaxRequest('reportCreateController.do?createAndUseSn', {
+            reportId: this.reportId
+          }, this.reportNumberFunCallback, false, true)
+        } else {
+          formTipFun('请先保存报告', this.save)
+        }
+      },
+      reportNumberFunCallback: function (res) {
+        console.log('res', res)
+      },
+      // 获取编号类别
+      initSnType: function () {
+        ajaxRequest('tSnCategoryController.do?getAllSnCategory', {}, this.initSnTypeCallback, false, true)
+      },
+      initSnTypeCallback: function (res) {
+        console.log('data', res)
+        // var res = JSON.parse(data)
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          // var selected = $(snType).data('selected');
+          var htm = '';
+          var rows = res.obj;
+          if (rows && rows.length > 0) {
+            for (i = 0; i < rows.length; i++) {
+              htm += '<option value="' + rows[i].id + '" >' + rows[i].name +
+                '</option>';
+            }
+          }
+          that.snTypeId.html(htm);
+          that.formLayerM.render();
+        }
+      },
+      // 获取正式报告回调
+      tempReportAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else if (res.obj.length !== 0) {
+          that.formalReportId = res.obj[0].id;
+          // <li><u class="layui-color-blue">BG-2018-SNJ-00001c</u></li>
+          var html;
+          html = '<li><u class="layui-color-blue">' + res.obj[0].reportNumber + that.statusArr[res.obj[0].reportStatus] +
+            '</u></li>'
+          that.formalReportIdsDiv.find('ul').html(html)
+          that.formalReportIdsDiv.show()
+          return;
+        }
+      },
+      // 获取正式报告
+      tempReportData: function () {
+        ajaxRequest(this.tempReportUrl, {
+          'tempReportId': this.reportId
+        }, this.tempReportAjaxCallback, false, true)
+      },
+
+      // 获取临时报告回调
+      formalReportAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else if (res.obj.length !== 0) {
+          var arr = res.obj;
+          var status, html = '<ul class="layui-ul" >';
+          for (var i = 0; i < arr.length; i++) {
+            that.tempReportIds.push(arr[i].id)
+            // <li><u class="layui-color-blue">BG-2018-SNJ-00001c</u></li>
+            html += '<li><u class="layui-color-blue">' + arr[i].reportNumber + that.statusArr[arr[i].reportStatus] +
+              '</u></li>'
+          }
+
+          that.tempReportIdsDiv.find('#tempUl').html(html + '</ul>')
+          that.tempReportIdsDiv.show()
+          return;
+        }
+      },
+      // 获取临时报告
+      formalReportData: function () {
+        ajaxRequest(this.formalReportUrl, {
+          'formalReportId': this.reportId
+        }, this.formalReportAjaxCallback, false, true)
+      },
+      // 获取上传文件回调 ajax
+      filesAjaxCallback: function (res) {
+        console.log('filesAjaxCallback', res)
+        var that = InitObj,
+          html = '';
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          for (var i = 0; i < res.obj.length; i++) {
+            that.reportFileIds.push(res.obj[i].id);
+            html += res.obj[i].attachmenttitle + ' ；';
+            filesObj.files.push({
+              'id': res.obj[i].id,
+              'realpath': res.obj[i].realpath || '',
+              'attachmenttitle': res.obj[i].attachmenttitle || ''
+            })
+          }
+          that.reportFileIdsDiv.find('.choiceShow').html(html)
+          return;
+        }
+      },
+      // 获取上传文件
+      filesData: function () {
+        ajaxRequest(this.filesUrl, {
+          'reportId': this.reportId
+        }, this.filesAjaxCallback, false, true)
+      },
+      // 上传文件
+      uploadFun: function (upload) {
+        var html = '';
+        var that = this;
+        var uploadInst = upload.render({
+          elem: '#uploadA', //绑定元素
+          url: 'uploadController.do?upload',
+          accept: 'file', //允许的文件类型file（所有文件）详见https://www.layui.com/doc/modules/upload.html文件上传模块
+          size: 50000, //允许的大小(kb)
+          multiple: true, //允许多文件上传
+          number: 5, //一次上传文件数量最大值
+          data: {
+            folderId: ''
+          }, //跟随本次上传操作一同提交的数据信息
+          before: function (obj) { //提交前触发的函数
+            html = '';
+            that.reportFileIds = [];
+            uploadLoading = layer.load(0, {
+              shade: 0.2
+            });
+          },
+          done: function (res) {
+            //单个文件上传完毕回调,多文件上传的情况下,每个都会调一次
+            if (res.success) {
+              //res:{"success":true,"msg":"操作成功","obj":[{"id":"402882206565747f016565dd420a0001","businessKey":null,"subclassname":null,"attachmenttitle":"taskUserChoose.jsp","realpath":"http://192.168.2.4:8801/fileShare/A03/images/2018/e6832476-636c-4e62-951b-ea77c2aeb5d4.jsp","createdate":null,"note":null,"swfpath":null,"extend":null,"relevantEntityId":null}],"attributes":null,"jsonStr":"{\"msg\":\"操作成功\",\"success\":true,\"obj\":[{\"attachmenttitle\":\"taskUserChoose.jsp\",\"id\":\"402882206565747f016565dd420a0001\",\"realpath\":\"http://192.168.2.4:8801/fileShare/A03/images/2018/e6832476-636c-4e62-951b-ea77c2aeb5d4.jsp\"}]}"}
+              //ajax写入任务和文件/目录之间的关系
+              //  layer.msg('单个成功');
+              that.reportFileIds.push(res.obj[0].id)
+              html += res.obj[0].attachmenttitle + '; ';
+            } else {
+              layer.msg(res.msg, function () { });
+            }
+          },
+          allDone: function (obj) { //当文件全部被提交后，才触发
+            //刷新页面信息
+            layer.msg('上传成功', { icon: 6 });
+            that.reportFileIdsDiv.find('.choiceShow').html(html)
+            layer.close(uploadLoading);
+          },
+          error: function () {
+            //请求异常回调
+            layer.close(uploadLoading);
+            layer.msg('上传失败,请重试', { icon: 5 });
+          }
+        });
+
+      },
+      // 获取资质类型数据回调 编辑时
+      qualificationAjaxCallback: function (res) {
+        var that = InitObj;
+        if (res.obj && res.obj.length !== 0) {
+          var arr = res.obj,
+            html = ''
+          for (var i = 0; i < arr.length; i++) {
+            that.qualificationTypeIds.push(arr[i].id)
+            that.qualificationTypeIdsData.push(arr[i])
+            html += arr[i].name + ';'
+          }
+        }
+        that.qualificationDiv.find('.choiceShow').html(html)
+      },
+      // 获取资质类型数据 编辑时
+      qualificationData: function () {
+        ajaxRequest(this.qualificationsUrl, {
+          'reportId': this.reportId
+        }, this.qualificationAjaxCallback, false, true)
+      },
+      // 选择资质类型回调 layer
+      qualificationLayerCallback: function (res, index) {
+        var that = InitObj,
+          html = '';
+        layer.close(index)
+        that.qualificationTypeIds = [];
+        that.qualificationTypeIdsData = [];
+        for (var i = 0; i < res.length; i++) {
+          html += res[i].name + ' ;'
+          that.qualificationTypeIds.push(res[i].id)
+          that.qualificationTypeIdsData.push(res[i])
+        }
+        that.qualificationDiv.find('.choiceShow').html(html)
+      },
+      // 选择资质类型页面
+      qualificationFun: function () {
+        var url = 'reportCreateController.do?goQualificationChoosePage&qualificationTypeIdsData=';
+        layerOpenFun(url + encodeURI(encodeURI(JSON.stringify(this.qualificationTypeIdsData))),
+          '选择资质类型', ['80%', '60%'], ['确定', '取消'], this.qualificationLayerCallback)
+      },
+      // 选择委托单位回调 layer
+      consignUnitLayerCallback: function (res, index) {
+        var that = InitObj;
+        layer.close(index)
+        var firstVal = that.consignUnitName.find('input').val()
+        if (firstVal !== res.id) {
+          that.consignUnitName.find('.choiceShow').html(res.name)
+          that.consignUnitName.find('input').val(res.id)
+          that.consignProjectName.find('.choiceShow').html('')
+          that.consignProjectName.find('input').val('')
+        }
+
+      },
+      // 选择委托单位
+      consignUnitFun: function () {
+        var url = 'reportCreateController.do?goUnitProjectChoosePage';
+        layerOpenFun(url, '选择委托单位', ['80%', '60%'], ['确定', '取消'], this.consignUnitLayerCallback)
+      },
+      // 选择项目名称回调 layer
+      consignProjectLayerCallback: function (res, index) {
+        var that = InitObj
+        layer.close(index)
+        that.consignProjectName.find('.choiceShow').html(res.name)
+        that.consignProjectName.find('input').val(res.id)
+      },
+      // 选择项目名称
+      consignProjectFun: function () {
+        var id = this.consignUnitName.find('input').val()
+        if (id) {
+          var url = 'reportCreateController.do?goUnitProjectChoosePage&uniId=' + id;
+          layerOpenFun(url, '选择项目名称', ['80%', '60%'], ['确定', '取消'], this.consignProjectLayerCallback)
+        } else {
+
+          formTipFun('请先选择委托单位', this.consignUnitName.find('.choiceShow'))
+        }
+      },
+      // 编辑数据处理
+      detailEditData: function (data) {
+        if ('synthesis_Temp' === data.reportType) {
+          this.add.hide()
+        }
+        var personsHtml = '',
+          personsArr = data.reportPersonVos;
+        for (var i = 0; i < personsArr.length; i++) {
+          if (personsArr[i].type === '1') {
+            this.userId.val(personsArr[i].userId)
+            $('#userName').html(personsArr[i].userRealName)
+          }
+          if (personsArr[i].type === '0') {
+            this.staffData[0].staffname.push({
+              "id": personsArr[i].userId,
+              "name": personsArr[i].userRealName
+            })
+          }
+          if (personsArr[i].type === '2') {
+            this.staffData[1].staffname.push({
+              "id": personsArr[i].userId,
+              "name": personsArr[i].userRealName
+            })
+          }
+          if (personsArr[i].type === '4') {
+            this.staffData[2].staffname.push({
+              "id": personsArr[i].userId,
+              "name": personsArr[i].userRealName
+            })
+          }
+          if (personsArr[i].type === '5') {
+            this.staffData[3].staffname.push({
+              "id": personsArr[i].userId,
+              "name": personsArr[i].userRealName
+            })
+          }
+          // 职责类型0:报告负责人, 1:报告创建人, 2:报告编写人, 3:复核人, 4:审核人, 5:批准人, 6:检测人
+        }
+        // this.reportPersonsDiv.find('span').html(); // 报告创建人
+        this.addPersonsLayerCallback(this.staffData)
+        this.reportNumber.val(data.reportNumber); // 报告编号
+        this.consignUnitName.find('.choiceShow').html(data.consignUnitName)
+        this.consignUnitName.find('input').val(data.consignUnitId)
+        this.consignProjectName.find('.choiceShow').html(data.consignProjectName)
+        this.consignProjectName.find('input').val(data.consignProjectId)
+        this.copies.val(data.copies); // 报告分数
+        this.testTime.val(new Date(data.testTimeBegin).Format("yyyy-MM-dd") + ' ~ ' + new Date(data.testTimeEnd).Format(
+          "yyyy-MM-dd")); // 检测时间 testTimeBegin testTimeEnd
+        this.isQualified.find('input[value="' + data.isQualified + '"]').attr('checked', true).siblings().attr(
+          'checked', false)
+        this.verdict.val(data.verdict); // 检测结论
+        this.verdictRemark.val(data.verdictRemark); // 备注
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看报告详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, {
+          "reportId": this.reportId
+        }, this.detailEditCallback, false, true)
+      },
+      // 设置人员回调  layer
+      addPersonsLayerCallback: function (res, index) {
+        layer.close(index)
+        var that = InitObj;
+        that.staffData = res;
+        that.staffDataSubmit = [];
+        var html = ''
+        for (var i = 0; i < res.length; i++) {
+          if (res[i].staffname.length > 0) {
+            html += res[i].typename + '：'
+            var staffname = res[i].staffname
+            for (var j = 0; j < staffname.length; j++) {
+              html += staffname[j].name + ' '
+              that.staffDataSubmit.push({
+                "userId": staffname[j].id,
+                "type": res[i].type
+              })
+            }
+            html += ';'
+          }
+        }
+        that.staffDataSubmit.push({
+          "userId": that.userId.val(),
+          "type": "1"
+        })
+        that.reportPersonsDiv.find('span').html(html); // 报告创建人
+      },
+
+      // 设置人员  及 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('提交报告' === openName) {
+            InitObj.submitDataFun(openUrl, openName)
+          } else if ('保存' === openName) {
+            InitObj.saveFun(openUrl)
+          } else if ('关联检测任务' === openName) {
+            if (that.reportId) {
+              // layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.testTaskIdsData))), openName, ['80%', '60%'], ['确定', '取消'], that.taskReloadLayerCallback)
+              layerOpenFun(openUrl, openName, ['80%', '60%'], ['确定', '取消'], that.taskReloadLayerCallback)
+            } else {
+              formTipFun('请先保存报告', that.save)
+            }
+          } else if ('添加临时报告' === openName) {
+            if (that.reportId) {
+              window.open(openUrl + '&formalId=' + that.reportId, openName)
+            } else {
+              formTipFun('请先保存报告', that.save)
+            }
+          } else if ('设置人员' === openName) {
+            layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.staffData))), openName, ['70%',
+              '80%'
+            ], ['确定', '取消'], that.addPersonsLayerCallback)
+          }
+        })
+      },
+      // 表单数据必填项
+      dataRequired: function () {
+        var reportNumber = this.reportNumber.val();
+        var consignUnitId = this.consignUnitName.find('input').val();
+        var consignProjectId = this.consignProjectName.find('input').val();
+        // if (!reportNumber) {
+        //   formTipFun('报告编号不能为空', this.reportNumber)
+        //   return false;
+        // }
+        if (!consignUnitId) {
+          formTipFun('委托单位不能为空', this.consignUnitName.find('.choiceShow'))
+          return false;
+        }
+        if (!consignProjectId) {
+          formTipFun('工程项目不能为空', this.consignProjectName.find('.choiceShow'))
+          return false;
+        }
+        if (this.qualificationTypeIds.length === 0) {
+          formTipFun('资质类型不能为空', this.qualificationDiv.find('.choiceShow'))
+          return false;
+        }
+        return true;
+
+      },
+      // 提交报告回调 先保存报告在提交
+      submitLayerCallback: function (res) {
+        var that = InitObj;
+        var url = 'reportCreateController.do?saveReport'
+        that.isSubmit = true;
+        that.isSubmitData = res;
+        that.saveFun(url)
+      },
+      // 提交报告
+      submitDataFun: function (openUrl, openName) {
+        var that = this;
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (that.dataRequired(formdata)) {
+          // 编号 设置人员 检测 结果 结论 备注 文件 
+          // var val = InitObj.reportFileIdsDiv.find('input').get(0).files
+          var val = InitObj.reportFileIdsDiv.find('u').html()
+          var data = {
+            'reportNumber': this.reportNumber.val(),
+            'snCategoryId': this.snTypeId.val(),
+            'reportPersons': this.staffData,
+            'verdict': this.verdict.val(),
+            'verdictRemark': this.verdictRemark.val(),
+            'files': val,
+            'isQualified': this.isQualified.find('input[name="isQualified"]:checked')[0].title,
+          }
+          console.log('data', data)
+          if ('none' === this.add[0].style.display) {
+            data.reportType = '临时报告';
+          } else {
+            data.reportType = '正式报告';
+          }
+          var dataUrl = encodeURI(encodeURI(JSON.stringify(data)))
+          layerOpenFun(openUrl + '&staffData=' + dataUrl, openName, ['80%', '90%'], ['确定', '取消'], that.submitLayerCallback)
+        }
+      },
+      // 提交报告（先保存，再调提交）回调
+      submitSaveCallback: function (res) {
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          var that = InitObj;
+          that.isSubmit = false;
+          layerAlertFun(res.msg, 6, []);
+          window.close();
+          return;
+        }
+      },
+      // 保存报告回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          that.reportId = res.obj
+          if (that.isSubmit === true) { // 再提交
+            var url = 'reportCreateController.do?submitReport';
+            var dataJson = {
+              "reportId": res.obj,
+              "signDate": that.isSubmitData.signDate,
+              "commitOpinion": that.isSubmitData.commitOpinion,
+            }
+            ajaxRequest(url, dataJson, that.submitSaveCallback, false, true)
+          }
+          location.href = "reportCreateController.do?goEditPage" + "&reportId=" + that.reportId;
+          return;
+        }
+      },
+      // 获取保存报告数据
+      saveData: function (url, submitData) {
+        if (this.dataRequired()) {
+          var data = {
+            'reportNumber': this.reportNumber.val(), //reportNumber: ""
+            'snCategoryId': this.snTypeId.val(),
+            'verdict': this.verdict.val(), //verdict: "检测结论"
+            'verdictRemark': this.verdictRemark.val(), //verdictRemark: "备注1111"
+            'consignUnitId': this.consignUnitName.find('input').val(), //consignUnitId
+            'consignProjectId': this.consignProjectName.find('input').val(), //consignProjectId
+            'copies': this.copies.val(), //copies
+            'isQualified': this.isQualified.find('input[name="isQualified"]:checked').val(),
+          }
+          console.log('saveData', data)
+          // 处理编辑
+          if (this.reportId) {
+            data.id = this.reportId
+          }
+          // 处理正式临时报告
+          if (this.formalId) {
+            data.reportType = 'synthesis_Temp';
+          } else {
+            data.reportType = 'synthesis';
+          }
+          // 处理时间
+          var testTimeArr = this.testTime.val().split(' ~ ')
+          data.testTimeBegin = testTimeArr[0];
+          data.testTimeEnd = testTimeArr[1];
+          // 处理设置人员+报告创建人
+          if (this.staffDataSubmit.length === 0) {
+            this.staffDataSubmit = [{
+              "userId": this.userId.val(),
+              "type": "1"
+            }]
+          }
+          var formdata = {
+            "report": data,
+            "tempReportIds": this.tempReportIds,
+            "formalReportId": this.formalReportId,
+            "reportFileIds": this.reportFileIds,
+            "testTaskIds": this.testTaskIds,
+            "reportPersons": this.staffDataSubmit,
+            "qualificationTypeIds": this.qualificationTypeIds
+          }
+          return formdata;
+        }
+      },
+      saveFun: function (url, submitData) {
+        var formdata = this.saveData();
+        if (formdata) {
+          var dataJson = {
+            moduleParamStr: JSON.stringify(formdata)
+          }
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(url, dataJson, this.saveAjaxCallback, true, true);
+          }
+        }
+      },
+
+      // 供报告关联检测任务回调 layer
+      taskReloadLayerCallback: function (res, index) {
+        layer.close(index)
+        var that = InitObj;
+        that.testTaskIds = [];
+        that.testTaskIdsData = [];
+        for (var i = 0; i < res.length; i++) {
+          that.testTaskIds.push(res[i].id)
+          that.testTaskIdsData.push(res[i])
+        }
+        that.testTaskIdsDiv.show()
+        that.taskDataGrid(res, that.columnsFun())
+      },
+      // 关联检测任务 获取数据回调ajax
+      taskAjaxCallback: function (res) {
+        var that = InitObj,
+          arr = res.rows;
+        if (arr.length !== 0) {
+          that.testTaskIds = [];
+          that.testTaskIdsData = [];
+          for (var i = 0; i < arr.length; i++) {
+            that.testTaskIds.push(arr[i].id)
+            that.testTaskIdsData.push(arr[i])
+          }
+          that.testTaskIdsDiv.show()
+          that.taskDataGrid(res, that.columnsFun())
+        }
+        return;
+      },
+      // 获取关联检测任务
+      taskData: function () {
+        ajaxRequest(this.taskUrl, {
+          'reportId': this.reportId
+        }, this.taskAjaxCallback, false, true)
+      },
+      taskDetail: function (id) {
+        window.open('testTaskController.do?goTestTaskDetail&id=' + id)
+      },
+      taskRemove: function (rowId) {
+        for (var i = 0; i < this.testTaskIds.length; i++) {
+          if (rowId === this.testTaskIds[i]) {
+            this.dataGrid.datagrid('deleteRow', i);
+            this.testTaskIds.splice(i, 1)
+            this.testTaskIdsData.splice(i, 1)
+            break;
+          }
+        }
+
+      },
+      columnsFun: function () { // 0.待批准报告  1.已批准报告
+        var columns = [];
+        columns.push({
+          title: "id",
+          field: "id",
+          hidden: 'true'
+        });
+        columns.push({
+          title: "任务编号",
+          field: "testTaskCode",
+          width: 50
+        });
+        columns.push({
+          title: "记录编号",
+          field: "testRecordCode",
+          width: 60
+        });
+        columns.push({
+          title: "检测时间",
+          field: "opt",
+          width: 50,
+          formatter: function (value, row, index) {
+            var dateHtml = '';
+            if (row.testDate) {
+              dateHtml += '<span>' + row.testDate + '</span>';
+            }
+            if (row.testDate && row.testEndDate) {
+              dateHtml += '~';
+            }
+            if (row.testEndDate) {
+              dateHtml += '<span>' + row.testEndDate + '</span>';
+            }
+            return dateHtml
+          }
+        });
+        columns.push({
+          title: "委托单位",
+          field: "unitName",
+          width: 70
+        });
+        columns.push({
+          title: "工程项目",
+          field: "projectName",
+          width: 50
+        });
+        if (this.detail !== 'detailPage') {
+          columns.push({
+            title: "操作",
+            field: "more",
+            width: 80,
+            formatter: function (value, row, index) {
+              var buttonGroup;
+              buttonGroup = '<a class="layui-btn layui-btn-sm" onclick="InitObj.taskDetail(&quot;' + row.id +
+                '&quot;)">'
+              buttonGroup += '<i class="layui-icon layui-color-blue">&#xe705;</i></a>'
+              buttonGroup += '<a  class="layui-btn layui-btn-sm" onclick="InitObj.taskRemove(&quot;' + row.id +
+                '&quot;)">'
+              buttonGroup += '<i class="layui-icon layui-color-red">&#xe640;</i></a>'
+              return buttonGroup;
+            }
+          });
+        }
+        return [columns];
+      },
+      // 关联检测任务 table
+      taskDataGrid: function (data, columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          data: data,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          fitColumns: true,
+          scrollbarSize: 0,
+          sortName: 'experience', // 检测时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          // //加载完成事件
+          onLoadSuccess: function (data) {
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+            //双击事件,进入任务分配
+          }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>

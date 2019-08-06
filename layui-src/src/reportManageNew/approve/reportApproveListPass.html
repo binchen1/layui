@@ -1,0 +1,255 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>批准通过</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+
+</head>
+
+<body>
+  <form class="layui-form" id="commonQueryForm">
+    <div class="layui-form-item">
+      <label class="layui-form-label">报告编号：</label>
+      <div class="layui-input-block">
+        <ul class="layui-ul" id="codeUl">
+          <!-- <li><b> BG-2018-SNJ-00001 </b></li>
+            <li><b> BG-2018-SNJ-00001 </b></li>
+            <li><b> BG-2018-SNJ-00001 </b></li> -->
+        </ul>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">要求报告时间：</label>
+        <div class="layui-inline">
+          <div class="layui-input-inline">
+            <input type="text" class="layui-input border-none" id="requireReportDate" readonly="readonly">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">报告签发日期：</label>
+        <div class="layui-inline">
+          <div class="layui-input-inline">
+            <input type="text" class="layui-input" name="signDate" id="signDate" readonly sutocomplete="off"
+              placeholder="请选择签发日期">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item ">
+      <label class="layui-form-label">批准意见：</label>
+    </div>
+    <div class="textarea-box">
+      <textarea name="comment" placeholder="请输入内容" class="layui-textarea"></textarea>
+    </div>
+    <div id="logBox" class="layui-hide">
+      <div class="layui-form-item ">
+        <label class="layui-form-label">流转日志：</label>
+
+      </div>
+      <div class="textarea-box">
+        <table class="easyui-datagrid" id="dataGrid"></table>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['laydate', 'layer'], function () {
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        lay('#signDate').each(function () {
+          laydate.render({
+            elem: this,
+            trigger: 'click',
+            // type: 'month',
+            format: 'yyyy-MM-dd'
+          });
+        });
+        InitObj.init()
+      });
+    })
+    var InitObj = {
+      dateUrl: 'reportController.do?getRequestDate', // 获取要求报告日期id
+      codeUrl: 'reportController.do?getReportCode', // 获取报告编号 
+      submitUrl: 'reportApproveController.do?doReportApprovePass',
+      logUrl: 'tSLogProcessController.do?getProcessLogList',
+      reportIds: GetQueryString("reportIds"), // 获取父页面传递过来的id
+      reportIdList: [],
+      logBox: $('#logBox'),
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      init: function () {
+        this.getDetailFun();
+        this.getDateFun();
+        this.reportIdList = this.reportIds.split(',')
+        this.reportIdList.length === 1 ? this.initDataGrid(this.columnsFun()) : '';
+      },
+      openCallback: function () {
+        var saveParam = this.saveData()
+        if (saveParam) {
+          var dataJson = { "reportId": this.reportIds, "comment": saveParam.comment, "signDate": saveParam.signDate }
+          if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(this.submitUrl, dataJson, this.saveAjaxCallback, true, true)
+          } else {
+              SHOW_LOAD_LAYER('数据提交中...')
+          }
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          parentThat.reloadDataGrid(false);
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      submitFun: function () {
+        var saveParam = this.saveData()
+        if (saveParam) {
+          var dataJson = { "reportId": this.reportIds, "comment": saveParam.comment, "signDate": saveParam.signDate }
+          if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(this.submitUrl, dataJson, this.saveAjaxCallback, true, true)
+          } else {
+              SHOW_LOAD_LAYER('数据提交中...')
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.signDate) {
+          queryParams.msg = '报告签发日期不能为空'
+          queryParams.element = $('input[name="signDate"]')
+          return false;
+        }
+        if (!queryParams.comment) {
+          queryParams.msg = '批准意见不能为空'
+          queryParams.element = $('textarea[name="comment"]')
+          return false;
+        }
+
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          // 保存数据
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+        return false;
+      },
+      // 查询报告日期回调
+      getDateCallback: function (res) {
+        console.log('报告日期', res)
+        var str = res.obj, html = '';
+        if (str) {
+          $('#requireReportDate').val(str)
+        }
+      },
+      // 查询报告日期
+      getDateFun: function () {
+        var dataJson = {
+          'reportIds': this.reportIds
+        }
+        ajaxRequest(this.dateUrl, dataJson, this.getDateCallback, false, true)
+      },
+      // 查询报告编号回调
+      getDetailCallback: function (res) {
+        var str = res.obj, arr = [], html = '';
+        if (res.obj) {
+          arr = str.split(',');
+          for (var i = 0; i < arr.length; i++) {
+            html += '<li><b>' + arr[i] + '</b></li>'
+          }
+          $('#codeUl').append(html)
+        }
+      },
+      // 查询报告编号
+      getDetailFun: function () {
+        var dataJson = {
+          'reportIds': this.reportIds
+        }
+        ajaxRequest(this.codeUrl, dataJson, this.getDetailCallback, false, true)
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {
+        var columns = [];
+        columns.push({ title: "id", field: "id", hidden: true });
+        columns.push({ field: 'content', title: '内容', width: 160 });
+        columns.push({ field: 'opinion', title: '处理意见', width: 160 });
+        columns.push({ field: 'objectSn', title: '对象编号', width: 100 });
+        columns.push({ field: 'createName', title: '处理人', width: 50 });
+        columns.push({
+          field: 'createDate', title: '时间', width: 100, sortable: true,
+          formatter: function (value, row) {
+            return new Date(value).Format("yyyy-MM-dd hh:mm:ss")
+          }, sorter: function (a, b) {
+            return (a > b ? 1 : -1)
+          }
+        });
+        return [columns];
+
+      },
+      // table渲染
+      initDataGrid: function (columns) {
+        this.logBox.removeClass('layui-hide').addClass('layui-show')
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.logUrl,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          fit: false,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          remoteSort: false,
+          queryParams: {
+            'objectType': 3,
+            'objectId': this.reportIds,
+            'relationQry': true
+          },
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+
+    }
+  </script>
+</body>
+
+</html>

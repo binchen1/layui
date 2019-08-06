@@ -1,0 +1,95 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>任务文件页面</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <script type="text/javascript">
+
+		/**
+		 * 判断是否引入了该文件
+		 * @return
+		 * @date 2019-06-26 15:20
+		 * @author weiheng
+		 */
+    function isInclude(name) {
+      var js = /js$/i.test(name);
+      var es = document.getElementsByTagName(js ? 'script' : 'link');
+      var flag = false;
+      for (var i = 0; i < es.length; i++) {
+        if (es[i][js ? 'src' : 'href'].indexOf(name) != -1) {
+          flag = true;
+        }
+      }
+      return flag;
+    }
+
+    var basePath = basePath || undefined;
+    // 判断是否引入了该JS文件：如果没有加载该文件，则进行加载。若此页面作为testTaskDetail.jsp的子页面使用，则无需加载下列文件（避免重复加载导致的一系列问题）
+    var loaded = isInclude("layui.js");
+    if (!loaded) {
+      //获得根目录
+      var strFullPath = window.document.location.href;
+      var strPath = window.document.location.pathname;
+      var pos = strFullPath.indexOf(strPath);
+      var prePath = strFullPath.substring(0, pos);
+      var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+      var path = prePath;
+      var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+      basePath = basePath || prePath + postPath;
+
+      // easyui相关
+      document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/easyui-1.5.5.2/themes/gray/easyui.css' />");
+      document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/iconfont/iconfont.css' />");
+      document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/ace/css/font-awesome.css' />");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery-1.8.3.min.js'><\/script>");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery.cookie.js'><\/script>");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery-plugs/storage/jquery.storageapi.min.js'><\/script>");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui-1.5.5.2/jquery.easyui.min.js'><\/script>");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/extends/datagrid-detailview.js'><\/script>");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/artTemplate/template-web.js'><\/script>");
+      // layui相关
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layui2.5.4/layui.js'><\/script>");
+      document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/layui2.5.4/css/layui.css' />");
+      document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layui2.5.4/layui.js'><\/script>");
+    }
+
+    //basePath等地址信息在easyui的jsp里面写了
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/testTask/testTaskFile.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/common/upload/fileUpload.js'><\/script>");
+
+  </script>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <style>
+    .datagrid-row-selected {
+      background: #CDCDC1;
+      color: #2B2B2B;
+    }
+
+    .datagrid .panel-body {
+      width: 100% !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="padding:10px 10px;" id="tb">
+    <button onclick="preUpload();" class="layui-btn layui-btn-xs"><i class="layui-icon">&#xe67c;</i>上传文件</button>
+    <button onclick='addFolder();' class="layui-btn layui-btn-xs"><i class="layui-icon">&#xe654;</i>新增目录</button>
+    <button onclick='recoverSysFile()' style="display:none;" id="recoverBtn" class="layui-btn layui-btn-xs"><i
+        class="layui-icon">&#xe666;</i>恢复系统文件</button>
+    <button onclick='reCreateReport()' style="display:none;" id="reCreateBtn" class="layui-btn layui-btn-xs"><i
+        class="layui-icon">&#xe655;</i>重新生成报告</button>
+  </div>
+  <div style="height:83%;overflow-y:auto;width:100%">
+    <table id="fileTreegrid" class='easyui-datagrid' style="width:100%;height: 500px;"></table>
+  </div>
+</body>
+
+
+</html>

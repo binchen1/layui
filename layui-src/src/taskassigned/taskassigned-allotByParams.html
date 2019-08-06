@@ -1,0 +1,815 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@include file="/context/layuiCommon.jsp" %>
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+  <title>任务分配-按参数分配</title>
+
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="expires" content="0">
+  <meta http-equiv="keywords" content="hitek,ilis,试验检测">
+  <meta http-equiv="description" content="ilis试验检测管理系统">
+  <script type="text/javascript">
+    //获得根目录
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var path = prePath;
+    var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+    var basePath = prePath + postPath;
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+  </script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <style type="text/css">
+    .td-label {
+      width: 20%;
+    }
+
+    .assignedTr {
+      height: 30px;
+    }
+  </style>
+</head>
+
+<body class="easyui-layout">
+
+
+  <div data-options="region:'center',title:'参数列表'" style="padding:5px;">
+    <table style="width:500px;height:300px" id="testInfo" toolbar="#testInfotb"></table>
+    <div id="testInfotb" style="height:0;padding:0;"></div>
+  </div>
+  <div data-options="region:'east',title:'已选人员',split:false" style="width:390px;">
+    <div style="width:90%;margin-left:5%;margin-top:5px;height:30px;">
+      <p><a href="unAssignedTaskController.do?goAllotByObjectPage" style="float:right;display:none"
+          data-funCode="taskAssignByObject">>>按样品设置人员</a></p>
+    </div>
+    <table class="formtable" border="1" cellspacing="0" style="width:90%;margin-left:5%;margin-top:1px;height:180px;">
+      <tbody style="text-align:right">
+        <tr class="tr-lable">
+          <td class="td-label">检测:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="testPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("testPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr class="tr-lable">
+          <td class="td-label">报告编写:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="reportPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("reportPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr class="tr-lable">
+          <td class="td-label">复核:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="recheckPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("recheckPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr class="tr-lable">
+          <td class="td-label">审核:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="auditPersonSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("auditPerson")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-label">批准:&nbsp;</td>
+          <td>
+            <span style="float:left;text-align:left;" id="approverSpan">&emsp;
+            </span>
+            <a href="javascript:void(0);" onclick='toChooseUser("approver")'>>>设置人员&emsp;</a>
+          </td>
+        </tr>
+    </table>
+    <div style="width:90%;margin-left:5%;margin-top:10px;height:30px;">
+      <p>
+        <button onclick="closePersonWindow();" class="layui-btn layui-btn-sm" style="float:left">
+          &gt;&gt;关闭人员弹窗</button> <button onclick="allotParamToPerson();" class="layui-btn layui-btn-sm"
+          style="float:right">
+          确认分配
+        </button>
+      </p>
+    </div>
+  </div>
+  <div data-options="region:'west',title:'人员选择',split:false,collapsible:false" style="width:320px;overflow:hidden;">
+    <div style="height:10%;width:100%;">
+      <p>
+        <input type="text" id="userNameLike" oninput="doFilter();" name="userNameLike" style="width:100%"
+          placeholder="请输入用户/部门">
+      </p>
+    </div>
+    <div style="height:86%;width:100%;">
+      <table class="easyui-datagrid" id="treeGridOfUsers"></table>
+    </div>
+  </div>
+  <div data-options="region:'south',title:'分配结果',split:true" style="height:220px;">
+    <table class="formtable" style="width:96%;margin-left:2%;margin-top:15px;height:auto;text-align:center;">
+      <thead>
+        <tr style="height:35px;background-color:#D1EEEE">
+          <td><strong>检测</strong></td>
+          <td><strong>报告编写</strong></td>
+          <td><strong>复核</strong></td>
+          <td><strong>审核</strong></td>
+          <td><strong>批准</strong></td>
+          <td><strong>检测参数</strong></td>
+          <td><strong>操作</strong></td>
+        </tr>
+      </thead>
+      <tbody id="taskTbody">
+      </tbody>
+    </table>
+  </div>
+</body>
+<script type="text/javascript">
+  $(function () {
+    layui.use(['element', 'laydate', 'form', 'layer'], function () {
+      var layer = layui.layer;
+    })
+
+  })
+  //初始化数据
+  $(document).ready(function () {
+    // common.js里的此函数是获取按钮或功能权限的 勿删
+    funCode()
+    initTestData();
+    setTimeout(initOldAssignInfo, 1000);
+    initTreeGridOfUsers();
+    //进入页面时默认不展示人员选择板块
+    closePersonWindow();
+    initReportMerge();
+  })
+
+  var reportMerge = false;
+  function initReportMerge() {
+    $.ajax({
+      type: "POST",
+      async: false,
+      url: "unAssignedTaskController.do?getSysParamOfReportMerge",
+      data: "",
+      dataType: "json",
+      success: function (data) {
+        if (data.success) {
+          if (data.obj == "Y") {
+            reportMerge = true;
+          }
+        }
+      }
+    });
+  }
+
+  //-------------------------------加载样品和参数的js--------------------------------------
+
+  // 初始化试验数据；包括样品和参数，以树形方式显示
+  var testInfoTreeGrid;
+  var allParamData;
+  function initTestData() {
+    var firstLoad = true;//标识首次加载
+
+    var selectedTask = parent.getSelectRows();
+    console.log(selectedTask);
+    var objectId = selectedTask[0].id;
+    console.log(objectId);
+    //初始化页面全局变量
+    sampleIds = selectedTask[0].sampleId;
+    consignId = selectedTask[0].consignId;
+    workFlowTaskId = selectedTask[0].workFlowTaskId;
+
+    testInfoTreeGrid = $('#testInfo').treegrid({
+      url: basePath + '/unAssignedTaskController.do?getObjectParamTree&objectId=' + objectId,
+      idField: 'id',
+      treeField: 'displayName',
+      fit: true,
+      loadMsg: loadMsgDatagrid,
+      rownumbers: false,
+      singleSelect: false,
+      fitColumns: true,
+      scrollbarSize: 0,
+      striped: true,
+      loadFilter: function (data) {
+        if (firstLoad) {
+          allParamData = JSON.parse(JSON.stringify(data));//js对象深度复制
+          firstLoad = false;
+        }
+        return data;
+      },
+      columns: [[
+        { title: 'id', field: 'id', checkbox: true },
+        { title: '样品id', field: '_parentId', hidden: true },
+        { title: '样品/参数', field: 'type', hidden: true },
+        { title: '样品/参数id', field: 'realId', hidden: true },
+        { title: '名称', field: 'displayName', width: 160 },
+        { title: '数量', field: 'value', width: 160 }
+      ]],
+      onSelect: function (row) {
+
+      },
+      onCheck: function (row) {
+        t = $(this);
+        opts = t.treegrid("options");
+        var idField = opts.idField, id = row[idField];
+        //如果当前节点被勾选,那么勾选该节点的子节点
+        $.each(t.treegrid("getChildren", id), function (i, n) {
+          t.treegrid("select", n[idField]);
+        });
+      },
+      onUncheck: function (row) {
+        t = $(this);
+        opts = t.treegrid("options");
+        var idField = opts.idField, id = row[idField];
+        $.each(t.treegrid("getChildren", id), function (i, n) {
+          t.treegrid("unselect", n[idField]);
+        });
+      },
+      //这个方法在勾选header上的checkbox时触发
+      onCheckAll: function (rows) {
+        t = $(this);
+        var idField = t.treegrid("options").idField;
+        $.each(rows, function (index, roww) {
+          t.treegrid("select", roww[idField]);
+        })
+      }
+    });
+    $('#testInfo').treegrid('getPager').pagination({
+      beforePageText: '',
+      afterPageText: '/{pages}',
+      displayMsg: '{from}-{to}共 {total}条',
+      showPageList: true,
+      showRefresh: true
+    });
+    $('#testInfo').treegrid('getPager').pagination({
+      onBeforeRefresh: function (pageNumber, pageSize) {
+        $(this).pagination('loading');
+        $(this).pagination('loaded');
+      }
+    });
+  }
+
+  //--------------------------------加载人员和人员选择的js--------------------------------
+
+  //用于标识左边人员树里选中的人员加入到右边的哪个工作中
+  var whereFrom = "testPerson";
+  //本页面加载的样品id字符串
+  var sampleIds = "";
+  //检测,报告,复核,审核,批准五个工作分别的人员id字符串
+  var testPersonIds = "";
+  var reportPersonIds = "";
+  var recheckPersonIds = "";
+  var auditPersonIds = "";
+  var approverIds = "";
+  //委托id和工作流任务id,安参数分配功能只有一个样品(委托/任务),所以可以直接从页面带回去
+  var consignId = "";
+  var workFlowTaskId = "";
+
+  //置空所有已勾选人员,并将whereFrom变量更新为当前的
+  function toChooseUser(where) {
+    whereFrom = where;
+    treegrid.treegrid('uncheckAll');
+    treegrid.treegrid('clearChecked');
+    $(".easyui-layout").layout('expand', 'west');
+  }
+
+  //调用时获取全部选中人员,根据whereFrom变量决定将这些人员写入哪里
+  function chooseUser() {
+    var checked = $('#treeGridOfUsers').datagrid('getChecked');
+    switch (whereFrom) {
+      case 'testPerson':
+        $("#testPersonSpan").html("");
+        testPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            if (index == 0) {
+              $("#testPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            } else {
+              $("#testPersonSpan").append(',<span>' + value.name + '</span>');
+            }
+            testPersonIds += value.id + ",";
+          }
+        });
+        console.log(testPersonIds);
+        break;
+      case 'reportPerson':
+        $("#reportPersonSpan").html("");
+        reportPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            if (index == 0) {
+              $("#reportPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            } else {
+              $("#reportPersonSpan").append(',<span>' + value.name + '</span>');
+            }
+            reportPersonIds += value.id + ",";
+          }
+        });
+        console.log(reportPersonIds);
+        break;
+      case 'recheckPerson':
+        $("#recheckPersonSpan").html("");
+        recheckPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            if (index == 0) {
+              $("#recheckPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            } else {
+              $("#recheckPersonSpan").append(',<span>' + value.name + '</span>');
+            }
+            recheckPersonIds += value.id + ",";
+          }
+        });
+        console.log(recheckPersonIds);
+        break;
+      case 'auditPerson':
+        $("#auditPersonSpan").html("");
+        auditPersonIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            if (index == 0) {
+              $("#auditPersonSpan").append('&emsp;<span>' + value.name + '</span>');
+            } else {
+              $("#auditPersonSpan").append(',<span>' + value.name + '</span>');
+            }
+            auditPersonIds += value.id + ",";
+            //根据系统参数检查已分配的部分,如果系统参数要求合并报告,则所有任务的审核人改成一致
+            checkAuditPerson();
+          }
+        });
+        console.log(auditPersonIds);
+        break;
+      case 'approver':
+        $("#approverSpan").html("");
+        approverIds = "";
+        $.each(checked, function (index, value) {
+          if (value.type == "USER") {
+            if (index == 0) {
+              $("#approverSpan").append('&emsp;<span>' + value.name + '</span>');
+            } else {
+              $("#approverSpan").append(',<span>' + value.name + '</span>');
+            }
+            approverIds += value.id + ",";
+            //根据系统参数检查已分配的部分,如果系统参数要求合并报告,则所有任务的批准人改成一致
+            checkApprover();
+          }
+        });
+        console.log(approverIds);
+        break;
+      default: break;
+    }
+  }
+  //根据系统参数检查审核人是否需要一致
+  function checkAuditPerson() {
+    if (reportMerge) {
+      //已分配的数组处理审核人id
+      for (var i = 0; i < taskAssignArray.length; i++) {
+        taskAssignArray[i].auditPersonIds = auditPersonIds;
+      }
+      //处理审核人名称展示
+      var auditPersonNameHtml = $("#auditPersonSpan").html();
+      $(".auditPersonTd").html(auditPersonNameHtml);
+    }
+  }
+  //根据系统参数检查批准人是否需要一致
+  function checkApprover() {
+    if (reportMerge) {
+      //已分配的数组处理批准人id
+      for (var i = 0; i < taskAssignArray.length; i++) {
+        taskAssignArray[i].approverIds = approverIds;
+      }
+      //处理批准人名称展示
+      var approverNameHtml = $("#approverSpan").html();
+      $(".approverTd").html(approverNameHtml);
+    }
+  }
+
+  //初始化人员选择的treegrid
+  var allData = new Array();
+  var treegrid;
+  function initTreeGridOfUsers() {
+    var bFound = true;//标识首次加载
+    var selectedTask = parent.getSelectRows();
+    var consignId = "";
+    $.each(selectedTask, function (i, n) {
+      consignId += n["consignId"] + ",";
+    });
+    consignId = consignId.substr(0, consignId.length - 1);
+    var queryParams = {};
+    queryParams["consignId"] = consignId;
+    treegrid = $('#treeGridOfUsers').treegrid({
+      url: basePath + '/taskAssignedController.do?usersInfo',
+      idField: 'id',
+      treeField: 'name',
+      queryParams: queryParams,
+      fit: true,
+      loadMsg: loadMsgDatagrid,
+      rownumbers: false,
+      singleSelect: false,
+      fitColumns: true,
+      scrollbarSize: 18,
+      striped: true,
+      loadFilter: function (data) {
+        if (bFound) {
+          allData = data;
+          bFound = false;
+        }
+        return data;
+      },
+      columns: [[
+        { title: 'ID', field: 'id', checkbox: true },
+        { title: '类型', field: 'type', hidden: true },
+        { title: '部门/人员1', field: 'name', width: 50 },
+        { title: '当前任务量', field: 'taskCount', width: 20 }
+      ]],
+      onSelect: function (row) {
+
+      },
+      onCheck: function (row) {
+        t = $(this);
+        opts = t.treegrid("options");
+        var idField = opts.idField, id = row[idField];
+        //如果当前节点被勾选,那么勾选该节点的子节点
+        $.each(t.treegrid("getChildren", id), function (i, n) {
+          t.treegrid("select", n[idField]);
+        });
+        //检查目前选中的全部人员,并更新左边的人员表
+        chooseUser();
+      },
+      onUncheck: function (row) {
+        t = $(this);
+        opts = t.treegrid("options");
+        var idField = opts.idField, id = row[idField];
+        $.each(t.treegrid("getChildren", id), function (i, n) {
+          t.treegrid("unselect", n[idField]);
+        });
+        //检查目前选中的全部人员,并更新左边的人员表
+        chooseUser();
+      }
+    });
+  }
+
+  //人员选择框本地搜索功能
+  function doFilter() {
+    //装筛选结果的数组
+    var newData = new Array();
+    var filter = $("#userNameLike").val();
+    if (allData.length == 0) {
+      return false;
+    }
+    var dataRows = allData.rows;
+    console.log('dataRows');
+    console.log(dataRows);
+    for (var i = 0; i < dataRows.length; i++) {
+      if (dataRows[i].name.indexOf(filter) >= 0) {
+        //先匹配的是部门名字,如果部门匹配上了,直接全部门放到newData里面
+        newData.push(dataRows[i]);
+      } else {
+        //如果部门没有匹配上,继续处理部门下的人员
+        var persons = dataRows[i].children;
+        console.log(dataRows[i].children);
+        if (persons.length > 0) {
+          for (var j = 0; j < persons.length; j++) {
+            //匹配人名
+            if (persons[j].name.indexOf(filter) >= 0) {
+              newData.push(persons[j]);
+            }
+          }
+        }
+      }
+    }
+    console.log('newData')
+    console.log(newData);
+    console.log('allData')
+    console.log(allData);
+    if (filter == "") {
+      console.log('加载allData');
+      $('#treeGridOfUsers').treegrid('loadData', allData);
+    } else {
+      console.log('加载newData');
+      $('#treeGridOfUsers').treegrid('loadData', newData);
+    }
+  }
+
+
+  //--------------------------------分配/撤销动作的js--------------------------------------
+
+  //分配参数到人
+  var taskAssignArray = [];//这个array是最终传回后台的分配数据
+  function allotParamToPerson() {
+    var paramIds = "";
+    var paramNames = "";
+    var personNames = "";
+
+    //取选中测试参数(id和名称)
+    var checked = $('#testInfo').datagrid('getChecked');
+    $.each(checked, function (index, value) {
+      if (value.type == 'testParam') {
+        paramIds += value.id + ',';
+        paramNames += value.displayName + ';';
+      }
+    })
+    paramIds = removeEndSymbol(paramIds);
+    paramNames = removeEndSymbol(paramNames, ';');
+    if (paramIds.length < 1) {
+      console.log("请选择样品")
+      parent.layer.msg("请选择样品", { icon: 5 });
+      return;
+    }
+    if (testPersonIds.length < 1) {
+      console.log("至少要选择一个实验检测人员")
+      parent.layer.msg("至少要选择一个实验检测人员", { icon: 5 });
+      return;
+    }
+    //根据系统参数规定来检查审核人和批准人,如果本次分配没有,则以之前的分配为准
+    inverseCheckPerson();
+    //构造传回后台的数据
+    var task = {
+      paramIds: paramIds,
+      testPersonIds: removeEndSymbol(testPersonIds),
+      reportPersonIds: removeEndSymbol(reportPersonIds),
+      recheckPersonIds: removeEndSymbol(recheckPersonIds),
+      auditPersonIds: removeEndSymbol(auditPersonIds),
+      approverIds: removeEndSymbol(approverIds),
+      sampleIds: sampleIds,
+      consignId: consignId,
+      workFlowTaskId: workFlowTaskId
+    };
+    taskAssignArray.push(task);
+    //构造展示数据写入下方table
+    createTaskTr(paramNames, paramIds);
+    //样品的treegrid清空全部选中项,并去掉该参数
+    reloadParamTakeOutAssigned();
+    //清空已选人员table,清空页面已选人员变量
+    clearAssignedPersonList();
+    console.log("分配完成,当前结果:");
+    console.log(taskAssignArray);
+  }
+
+  //撤销分配条目
+  function unDoAllot(th) {
+    console.log('已分配的任务:');
+    console.log(taskAssignArray);
+    //确认撤销的行
+    var paramIds = $(th).prev().val();
+    console.log('撤销任务:要撤销的数据:');
+    console.log(paramIds);
+    //删除传回后台的部分数据
+    var taskAssignCopy = JSON.parse(JSON.stringify(taskAssignArray));
+    for (var i = 0; i < taskAssignArray.length; i++) {
+      if (taskAssignArray[i].paramIds == paramIds) {
+        taskAssignCopy.splice(i, 1);
+      }
+    }
+    taskAssignArray = taskAssignCopy;
+    console.log('撤销完成,新的任务数据:');
+    console.log(taskAssignArray);
+    //重新计算treegrid数据并重载数据
+    reloadParamTakeOutAssigned();
+    //删除已分配好的行
+    $(th).parents("tr").remove();
+  }
+
+  //重载样品参数grid,用原始缓存数据减去当前已分配数据
+  function reloadParamTakeOutAssigned() {
+    //原数据深复制
+    var allParamCopy = JSON.parse(JSON.stringify(allParamData));
+    var rows = allParamCopy.rows;
+    for (var k = rows.length - 1; k >= 0; k--) {//反向遍历以规避数组被splice之后index改变的问题
+      for (var i = 0; i < taskAssignArray.length; i++) {
+        var pids = taskAssignArray[i].paramIds.split(',');
+        for (var j = 0; j < pids.length; j++) {
+          if (rows[k].id == pids[j]) {
+            allParamCopy.rows.splice(k, 1);
+          }
+        }
+      }
+    }
+    //检查该样品下还有没有参数没有分配,没有的话删除该节点
+    var countParamNode = 0;
+    $.each(allParamCopy.rows, function (index, row) {
+      if (row.type == 'testParam') {
+        countParamNode++;
+      }
+    })
+    if (countParamNode == 0) {
+      allParamCopy['rows'] = [];
+      allParamCopy.total = 0;
+    }
+    console.log('新的treeGrid数据计算完成:');
+    console.log(allParamCopy)
+    $('#testInfo').treegrid('uncheckAll');
+    $('#testInfo').treegrid('clearChecked');
+    $('#testInfo').treegrid('loadData', allParamCopy);
+  }
+
+  //分配结果表格新增一行
+  function createTaskTr(paramNames, paramIds) {
+    var testPersonName = $("#testPersonSpan").html();
+    var reportPersonName = $("#reportPersonSpan").html();
+    var recheckPersonName = $("#recheckPersonSpan").html();
+    var auditPersonName = $("#auditPersonSpan").html();
+    var approverName = $("#approverSpan").html();
+    var html = '<tr class="assignedTr">' +
+      '<td>' + testPersonName + '</td><td>' + reportPersonName + '</td><td>' + recheckPersonName + '</td>' +
+      '<td class="auditPersonTd">' + auditPersonName + '</td><td class="approverTd">' + approverName + '</td><td>' + paramNames + '</td>' +
+      '<td><input type="hidden" value="' + paramIds + '" />' +
+      '<button onclick="unDoAllot(this);" class="layui-btn layui-btn-xs"><i class="layui-icon">&#xe640;</i>撤回</button></td></tr>';
+    $("#taskTbody").append(html);
+  }
+
+  //这个方法,在分配动作调用,用于检查本次分配动作是否有审核人和批准人,如果没有,以之前的为准来写入
+  function inverseCheckPerson() {
+    if (reportMerge) {
+      //检查审核人
+      if (auditPersonIds.length < 10) {
+        if (taskAssignArray.length > 0) {
+          auditPersonIds = taskAssignArray[0].auditPersonIds;
+          var auditPersonTd = $(".auditPersonTd")[0];
+          $("#auditPersonSpan").html($(auditPersonTd).html());
+        }
+      }
+      //检查审批人
+      if (approverIds.length < 10) {
+        if (taskAssignArray.length > 0) {
+          approverIds = taskAssignArray[0].approverIds;
+          var approverNameTd = $(".approverTd")[0];
+          $("#approverSpan").html($(approverNameTd).html());
+        }
+      }
+    }
+  }
+
+  //清空已选人员列表
+  function clearAssignedPersonList() {
+    testPersonIds = "";
+    reportPersonIds = "";
+    recheckPersonIds = "";
+    auditPersonIds = "";
+    approverIds = "";
+    whereFrom = "testPerson";
+    treegrid.treegrid('uncheckAll');
+    treegrid.treegrid('clearChecked');
+    $("#testPersonSpan").html("");
+    $("#reportPersonSpan").html("");
+    $("#recheckPersonSpan").html("");
+    $("#auditPersonSpan").html("");
+    $("#approverSpan").html("");
+  }
+
+
+  //-------------------------------已分配信息展示(回退的任务可能会有已分配任务)-------------------------------
+  //查询样品已分配的任务信息
+  function initOldAssignInfo() {
+    var selectedRows = parent.getSelectRows();
+    if (selectedRows.length == 1) {
+      var testObjectId = selectedRows[0].sampleId;
+      $.ajax({
+        type: "POST",
+        async: false,
+        url: "assignedTaskController.do?getObjectTasks",
+        data: "testObjectId=" + testObjectId,
+        dataType: "json",
+        success: function (data) {
+          console.log(data);
+          if (data.success) {
+            if (data.obj.length > 0) {
+              $.each(data.obj, function (index, assignedTask) {
+                //构造传回后台的任务数据
+                var task = {
+                  testTaskId: assignedTask.testTaskId, //以前分配的任务是有任务id的,正常分配没有这个字段
+                  paramIds: assignedTask.paramIds,
+                  testPersonIds: assignedTask.testPersonIds,
+                  reportPersonIds: assignedTask.reportPersonIds,
+                  recheckPersonIds: assignedTask.recheckPersonIds,
+                  auditPersonIds: assignedTask.auditPersonIds,
+                  approverIds: assignedTask.approverIds,
+                  sampleIds: sampleIds,
+                  consignId: consignId,
+                  workFlowTaskId: workFlowTaskId
+                };
+                taskAssignArray.push(task);
+
+                //构造展示数据写入下方table
+                var testPersonNames = assignedTask.testPersonNames ? assignedTask.testPersonNames : "";
+                var reportPersonNames = assignedTask.reportPersonNames ? assignedTask.reportPersonNames : "";
+                var recheckPersonNames = assignedTask.recheckPersonNames ? assignedTask.recheckPersonNames : "";
+                var auditPersonNames = assignedTask.auditPersonNames ? assignedTask.auditPersonNames : "";
+                var approverNames = assignedTask.approverNames ? assignedTask.approverNames : "";
+                var html = '<tr class="assignedTr">' +
+                  '<td>' + testPersonNames + '</td><td>' + reportPersonNames + '</td><td>' + recheckPersonNames + '</td>' +
+                  '<td class="auditPersonTd">' + auditPersonNames + '</td><td class="approverTd">' + approverNames + '</td><td>' + assignedTask.paramNames + '</td>' +
+                  '<td><input type="hidden" value="' + assignedTask.paramIds + '" />' +
+                  '<button onclick="unDoAllot(this);" class="layui-btn layui-btn-xs"><i class="layui-icon">&#xe640;</i>撤回</button></td></tr>';
+                $("#taskTbody").append(html);
+
+                //样品的treegrid清空全部选中项,并去掉该参数
+                reloadParamTakeOutAssigned();
+              })
+            }
+            console.log(taskAssignArray);
+          } else {
+            parent.layer.msg(data.msg, { icon: 6 });
+          }
+        }
+      });
+    }
+  }
+
+
+  var fristConfirm = true; // 是否第一次点击提交按钮
+  //-------------------------------分配结果提交-------------------------------
+  //该方法是在父级页面上调用的,在点击弹窗主体的[确定]按钮的时候
+  function submitAssign() {
+    if (taskAssignArray.length < 1) {
+      console.log("还没有分配任务哦", layer)
+      parent.layer.msg("还没有分配任务哦", { icon: 5 })
+      return;
+    }
+    //取参数总数和已分配参数量来确认是否分配完,这里需求是必须把一个样品分配完才可以提交
+    var countParam = 0;
+    $.each(allParamData.rows, function (index, row) {
+      if (row.type == 'testParam') {
+        countParam++;
+      }
+    })
+    //已分配样品数
+    var countAssign = 0;
+    $.each(taskAssignArray, function (index, task) {
+      countAssign += task.paramIds.split(',').length;
+    })
+    if (countAssign != countParam) {
+      parent.layer.msg("还没有分配完成哦", { icon: 5 })
+      return;
+    }
+
+    //提交数据
+    console.log('fristConfirm', fristConfirm)
+    if (fristConfirm) {
+      console.log('if', fristConfirm)
+      fristConfirm = !fristConfirm;
+      var index = '';
+      $.ajax({
+        // headers必须添加，否则会报415错误
+        /* headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }, */
+        contentType: 'application/json;charset=utf-8',
+        type: "POST",
+        // async: false,
+        async: true,
+        url: "unAssignedTaskController.do?assignTaskWithParams",
+        data: JSON.stringify(taskAssignArray),
+        dataType: "json",
+        beforeSend: function () {
+          index = parent.layer.msg('加载中......', { icon: 16, shade: [0.5, '#f5f5f5'], scrollbar: false, offset: '50%', time: 100000 });
+        },
+        success: function (data) {
+          parent.layer.close(index);
+          if (data.success) {
+            var testTaskIdArr = data.obj;
+            parent.InitObj.printTaskDistribution(testTaskIdArr);// 打印任务分配清单
+            //分配成功,关闭窗口
+            parent.layer.msg("操作成功", { icon: 6 });
+            parent.layer.close(parent.layer.getFrameIndex(window.name));
+            parent.closeAssignWindow();
+          } else {
+            fristConfirm = !fristConfirm;
+            parent.layer.msg(data.msg, { icon: 5 })
+          }
+        }
+      });
+    }
+  }
+
+  //--------------------------------工具类的js--------------------------------
+
+  //移除字符串最后的指定符号
+  function removeEndSymbol(str, symbol) {
+    if (!symbol) {
+      symbol = ',';
+    }
+    if (str.charAt(str.length - 1) == symbol) {
+      return str.substring(0, str.length - 1);
+    }
+    return str;
+  }
+
+  //关闭人员弹窗
+  function closePersonWindow() {
+    $(".easyui-layout").layout('collapse', 'west');
+  }
+</script>
+
+</html>

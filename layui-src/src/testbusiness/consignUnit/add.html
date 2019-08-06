@@ -1,0 +1,460 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增委托单位</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>  -->
+  <style>
+    h3 {
+
+      margin: 10px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="height-full">
+    <form class="layui-form table-form" id="commonQueryForm">
+      <div class="layui-form-box">
+        <div class="table-box">
+          <h3 class="dy layui-color-red" style="display:none">请填写单位信息:</h3>
+          <div class="layui-form-item">
+            <label class="layui-form-label"><span class="layui-color-red">* </span>委托单位：</label>
+            <div class="layui-input-block">
+              <input type="text" name="unitName" class="layui-input" lay-verify="required" autocomplete="off">
+            </div>
+          </div>
+          <!-- <div class="layui-form-item">
+            <label class="layui-form-label"> <span class="layui-color-red">* </span> 资质类型：</label>
+            <div class="layui-input-block" id="qualificationTypeDiv">
+              <select name="qualificationTypeId" lay-filter="pid" lay-ignore style="width:97%;margin-left:1%">
+                <option value=""></option>
+              </select>
+            </div>
+          </div> -->
+          <div class="layui-form-item">
+            <label class="layui-form-label"> 资质类型：</label>
+            <div class="layui-input-block" id="qualificationTypeDiv">
+              <select name="qualificationTypeId" lay-filter="pid">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">缴费单位名称：</label>
+            <div class="layui-input-block">
+              <input type="text" name="payUnitName" disabled class="layui-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">联系地址：</label>
+            <div class="layui-input-block">
+              <input type="text" name="contactAddress" disabled class="layui-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">备注：</label>
+            <div class="layui-input-block">
+              <input type="text" name="unitRemark" disabled class="layui-input" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <div class="table-box">
+          <h3 class="layui-color-red dy" style="display: none;">请填写项目信息：</h3>
+          <div class="layui-form-item">
+            <label class="layui-form-label"><span class="layui-color-red">* </span>工程项目：</label>
+            <div class="layui-input-block">
+              <input type="text" name="projectName" list="projectNameIds" class="layui-input" lay-verify="required"
+                autocomplete="off" onblur="InitObj.projectNameBlur()" onfocus="InitObj.projectNameFocus()">
+              <datalist id="projectNameIds"></datalist>
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">施工单位：</label>
+            <div class="layui-input-block">
+              <input type="text" name="constructionUnitName" disabled class="layui-input project-input"
+                autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">建设单位：</label>
+            <div class="layui-input-block">
+              <input type="text" name="buildUnitName" disabled class="layui-input project-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">建设项目：</label>
+            <div class="layui-input-block">
+              <input type="text" name="buildProjectName" disabled class="layui-input project-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">见证单位：</label>
+            <div class="layui-input-block">
+              <input type="text" name="witnessUnitName" disabled class="layui-input project-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item dy" style="display: none;">
+            <label class="layui-form-label">备注：</label>
+            <div class="layui-input-block">
+              <input type="text" name="projectRemark" disabled class="layui-input project-input" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <div class="table-box">
+          <h3 class="layui-color-red dy" style="display: none;">请填写人员信息：</h3>
+          <div class="layui-form-item">
+            <label class="layui-form-label"><span class="layui-color-red">* </span>送样人：</label>
+            <div class="layui-input-block">
+              <input type="text" name="sampleSenderName" class="layui-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label"><span class="layui-color-red">* </span>送样人电话：</label>
+            <div class="layui-input-block">
+              <input type="number" name="contactPhone" class="layui-input" autocomplete="off"
+                onchange="InitObj.contactPhoneBlur()">
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item unitRemark">
+          <label class="layui-form-label">备注：</label>
+          <div class="layui-input-block">
+            <input type="text" name="unitRemark" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+        <div class="more-box" style="display:none;">
+          <u href="javascript:void(0)" class="easyui-linkbutton layui-color-blue" plain="true"
+            onclick="InitObj.moreFun()">更多
+            &gt;&gt;&gt;</u>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        form.on('select(pid)', function (data) {
+          console.log(data)
+          console.log(data.elem);
+          if (data.value) {
+            // $('#qualificationTypeDiv .layui-input.layui-unselect').val(data.value)
+          }
+        })
+        InitObj.init(form)
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象  
+      saveUrl: 'consignUnitController.do?addConsignUnit', // 保存数据
+      qualificationsUrl: 'departVersionController.do?getDefaultQualifications', // 获取资质类型
+      projectNameUrl: 'projectController.do?getAll', // 获取工程项目名称
+      projectNameIdUrl: '', // 获取工程项目对应的信息
+      contactPhoneUrl: 'sampleSenderController.do?getByPhone', // 获取送样人手机号对应的信息
+      qualificationType: $('select[name="qualificationTypeId"]'),
+      projectName: $('input[name="projectName"]'), //工程项目名称
+      constructionUnitName: $('input[name="constructionUnitName"]'), // 工程项目
+      buildUnitName: $('input[name="buildUnitName"]'), // 工程项目
+      buildProjectName: $('input[name="buildProjectName"]'), // 工程项目
+      witnessUnitName: $('input[name="witnessUnitName"]'), // 工程项目
+      projectRemark: $('input[name="projectRemark"]'), // 工程项目
+      projectList: [], // 工程项目数组
+      sampleSenderName: $('input[name="sampleSenderName"]'), //送样人姓名
+      contactPhone: $('input[name="contactPhone"]'), //送样人姓名
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      isAllRequired: false, // 全部提交
+      sampleId: '', // 送样人id
+      projectId: '', // 工程id
+      morebox: $('.more-box'),
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form) {
+        this.formLayerM = form;
+        this.morebox.show();
+        this.initQualificationType('');
+      },
+      // 点击更多信息
+      moreFun: function () {
+        $('.dy').toggle();
+        $('.dy input').attr('disabled', false);
+        $('.unitRemark').hide().find('input').attr('disabled', true);
+        var unitRemark = $('.unitRemark').hide().find('input').val()
+        $('.dy input[name="unitRemark"]').val(unitRemark)
+        this.isAllRequired = true;
+        this.morebox.hide()
+        this.projectNameFun()
+      },
+      contactPhoneCallback: function (res) {
+        var that = InitObj;
+        if (res.success && res.obj.length > 0) {
+          //填写送样人电话后，检查所填写的电话在系统中是否已存在，若已存在，
+          // 检查填写的送样人姓名与系统中是否一致，若不一致则提示“系统检索到当前号码持有人为xxx，
+          // 是否更新在填送样人姓名?”是则将当前界面的送样人更新，否则清空送样人电话
+          that.sampleId = res.obj[0].id
+          if (that.sampleSenderName.val() !== res.obj[0].name) {
+            layerConfirmFun('系统检索到当前号码持有人为:' + res.obj[0].name + '，是否更新在填送样人姓名?',
+              '', ['确定', '取消'], that.contactPhoneYes, res.obj[0].name)
+          }
+        } else if (res.success && res.obj.length === 0) { // 再次点击把之前的晴空
+          that.sampleId = ''
+        }
+      },
+      contactPhoneYes: function (name, index) {
+        var that = InitObj;
+        that.sampleSenderName.val(name)
+        layer.close(index)
+      },
+      // 光标离开后获取 根据电话号码，获取信息
+      contactPhoneBlur: function () {
+        var phones = this.contactPhone.val()
+        if (checkTelephone(phones)) {
+          ajaxRequest(this.contactPhoneUrl, {
+            'contactPhone': phones
+          }, this.contactPhoneCallback, false, true)
+        } else {
+          formTipFun('电话号码有误，请重填', this.contactPhone)
+        }
+
+      },
+      projectNameFocus: function () {
+        $('.project-input').attr('readonly', false).attr("unselectable", "");
+      },
+      // 光标离开后获取 项目名称对应的数据
+      projectNameBlur: function () {
+        var names = this.projectName.val();
+        var ids = $('option[value="' + names + '"]').attr('data-id');
+        console.log('ids', ids)
+        var index = $('option[value="' + names + '"]').attr('data-index');
+        if (ids) {
+          this.projectNameIdCallback(this.projectList[index])
+          this.projectId = ids
+          $('.project-input').attr('readonly', true).attr("unselectable", "on");
+          $('input[name="sampleSenderName"]').focus();
+        } else {
+          $('.project-input').attr('readonly', false).attr("unselectable", "");
+          var res = {
+            'constructionUnitName': '',
+            'buildUnitName': '',
+            'buildProjectName': '',
+            'witnessUnitName': '',
+            'projectRemark': ''
+          }
+          this.projectNameIdCallback(res)
+        }
+      },
+      // 获取工程项目名称成功  工程项目信息渲染及只读
+      projectNameIdCallback: function (res) {
+        this.constructionUnitName.val(res.constructionUnitName)
+        this.buildUnitName.val(res.buildUnitName)
+        this.buildProjectName.val(res.buildProjectName)
+        this.witnessUnitName.val(res.witnessUnitName)
+        this.projectRemark.val(res.projectRemark)
+      },
+      // 获取工程项目名称 对应的信息
+      projectNameIdFun: function (ids) {
+        this.projectNameIdCallback()
+      },
+      // 获取工程项目名称成功页面渲染
+      projectNameCallback: function (res) {
+        if (res.success && res.obj.length > 0) {
+          var htm = ''
+          InitObj.projectList = res.obj
+          $.each(res.obj, function (i, v) {
+            htm += '<option data-index="' + i + '" data-id="' + v.id + '" value = "' + v.name + '" />'
+          })
+          $('#projectNameIds').html(htm)
+        }
+      },
+      // 获取工程项目名称
+      projectNameFun: function () {
+        ajaxRequest(this.projectNameUrl, {}, this.projectNameCallback, false, true)
+      },
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(this.saveUrl, { paramUtilStr: JSON.stringify(saveParam) }, this.saveAjaxCallback, true, true);
+            }
+            return true;
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+      },
+      // 获取资质类型回调及页面渲染
+      qualificationTypeCallback: function (res, selected) {
+        var that = InitObj,
+          htm = '';
+        if (res.success) {
+          var rows = res.obj;
+          if (rows && rows.length > 0) {
+            // if (!selected) {
+            //   for (var i in rows) {
+            //     if ('1' == rows[i].isDefault) {
+            //       selected = rows[i].id;
+            //     } else {
+            //       selected = ''
+            //     }
+            //   }
+            // }
+            for (var j = 0; j < rows.length; j++) {
+              // var selectAttribute = '';
+              // if (selected == rows[j].id) {
+              //   selectAttribute = 'selected';
+              // }
+              htm += '<option value="' + rows[j].id + '">' + rows[j].name + '</option>';
+            }
+          }
+        }
+        // that.qualificationType.html(that.qualificationType.html() + htm);
+        that.qualificationType.append(htm);
+        that.formLayerM.render()
+      },
+      // 获取资质类型
+      initQualificationType: function (selected) {
+        ajaxRequest(this.qualificationsUrl, {}, this.qualificationTypeCallback, false, true, selected)
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务 
+          $('a').hide();
+          $('select').attr('disabled', true);
+          $("input").attr('readonly', true);
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(formdata)) {
+          var saveParam = {
+            "consignUnit": {
+              "name": formdata.unitName,
+              "qualificationTypeId": formdata.qualificationTypeId,
+              "remark": formdata.unitRemark
+
+            },
+            "consignProject": {
+              "name": formdata.projectName,
+            },
+            "sampleSender": {
+              "name": formdata.sampleSenderName,
+              "contactPhone": formdata.contactPhone
+            }
+          }
+
+          if (this.sampleId) {
+            saveParam.sampleSender.id = this.sampleId
+          }
+          if (this.projectId) {
+            saveParam.consignProject.id = this.projectId
+          }
+          if (this.isAllRequired) {
+            saveParam.consignUnit.payUnitName = formdata.payUnitName
+            saveParam.consignUnit.contactAddress = formdata.contactAddress
+            saveParam.consignProject.constructionUnitName = formdata.constructionUnitName
+            saveParam.consignProject.constructionUnitName = formdata.constructionUnitName
+            saveParam.consignProject.buildUnitName = formdata.buildUnitName
+            saveParam.consignProject.buildProjectName = formdata.buildProjectName
+            saveParam.consignProject.witnessUnitName = formdata.witnessUnitName
+            saveParam.consignProject.remark = formdata.projectRemark
+          }
+          return saveParam
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+          return false;
+        }
+      },
+      // 保存报告回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj,
+          parentThat = parent;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          parentThat.reloadDataGrid();
+          parentThat.reloadDataGrid0();
+          parentThat.reloadDataGrid1();
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.unitName) {
+          queryParams.msg = '委托单位不能为空'
+          queryParams.element = $('input[name="unitName"]')
+          return false;
+        }
+        // if (!queryParams.qualificationTypeId) {
+        //   queryParams.msg = '资质类型不能为空'
+        //   queryParams.element = $('#qualificationTypeDiv')
+        //   return false;
+        // }
+        if (!queryParams.projectName) {
+          queryParams.msg = '工程项目不能为空'
+          queryParams.element = this.projectName
+          return false;
+        }
+        if (!queryParams.sampleSenderName) {
+          queryParams.msg = '送样人不能为空'
+          queryParams.element = this.sampleSenderName
+          return false;
+        }
+        if (!queryParams.contactPhone) {
+          queryParams.msg = '送样人电话不能为空'
+          queryParams.element = this.contactPhone
+          return false;
+        }
+        if (queryParams.contactPhone) {
+          var isPass = checkTelephone(queryParams.contactPhone)
+          if (!isPass) {
+            queryParams.msg = '电话号码有误，请重填';
+            queryParams.element = this.contactPhone
+            return false;
+          }
+        }
+        return true;
+      },
+    }
+  </script>
+</body>
+
+</html>

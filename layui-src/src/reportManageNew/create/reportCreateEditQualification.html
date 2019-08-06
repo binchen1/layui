@@ -1,0 +1,145 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>资质类型</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>资质类型</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    /* .datagrid-cell,
+    .datagrid-cell-group,
+    .datagrid-header-rownumber,
+    .datagrid-cell-rownumber {
+      white-space: normal;
+    } */
+    .layui-form-radioed>i,
+    .layui-form-radio>i:hover {
+      color: #1e9fff;
+    }
+
+    .layui-btn {
+      background-color: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="height-full">
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+      })
+     // InitObj.initDataGrid(InitObj.columnsFun());
+      InitObj.init();
+    })
+    // 初始化页面
+    var InitObj = {
+      defaultUrl: 'departVersionController.do?getDefaultQualifications', //默认获取数据url
+      unitUrl:'consignUnitController.do?datagrid', // 委托单位url
+      projectUrl:'consignUnitController.do?getConsignUnitProjects&id=', //项目名称
+      datagrid: null, // table返回对象
+      rowIndex: '', // 选中行
+      rowName: '', //选中name
+      initData: null, // 获取数据
+      qualificationTypeIdsData: JSON.parse(decodeURI(GetQueryString("qualificationTypeIdsData"))), // 获取传递的人员列表
+      init: function () {
+        ajaxRequest(this.defaultUrl, {}, this.consignProjectNameCallback, false, true)
+        
+      },
+       // 选择委托单位回调
+      consignUnitNameCallback: function (res) { 
+      },
+      // 选择项目名称回调
+      consignProjectNameCallback: function (res) { 
+        var that=InitObj;
+        that.initDataGrid(that.columnsFun(),res.obj)
+
+      },
+      openCallback: function(){
+         var selectedData=$("#dataGrid").datagrid("getChecked"); 
+         console.log('资质类型 openCallback')
+         return this.qualificationTypeIdsData.concat(selectedData);
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        return [[
+          { title: "id", field: "id", checkbox: true, width: 50 },
+          { title: "资质类型", field: "name", width: 50 },
+        ]]
+      },
+      // // 关联检测任务 table
+      initDataGrid: function (columns,data) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+         // url: this.defaultUrl,
+           data:data,
+          pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          fitColumns: true,
+          scrollbarSize: 0,
+         // sortName: 'experience', // 报告时间
+          // sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) { 
+            // 调分页 文本显示 common.js函数
+            that.initData = data.rows
+            getPagerFun('#dataGrid')
+          },
+          onSelect: function (rowIndex, rowData) {  
+           var arr = that.qualificationTypeIdsData 
+           if(arr.length!==0){
+            for(var i=0;i<arr.length;i++){
+              if(rowData.id === arr[i].id){ 
+                layer.msg('此类型已经选择过了', { icon: 2 });
+                $('#dataGrid').treegrid("unselectRow", rowIndex);
+                return;
+              }
+            }
+           }
+          },
+          onClickCell: function (rowIndex, field, value) {
+          },
+          onDblClickRow: function (index, row) {
+            //双击事件,进入任务分配
+          }
+        });
+      }
+    }
+
+
+
+  </script>
+</body>
+
+</html>

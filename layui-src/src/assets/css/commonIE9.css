@@ -1,0 +1,29 @@
+@charset "utf-8";
+
+body.full-height-layout #wrapper {
+  height: 100%;
+  margin-top: 70px;
+  padding-top: 0px;
+}
+.process >div {
+  float: left;
+  position: relative;
+  padding-right: 4px;
+  width: 5.3%;
+}
+.process >div:last-child {
+  padding-right:0px;
+} 
+.process .process-arrow {
+  margin-top: 27px;
+  text-align: center;
+}
+#asidenav-box {
+  display: none;
+}
+#content-main {
+  height: calc(100%-100px);
+}
+
+
+

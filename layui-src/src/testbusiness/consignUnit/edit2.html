@@ -1,0 +1,541 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+  document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+</script>
+<style>
+  .table-box h3 {
+    color: #F00000;
+    margin: 10px;
+    margin-bottom: 5px;
+  }
+  .table-frist-td {
+    text-align: right;
+    width: 120px;
+  }
+  .formtable .inputxt  {
+    width:98%;
+  }
+  .formtable select {
+    width:99%;
+  }
+</style>
+
+<div class="easyui-layout" fit="true">
+  <div data-options="region: 'center', split: true">
+    <form id="form" method="POST" action="consignUnitController.do?${empty consignUnitEntity ? 'doAdd' : 'doUpdate'}">
+      <div class="table-box">
+        <h3 class="dy" style="display:none">请填写单位信息:</h3>
+        <input id="id" name="id" type="hidden" value="${consignUnitEntity.id }">
+        <input type="hidden" name="sampleSenderIds" value="${sampleSenderIds}">
+        <input id="btn_sub" type="hidden" class="btn-4-submit">
+
+        <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label"><span style="color: #F00000">*</span>委托单位:</label>
+            </td>
+            <td class="value">
+              <input id="name" name="name" class="inputxt" datatype="*" value='${consignUnitEntity.name}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label"><span style="color: #F00000">*</span>资质类型:</label>
+            </td>
+            <td class="value">
+              <select id="qualificationTypeId" datatype="qualificationTypeId" name="qualificationTypeId" data-selected="${consignUnitEntity.qualificationTypeId}">
+                <option>
+                  请选择
+                </option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">联系地址:</label>
+            </td>
+            <td class="value">
+              <input id="contactAddress" name="contactAddress" class="inputxt" value='${consignUnitEntity.contactAddress}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">缴费单位:</label>
+            </td>
+            <td class="value">
+              <input id="0000" name="0000" class="inputxt" value='${consignUnitEntity.contactAddress}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">备注:</label>
+            </td>
+            <td class="value">
+              <textarea name="remark" class="inputxt" style="height: 30px;">${consignUnitEntity.remark}</textarea>
+            </td>
+          </tr>
+          <!-- <tr>
+
+            <td class="table-frist-td" style="display:none;">
+              <label class="Validform_label">项目标段名称:</label>
+            </td>
+            <td class="value" style="display:none;">
+              <input id="projectTenderName" name="projectTenderName" class="inputxt" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+            <td class="table-frist-td">
+              <label class="Validform_label">施工单位名称:</label>
+            </td>
+            <td class="value">
+              <input id="constructionUnitName" name="constructionUnitName" class="inputxt" value='${consignUnitEntity.constructionUnitName}'>
+            </td>
+            <td class="table-frist-td">
+              <label class="Validform_label">联系人:</label>
+            </td>
+            <td class="value">
+              <input id="contactPerson" name="contactPerson" class="inputxt" value='${consignUnitEntity.contactPerson}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">联系人电话:</label>
+            </td>
+            <td class="value">
+              <input id="contactPhone" name="contactPhone" class="inputxt" value='${consignUnitEntity.contactPhone}'>
+            </td>
+            <td class="table-frist-td">
+              <label class="Validform_label">联系地址:</label>
+            </td>
+            <td class="value">
+              <input id="contactAddress" name="contactAddress" class="inputxt" value='${consignUnitEntity.contactAddress}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">邮编:</label>
+            </td>
+            <td class="value">
+              <input id="zipCode" name="zipCode" class="inputxt" value='${consignUnitEntity.zipCode}'>
+            </td>
+            <td class="table-frist-td">
+              <label class="Validform_label">收入地区:</label>
+            </td>
+            <td class="value">
+              <input id="includedArea" name="includedArea" class="inputxt" value='${consignUnitEntity.includedArea}'>
+            </td>
+          </tr>
+          <tr>
+            <%-- <td class="table-frist-td">
+                        <label class="Validform_label">卡号/账号:</label>
+                    </td>
+                    <td class="value">
+                        <input id="cardNumber" name="cardNumber" class="inputxt"
+                               value='${consignUnitEntity.cardNumber}'>
+                    </td> --%>
+            <td class="table-frist-td">
+              <label class="Validform_label">备注:</label>
+            </td>
+            <td class="value">
+              <textarea name="remark" class="inputxt" style="height: 30px;">${consignUnitEntity.remark}</textarea>
+            </td>
+            <td class="table-frist-td">
+              <label class="Validform_label">质量监督:</label>
+            </td>
+            <td class="value">
+              <input type="radio" name="isQualitySupervise" value="0" ${empty consignUnitEntity ? 'checked' :
+                consignUnitEntity.isQualitySupervise==0 ? 'checked' : '' }>否
+              <input type="radio" name="isQualitySupervise" value="1" ${consignUnitEntity.isQualitySupervise==1 ?
+                'checked' : '' }>是
+            </td>
+          </tr> -->
+          <tr>
+
+          </tr>
+
+        </table>
+      </div>
+      <div class="more-box">
+        <a href="javascript:void(0)" class="easyui-linkbutton  btn-4-show-more" icon="icon-more" onclick="moreFun()">更多</a>
+      </div>
+      <div class="table-box dy" style="display: none;">
+        <h3>请填写项目信息：</h3>
+        <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label"><span style="color: #F00000">*</span>工程项目:</label>
+            </td>
+            <td class="value">
+              <input id="1111" name="1111" class="inputxt" datatype="*" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">施工单位:</label>
+            </td>
+            <td class="value">
+              <input id="2222" name="2222" class="inputxt" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">建设单位：</label>
+            </td>
+            <td class="value">
+              <input id="3333" name="3333" class="inputxt" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">建设项目：</label>
+            </td>
+            <td class="value">
+              <input id="4444" name="4444" class="inputxt" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">见证单位：</label>
+            </td>
+            <td class="value">
+              <input id="5555" name="5555" class="inputxt" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label">备注：</label>
+            </td>
+            <td class="value">
+              <input id="6666" name="6666" class="inputxt" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="table-box dy" style="display: none;">
+        <h3>请填写人员信息：</h3>
+        <table style="width: 100%;" cellpadding="0" cellspacing="1" class="formtable">
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label"><span style="color: #F00000">*</span>送样人：</label>
+            </td>
+            <td class="value">
+              <input id="7777" name="7777" class="inputxt" datatype="*" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-frist-td">
+              <label class="Validform_label"><span style="color: #F00000">*</span>送样人电话：</label>
+            </td>
+            <td class="value">
+              <input id="7777" name="7777" class="inputxt" datatype="*" value='${consignUnitEntity.projectTenderName}'>
+            </td>
+          </tr>
+
+        </table>
+      </div>
+    </form>
+  </div>
+
+  <!-- <div data-options="region: 'east', split: true" style="width: 400px;" class="self-noscroll">
+        <div class="toolbar" style="padding:3px">
+            <span>送样人员姓名：</span>
+            <input style="line-height:24px; height: 24px; border:1px solid #ccc">
+            <a href="#" class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+            <a href="#" class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+        </div>
+        <table id="dataGrid"></table>
+    </div> -->
+</div>
+
+<%--suppress JSUnresolvedFunction --%>
+<script>
+  $(function () {
+
+    initQualificationType();
+    // initDataGrid();
+
+    /**
+     * 表单验证提交
+     */
+    $("#form").Validform({
+      btnSubmit: ".btn-4-submit",
+      tiptype: 4,
+      ignoreHidden: false,
+      dragonfly: false,
+      tipSweep: false,
+      showAllError: true,
+      postonce: true,
+      ajaxPost: true,
+      datatype: {//传入自定义datatype类型，可以是正则，也可以是函数（函数内会传入一个参数）;
+        "qualificationTypeId": function (gets, obj, curform, regxp) {
+          //参数gets是获取到的表单元素值，obj为当前表单元素，curform为当前验证的表单，regxp为内置的一些正则表达式的引用;
+          if (gets == "请选择") {
+            return "请选择资质类型";
+          }
+          return true;
+          //注意return可以返回true 或 false 或 字符串文字，true表示验证通过，返回字符串表示验证失败，字符串作为错误提示显示，返回false则用errmsg或默认的错误提示;
+        }
+      },
+      beforeSubmit: function (curform) {
+        //在验证成功后，表单提交前执行的函数，curform参数是当前表单对象。
+        //这里明确return false的话表单将不会提交;
+        console.log('beforeSubmit', curform)
+        // $(curform).find('input[name=sampleSenderIds]').val(SAMPLE_SENDER_IDS.join(','));
+        // if (SAMPLE_SENDER_IDS.length == 0) {
+        //   parent.tip('请选择送样人员');
+        //   return false;
+        // }
+        // else if (SAMPLE_SENDER_IDS[0] == "" && SAMPLE_SENDER_IDS.length == 1) {
+        //   parent.tip('请选择送样人员');
+        //   return false;
+        // }
+      },
+      beforeCheck: function (curform) {
+        console.log('beforeCheck', curform)
+        //在表单提交执行验证之前执行的函数，curform参数是当前表单对象。
+        //这里明确return false的话将不会继续执行验证操作;
+      },
+      callback: function (data) {
+        console.log('data', data)
+        if (data.success) {
+          var index = parent.layer.getFrameIndex(window.name);
+          parent.reloadDataGrid();
+          parent.reloadDataGrid0();
+          parent.reloadDataGrid1();
+          parent.layer.close(index);
+          parent.tip(data.msg);
+        } else {
+          parent.tip(data.msg);
+        }
+      }
+    });
+
+    /**
+     * 查询按钮事件
+     */
+    // $('.btn-4-search').click(function () {
+    //   dataGrid.datagrid('load', {
+    //     name: $('.toolbar input').val()
+    //   });
+    // });
+
+    /**
+     * 重置按钮事件
+     */
+    // $('.btn-4-reset').click(function () {
+    //   $('.toolbar input').val('');
+    //   $('.btn-4-search').trigger('click');
+    // });
+
+    /**
+     *初始化资质select组件
+     */
+    function initQualificationType() {
+      var qualificationType = $('#qualificationTypeId');
+      console.log('qualificationType', qualificationType)
+      var selected = $(qualificationType).data('selected');
+      var htm = '';
+      ajaxSubmitResponseJSON({
+        url: 'departVersionController.do?getDefaultQualifications',
+        success: function (data) {
+          console.log('initQualificationType', data)
+          if (data.success) {
+            var rows = data.obj;
+            if (rows && rows.length > 0) {
+              if (!selected) {
+                for (var i in rows) {
+                  if (rows[i].isDefault == "1") {
+                    selected = rows[i].id;
+                  }
+                }
+              }
+              for (var i in rows) {
+                var selectAttribute = '';
+                if (selected == rows[i].id) {
+                  selectAttribute = 'selected';
+                }
+                htm += '<option value="' + rows[i].id + '" ' + selectAttribute + '>' + rows[i].name + '</option>';
+              }
+            }
+          }
+        }
+      });
+      $(qualificationType).html($(qualificationType).html() + htm);
+    }
+  });
+
+  var dataGrid;
+  // var SAMPLE_SENDER_IDS = [];
+  /**
+* 更多
+*/
+  function moreFun() {
+    $('.dy').toggle();
+    
+
+    $('.more-box').hide()
+  }
+  /**
+   * 初始化送样人员datagrid
+   */
+  function initDataGrid() {
+    // dataGrid = $('#dataGrid').datagrid({
+    //   url: 'sampleSenderController.do?datagrid',
+    //   toolbar: '.toolbar',
+    //   singleSelect: false,
+    //   pagination: true,
+    //   pageList: [10],
+    //   fit: true,
+    //   fitColumns: true,
+    //   scrollbarSize: 0,
+    //   columns: [[
+    //     { title: "ID", field: "id", checkbox: true },
+    //     { title: "账号", field: "account", width: 70 },
+    //     { title: "送样人员姓名", field: "name", width: 75 },
+    //     { title: "联系电话", field: "contactPhone", width: 90 },
+    //     {
+    //       title: "是否禁用", field: "status", align: 'center', width: 60,
+    //       formatter: function (value) {
+    //         var valueCN = '是';
+    //         if (value == '0') {
+    //           valueCN = '否';
+    //         }
+    //         return valueCN;
+    //       }
+    //     },
+    //     {
+    //       title: "审核状态", field: "verifyStatus", width: 60,
+    //       formatter: function (value) {
+    //         var valueCN = '待审核';
+    //         if (value == '10') {
+    //           valueCN = '审核不通过';
+    //         } else if (value == '20') {
+    //           valueCN = '审核通过';
+    //         }
+    //         return valueCN;
+    //       }
+    //     }
+    //   ]],
+    //   onCheckAll: function (rows) {
+    //     for (var i in rows) {
+    //       if ($.inArray(rows[i].id, SAMPLE_SENDER_IDS) == -1) {
+    //         SAMPLE_SENDER_IDS.push(rows[i].id);
+    //       }
+    //     }
+    //   },
+    //   onUncheckAll: function (rows) {
+    //     for (var i in rows) {
+    //       if ($.inArray(rows[i].id, SAMPLE_SENDER_IDS) > -1) {
+    //         SAMPLE_SENDER_IDS.splice($.inArray(rows[i].id, SAMPLE_SENDER_IDS), 1);
+    //       }
+    //     }
+    //   },
+    //   onCheck: function (index, row) {
+    //     if ($.inArray(row.id, SAMPLE_SENDER_IDS) == -1) {
+    //       SAMPLE_SENDER_IDS.push(row.id);
+    //     }
+    //   },
+    //   onUncheck: function (index, row) {
+    //     if ($.inArray(row.id, SAMPLE_SENDER_IDS) > -1) {
+    //       SAMPLE_SENDER_IDS.splice($.inArray(row.id, SAMPLE_SENDER_IDS), 1);
+    //     }
+    //   },
+    //   onLoadSuccess: function (data) {
+    //     dataGrid.datagrid('getPager').pagination({
+    //       displayMsg: '',
+    //       onRefresh: function () {
+    //         initSampleSenderIds();
+    //         applyNeedSelectRow(data.rows);
+    //       }
+    //     });
+    //     initSampleSenderIds();
+    //     applyNeedSelectRow(data.rows);
+    //   }
+    // });
+  }
+
+  /**
+   * 选中已经关联关系的送样人员
+   */
+  // function applyNeedSelectRow(rows) {
+  //   for (var i in rows) {
+  //     if ($.inArray(rows[i].id, SAMPLE_SENDER_IDS) >= 0) {
+  //       dataGrid.datagrid('selectRow', dataGrid.datagrid('getRowIndex', rows[i]));
+  //     } else {
+  //       dataGrid.datagrid('unselectRow', dataGrid.datagrid('getRowIndex', rows[i]));
+  //     }
+  //   }
+  // }
+
+  // function initSampleSenderIds() {
+  //   SAMPLE_SENDER_IDS = [];
+  //   var sampleSenderIds = $('#form input[name=sampleSenderIds]').val();
+  //   if (sampleSenderIds) {
+  //     SAMPLE_SENDER_IDS = sampleSenderIds.split(',');
+  //   }
+  // }
+  var layerIndex
+  //新增时判断是否是删除过的公司
+  function hasDelete() {
+    // var row = $('#dataGrid').datagrid('getSelected')
+    // if (!row) {
+    //   parent.tip('请选择送样人员');
+    //   return;
+    // }
+    console.log('hasDelete')
+    $.ajax({
+      url: 'consignUnitController.do?isDelete',
+      data: { consignUnitName: $('#name').val() },
+      type: 'POST',
+      dataType: 'json',
+      success: function (data) {
+        if (data.success == true) {
+          $('.btn-4-submit').trigger('click');
+        } else {
+          // $(document).on("click",'.layui-layer-btn1',function(){$('.btn-4-submit').trigger('click');})
+          layerIndex = layer.confirm('之前有删除的数据,是否恢复?', { title: '提示', btn: ['确定', '取消'] }, function () {
+            //恢复
+            recoveryUnit();
+          })
+        }
+      }
+    })
+  }
+  //恢复删除的公司
+  function recoveryUnit() {
+    $.ajax({
+      url: 'consignUnitController.do?recoveryUnit',
+      data: { consignUnitName: $('#name').val() },
+      type: 'POST',
+      dataType: 'json',
+      success: function (data) {
+        if (data.success == true) {
+          var index = parent.layer.getFrameIndex(window.name);
+          parent.reloadDataGrid();
+          parent.reloadDataGrid0();
+          parent.reloadDataGrid1();
+          parent.layer.close(index);
+          layer.close(layerIndex);
+          tip('数据恢复成功!')
+        }
+      }
+    })
+  }
+</script>

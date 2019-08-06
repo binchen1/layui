@@ -1,0 +1,522 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>留样提前处理申请</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .form-table {
+      padding: 10px;
+      border: 1px solid rgb(56, 55, 55);
+    }
+
+    .form-table .layui-row {
+      min-height: 34px;
+    }
+
+    .form-table .layui-row:nth-child(2n) {
+      background: #eee;
+    }
+
+    .auditBox {
+      text-align: left;
+      position: relative;
+    }
+
+    .auditPersons {
+      margin-left: 70px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div>
+    <form class="layui-form layui-form-box" id="commonQueryForm">
+      <div class="form-box"> </div>
+
+
+      <div class="form-middle layui-row">
+        <div class="layui-col-xs3 font-weight">样品列表：</div>
+        <div class="layui-col-xs9 text-right" id="allSetId" style="display:none">
+          <div class="layui-form-item">
+            <div class="layui-inline">
+              <label class="layui-form-label">申请处理数量：</label>
+              <div class="layui-input-inline">
+                <input type="text" name="amountAll" autocomplete="off" class="layui-input">
+              </div>
+              <div class="layui-input-inline" style="width: auto;">
+                <a href="#" onclick="InitObj.allSet()" class="layui-btn layui-bg-blue layui-btn-xs">批量设置</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-table"> </div>
+      <br>
+      <br>
+      <br>
+      <div class="layui-form-item auditBox">
+        <label class="font-weight">审核人员：</label>
+        <div class="auditPersons">
+          <div>
+            <div id="auditPersonsBox"></div>
+            <a class="layui-btn layui-btn-sm" id="auditPersonsAdd">
+              <i class="layui-icon">&#xe61f;</i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+
+  <!-- 测试 -->
+
+
+  <script>
+    $(function () {
+      layui.use(['table', 'laydate', 'form'], function () {
+        var table = layui.table;
+        // var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init(form);
+      })
+    })
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      detailUrl: 'objectAuditController.do?getAuditDetail', //默认获取数据url
+      saveUrl: 'objectAuditController.do?addAudit', // 样品流转-通用处理接口 
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      // 0:领样,1:收样处留样,2:测后留样,3:测后废弃,4:留样到期废弃,5:留样到期返还,6:提前废弃,7:提前返还,8:利用,9:提前利用,10:作废
+      formLayerM: null,
+      tabsStatus6: null, // 留样样品处理 提前废弃
+      tabsStatus7: null, // 留样样品处理 提前返还
+      tabsStatus9: null, // 留样样品处理 提前利用 
+      parentSel: parent.InitObj.rowSelect,
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      auditPersonsAdd: $('#auditPersonsAdd'), // 审核人员 点击按钮
+      auditPersonsBox: $('#auditPersonsBox'), // 审核人员盒子
+      auditPersons: [], // 审核人员 保存数据
+      auditPersonsData: [], // 审核人员  临时保存数据
+      recordVosId: '', // 操作id
+      allSetId: $('#allSetId'), // 操作id
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form) {
+        this.formLayerM = form;
+        console.log('editId', this.editId)
+        if (this.initData()) {
+          if (this.editId) {
+            this.detailEdit();
+          } else {
+            this.styleLayout(form, '6');
+            this.allSetId.show()
+          }
+        }
+        this.btnFun(this.auditPersonsAdd, 'reportRedoAuditController.do?goAuditUserChoosePage&auditPersonsData=',
+          '审核人员')
+      },
+      // 审核人员  及 报告编号
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('选择报告' === openName) {
+            layerOpenFun(openUrl, openName, ['95%', '95%'], ['确定', '取消'], that.reportIdsSelCallback)
+          } else if ('审核人员' === openName) {
+            console.log('审核人员', openUrl)
+            layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.auditPersonsData))), openName,
+              ['95%', '95%'], ['确定', '取消'], that.addPersonsCallback)
+          } else {
+            console.log(openName)
+          }
+        })
+      },
+      // 审核人员删除
+      addPersonsRem: function (res) {
+        console.log('点击了删除', res)
+        console.log(this.auditPersonsData)
+        for (var i = 0; i < this.auditPersonsData.length; i++) {
+          if (res === this.auditPersonsData[i].userId) {
+            this.auditPersonsData.splice(i, 1)
+            break;
+          }
+        }
+        console.log(this.auditPersonsData)
+        this.addPersonsCallback(this.auditPersonsData)
+      },
+      // 审核人员回调 
+      addPersonsCallback: function (res, index) {
+        index ? layer.close(index) : ''
+        var that = InitObj;
+        // that.staffData = res;
+        console.log('审核人员回调 ', res)
+        that.auditPersonsData = res;
+        that.auditPersons = [];
+        var html = ''
+        for (var i = 0; i < res.length; i++) {
+          if (i === 0) {
+            html += '<div class="btnClose"><span>' + res[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          } else {
+            html += '<b class="layui-btn layui-btn-sm unReturn"><i class="layui-icon">&#xe65c;</i></b>'
+            html += '<div class="btnClose"><span>' + res[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          }
+          that.auditPersons.push({
+            "userId": res[i].userId,
+            "auditSequence": i + 1
+          })
+        }
+        that.auditPersonsBox.html(html); // 
+        console.log('审核人员回调提交数据', that.auditPersons)
+      },
+
+      // 初始化需要提交的数据，展示页面
+      initData: function () {
+        // 0:领样,1:收样处留样,2:测后留样,3:测后废弃,4:留样到期废弃,5:留样到期返还,6:提前废弃,7:提前返还,8:利用
+
+        this.tabsStatus6 = {
+          "operationType": [{
+              "values": "6",
+              "lables": "废弃",
+              "checkeds": "checked"
+            },
+            {
+              "values": "7",
+              "lables": "返还"
+            },
+            {
+              "values": "9",
+              "lables": "利用"
+            }
+          ],
+          "operationTitle": "申请处理方式",
+          "reason": {
+            "name": "申请原因",
+            "values": ""
+          },
+        }
+        this.tabsStatus7 = {
+          "operationType": [{
+              "values": "6",
+              "lables": "废弃"
+            },
+            {
+              "values": "7",
+              "lables": "返还",
+              "checkeds": "checked"
+            },
+            {
+              "values": "9",
+              "lables": "利用"
+            }
+          ],
+          "operationTitle": "申请处理方式",
+          "reason": {
+            "name": "申请原因",
+            "values": ""
+          },
+        }
+        this.tabsStatus9 = {
+          "operationType": [{
+              "values": "6",
+              "lables": "废弃"
+            },
+            {
+              "values": "7",
+              "lables": "返还"
+            },
+            {
+              "values": "9",
+              "lables": "利用",
+              "checkeds": "checked"
+            }
+          ],
+          "operationTitle": "申请处理方式",
+          "reason": {
+            "name": "申请原因",
+            "values": ""
+          },
+        }
+        return true;
+      },
+      // 渲染form表单
+      renderHtml: function (obj) {
+        console.log('renderHtml', obj)
+        var html = ''
+        if (obj.operationTitle) {
+          html += '<div class="layui-form-item">'
+          html += ' <label class="layui-form-label" >' + obj.operationTitle + '：</label >'
+          html += '    <div class="layui-input-block layui-input-width" id="saveTypeDiv">'
+          for (var key in obj.operationType) {
+            if (obj.operationType.hasOwnProperty(key)) {
+              var element = obj.operationType[key]
+              html += '<input class="layui-bg-blue layui-input" type = "radio" lay-filter="saveType" '
+              html += ' name = "operationType" value = "' + element.values + '" title = "' + element.lables + '"'
+              if (element.checkeds) {
+                html += ' checked="' + element.checkeds + '" > '
+              } else {
+                html += '> '
+              }
+            }
+          }
+          html += '</div> </div > '
+        }
+        if (obj.reason) {
+          html += '<div class="layui-form-item" >'
+          html += '<label class="layui-form-label">' + obj.reason.name + '：</label>'
+          html += '<div class="layui-input-block ">'
+          html += '<input type="text" name="reason"  class="layui-input" value="' + obj.reason.values +
+            '" autocomplete="off">'
+          html += '</div>'
+          html += '</div>'
+        }
+        $('.form-box').html(html)
+        this.formLayerM.render();
+        this.tableHtml(obj.tablecol, obj.amountAll)
+      },
+      // 渲染table
+      tableHtml: function (tablecol, amountAll) {
+        console.log('amountAll', tablecol, amountAll)
+        var html = '<div class="layui-row  layui-col-space10">'
+        html += '<div class="layui-col-xs3"> 样品编号 </div>'
+        html += '<div class="layui-col-xs2"> 样品名称 </div>'
+        html += '<div class="layui-col-xs2"> 规格型号 </div>'
+        html += '<div class="layui-col-xs2"> 留样数量 </div>'
+        html += '<div class="layui-col-xs3"> 申请处理数量 </div>'
+        html += '</div>'
+        // sampleNum :试样数量,getAmount:领样数量,savedAmount:留样数量
+        $.each(this.parentSel, function (i, v) {
+          console.log('v', v)
+          html += '<div class="layui-row  layui-col-space10">'
+          html += '<div class="layui-col-xs3"> ' + v.testObjectCode + ' </div>'
+          html += '<div class="layui-col-xs2"> ' + v.displayName + ' </div>'
+          html += '<div class="layui-col-xs2"> ' + v.standard + '</div>'
+          var tablecolValue = v.savedAmount || ''
+          html += '<div class="layui-col-xs2"> ' + tablecolValue + ' </div>'
+          html += '<div class="layui-col-xs3">'
+          if (v.amount) {
+            html += '<input type="text" name="amount' + i + '" value="' + v.amount +
+              '" class="layui-input " autocomplete="off">'
+          } else {
+            html += '<input type="text" name="amount' + i +
+              '" value="" class="layui-input " autocomplete="off">'
+          }
+          html += '</div>'
+          html += '</div>'
+        })
+        $('.form-table').html(html)
+        this.detailDisplay()
+      },
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+            // var saveType = { "0": "saveUrlReceive", "1": "saveUrlCollect", "default": "saveUrl" }, dataJson, params;
+            // var url = saveType[this.operationTypes] || saveType['default']
+            // if ('8' === this.operationTypes) { //利用
+            params = {
+              "operations": saveParam,
+              "auditPersons": this.auditPersons
+            }
+            dataJson = {
+              moduleParamStr: JSON.stringify(params)
+            }
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(this.saveUrl, dataJson, this.saveAjaxCallback, true, true)
+              // } else {
+              //   dataJson = { params: JSON.stringify(saveParam) }
+              //   ajaxRequest(this[url], { params: JSON.stringify(saveParam) }, this.saveAjaxCallback, false, true)
+              // }
+            } else {
+              SHOW_LOAD_LAYER('数据提交中...')
+            }
+            return true;
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+      },
+      // 批量设置
+      allSet: function () {
+        var amountAll = $('input[name="amountAll"]').val();
+        $('.form-table input').val(amountAll);
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 编辑详情页面数据处理
+      detailEditData: function (data) {
+        console.log('detailEditData', data)
+        var dataObj = {
+          operationType: '',
+          reason: '',
+          testObjectArr: []
+        }
+
+        for (var i = 0; i < data.length; i++) {
+          this.addPersonsCallback(data[i].auditPersons)
+          var applyData = JSON.parse(data[i].auditVo.applyData)
+          if ('8' === applyData['disposeWay']) {
+            // 处理已到期显示
+            dataObj.operationType = '9'
+          } else {
+            dataObj.operationType = applyData['disposeWay']
+          }
+          dataObj.reason = data[i].auditVo.applyReason
+          var testObjectVO = data[i].testObjectVO
+          dataObj.testObjectArr.push({
+            displayName: testObjectVO.testSampleDisplayName,
+            savedAmount: data[i].saveAmount,
+            standard: testObjectVO.standard,
+            testObjectCode: testObjectVO.testObjectCode,
+            testObjectId: testObjectVO.id,
+            amount: applyData['amount'],
+            objectProcessId: data[i].auditVo.relationObjId, // 流转id
+          })
+        }
+        this.parentSel = [], this.operationTypeArr = [];
+        this.parentSel = dataObj.testObjectArr;
+        console.log('dataObj', dataObj)
+        console.log('operationType', this['tabsStatus' + dataObj.operationType])
+
+        this['tabsStatus' + dataObj.operationType].isAmountAll = false;
+        this['tabsStatus' + dataObj.operationType].reason.values = dataObj.reason;
+
+        this.styleLayout(this.formLayerM, dataObj.operationType);
+        this.formLayerM.render();
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        console.log('detailEditCallback', res)
+        if (!res.success) {
+          layerAlertFun(res.msg, 6, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, {
+          "auditId": this.editId
+        }, this.detailEditCallback, false, true)
+      },
+      // 表单数据必填项
+      dataRequired: function (requiredParam) {
+        var len = this.parentSel.length;
+        for (var i = 0; i < len; i++) {
+          console.log('dataRequired', requiredParam['amount' + i])
+          if (!requiredParam['amount' + i]) {
+            formTipFun('数量不能为空', $('input[name="amount' + i + '"]'))
+            return false;
+          }
+        }
+
+        if (0 === this.auditPersons.length) {
+          formTipFun('审核人员不能为空', this.auditPersonsAdd)
+          return false;
+        }
+
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var requiredParam = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(requiredParam)) {
+          var arr = []
+          // 保存数据
+          for (var i = 0; i < this.parentSel.length; i++) {
+            arr.push({
+              "testObjectId": this.parentSel[i].testObjectId,
+              "objectProcessId": this.parentSel[i].objectProcessId || this.editId || '',
+              "operationType": requiredParam.operationType,
+              "operator": requiredParam.operator || '',
+              "receiver": requiredParam.receiver || '',
+              "operationDate": requiredParam.operationDate || '',
+              "amount": requiredParam['amount' + i],
+              "saveSite": requiredParam.saveSite || '',
+              "saveDayLimit": requiredParam.saveDayLimit || '',
+              "reason": requiredParam.reason || '',
+              "id": this.recordVosId || '',
+            })
+          }
+          return arr;
+        }
+      },
+
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj,
+          that = InitObj;
+          that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 样式布局控制
+      styleLayout: function (form, tabsStatus) {
+        this.renderHtml(this['tabsStatus' + tabsStatus])
+        var that = this;
+        form.on('radio(saveType)', function (data) {
+          that.renderHtml(that['tabsStatus' + data.value])
+        });
+      },
+    }
+  </script>
+</body>
+
+</html>

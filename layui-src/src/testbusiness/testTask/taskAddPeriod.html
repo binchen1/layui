@@ -1,0 +1,472 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>龄期登记</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>龄期登记</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .layui-checkbox-disbaled {
+      border-color: #5FB878 !important;
+    }
+
+    .layui-checkbox-disbaled span {
+      background-color: #5FB878 !important;
+    }
+
+    .layui-form {
+      padding: 0 16px;
+    }
+
+    #layui-laydate2 {
+      top: 40px !important;
+      left: 50% !important;
+    }
+
+    .layui-row span {
+      display: inline-block;
+      min-height: 30px;
+      line-height: 30px;
+      padding-left: 5px;
+    }
+
+    .layui-row>div {
+      border-left: 1px solid #e6e6e6;
+      padding: 5px 0;
+    }
+
+    .layui-row>div:first-child {
+      border-left: none;
+    }
+
+    .layui-row {
+      border-bottom: 1px solid #e6e6e6;
+    }
+
+    .layui-row input {
+      width: 98%;
+      height: 30px;
+    }
+
+    .layui-row.active {
+      background: #C6E4FE;
+    }
+
+    .layui-form-radio {
+      line-height: 30px;
+    }
+
+    .layui-input {
+      padding-left: 5px;
+    }
+
+    .layui-checkbox-disbaled span {
+      background-color: #5baaeb !important;
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <div id="tb" class="tb-box">
+    <div class="tb-box-btn" id="functionButton">
+      <span>
+        <a href="#" class="easyui-linkbutton funBtn_2" onclick="InitObj.add()" iconCls="icon-add" plain="true">新增</a>
+        <a href="#" class="easyui-linkbutton funBtn_1" onclick="InitObj.deleterow()" iconCls="icon-cancel"
+          plain="true">删除</a>
+      </span>
+    </div>
+  </div>
+  <form class="layui-form" id="commonQueryForm">
+    <div class="layui-row">
+      <div style="float: left;">
+        <input type="radio" name="sex" value="nan" disabled>
+      </div>
+      <div class="layui-col-xs3"><span>样品编号</span></div>
+      <div class="layui-col-xs2"><span>成型日期</span></div>
+      <div class="layui-col-xs2"><span>龄期(天)</span></div>
+      <div class="layui-col-xs2"><span>试验日期</span></div>
+      <div class="layui-col-xs2"><span>是否已检测</span></div>
+    </div>
+    <div id="layui-row-box"></div>
+  </form>
+  <script type="text/javascript">
+    $(function () {
+      layui.use(['layer', 'element', 'form', 'laydate', 'table'], function () {
+        var layer = layui.layer,
+          element = layui.element,
+          laydate = layui.laydate,
+          table = layui.table,
+          form = layui.form;
+        InitObj.init(form, laydate, table)
+
+        //监听单元格编辑
+        table.on('edit(test)', function (obj) {
+          var value = obj.value //得到修改后的值
+            ,
+            data = obj.data //得到所在行所有键值
+            ,
+            field = obj.field; //得到字段
+          layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
+        });
+      })
+
+    })
+    var InitObj = {
+      // defaultUrl: 'archiveSiteController.do?datagrid',
+      defaultUrl: 'testObjectPeriodController.do?datagridByTesttask',
+      changeTestStatusUrl: 'testObjectPeriodController.do?markTested',
+      saveUrl: 'testObjectPeriodController.do?addTaskPeriod',
+      delUrl: 'testObjectPeriodController.do?delTaskPeriod',
+      testTaskId: GetQueryString("testTaskId"), // 获取父页面传递过来的编辑id
+      // testObjects: GetQueryString("testObjects"), // 获取父页面传递过来的样品编号(试样编号)
+      testObjects: parent.testObjects || '', // 获取父页面传递过来的样品编号(试样编号)
+      dataGrid: null,
+      laydateLayerM: null,
+      formLayerM: null,
+      tableLayerM: null,
+      tableData: null, // 追加数据的数组
+      updateIndex: '', //  保存及删除调用接口后 更新对应的 table 行
+      rowChanges: {}, //  编辑时保存数据变化
+      parentIndex: parent.layer.getFrameIndex(window.name), // 先得到当前iframe层的索引
+      fristConfirm: true, //是否第一次点击提交
+      fristDelete: true, //是否第一次点击提交
+      init: function (form, laydate, table) {
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        this.tableLayerM = table;
+        ajaxRequest(this.defaultUrl, {
+          'testTaskId': this.testTaskId
+        }, this.getTestTaskAjaxCallback, false, true)
+      },
+      openCallback: function () {
+        this.add('save')
+      },
+      /** 获取已有的地址数据回调 */
+      getTestTaskAjaxCallback: function (res) {
+        var that = InitObj;
+        that.tableData = res;
+        that.rowHtml(res.rows);
+
+      },
+      radioFun: function (target) {
+        var index = $(target).find('input').val()
+        $('#layui-row_' + index + '').addClass('active').siblings().removeClass('active')
+      },
+      rowHtml: function (data) {
+        var htmls = ''
+        for (var i = 0; i < data.length; i++) {
+          htmls += ' <div class="layui-row" id="layui-row_' + i + '">'
+          htmls += '<div style="float:left;" onclick="InitObj.radioFun(this)">'
+          htmls += '<input type="radio"  name="index" value="' + i + '">'
+          htmls += '</div>'
+          htmls += '<div class="layui-col-xs3">'
+          if ('add' === data[i].isAdd) {
+            var code = '';
+            if (data[i].periodCode) {
+              code = data[i].periodCode;
+            } else {
+              if (data[i].testObjectCode) {
+                code = data[i].testObjectCode;
+              }
+            }
+            htmls += '<input type="text" name="periodCode" class="layui-input" value="' + code +
+              '"  autocomplete="off" >'
+          } else {
+            var code = '';
+            if (data[i].periodCode) {
+              code = data[i].periodCode;
+            } else {
+              if (data[i].testObjectCode) {
+                code = data[i].testObjectCode;
+              }
+            }
+            htmls += '<span> ' + code + ' </span>'
+          }
+          htmls += '</div>'
+          htmls += '<div class="layui-col-xs2">'
+          if ('add' === data[i].isAdd) {
+            var formingDate = data[i].formingDate ? new Date(data[i].formingDate).Format("yyyy-MM-dd") : '';
+            htmls += '<input type="text" name="formingDate"  class="layui-input" value="' + formingDate +
+              '" id="formingDate" autocomplete="off" >'
+          } else {
+            if (data[i].formingDate) {
+              var formingDate = new Date(data[i].formingDate).Format("yyyy-MM-dd")
+              htmls += '<span> ' + formingDate + ' </span>'
+            } else {
+              htmls += '<span>  </span>'
+            }
+          }
+          htmls += '</div>'
+          htmls += '<div class="layui-col-xs2">'
+          var days = '';
+          if ('add' === data[i].isAdd) {
+            if (data[i].days) {
+              days = data[i].days;
+            }
+            htmls += '<input type="number"  onkeyup="InitObj.dataChange(event)"  name="days" class="layui-input" value="' + days +
+              '"  autocomplete="off" >'
+          } else {
+            if (data[i].days) {
+              days = data[i].days;
+            }
+            htmls += '<span> ' + days + ' </span>'
+          }
+          htmls += '</div>'
+          htmls += '<div class="layui-col-xs2"> '
+          if ('add' === data[i].isAdd) {
+            htmls += '<span id="testDate">'
+          } else {
+            htmls += '<span id="">'
+          }
+          htmls += this.testDateFun(data[i].formingDate, data[i].days)
+          htmls += ' </span>'
+          // if ('add' !== data[i].isAdd) {
+          //   htmls += this.testDateFun(data[i].formingDate, data[i].days)
+          // }
+          htmls += ' </span></div>'
+          htmls += '<div class="layui-col-xs2" onclick="InitObj.changeTestStatus(this,\'' + i + '\')">'
+          if (data[i].isTested && '1' === data[i].isTested) {
+            htmls += '<input type="checkbox" class="layui-input" name="isTested" title="已检测" checked disabled >'
+          } else {
+            htmls += '<input type="checkbox" class="layui-input" name="isTested" title="已检测" >'
+          }
+          htmls += '</div>'
+          htmls += '</div>'
+        }
+        $('#layui-row-box').html(htmls);
+
+        this.laydateLayerM.render({
+          elem: '#formingDate',
+          format: 'yyyy-MM-dd',
+          trigger: 'click',
+          done: function (value, date, endDate) {
+            var days = $('input[name="days"]').val();
+            var date = (new Date(value)).valueOf();
+            if (days) {
+              $('#testDate').html(InitObj.testDateFun(date, days))
+            }
+          }
+        })
+        this.formLayerM.render()
+
+      },
+      // 龄期输入验证
+      dataChange: function (event) {
+        var values = Number($(event.target).val());
+        var date = $('input[name="formingDate"]').val();
+        if (values < 1) {
+          formTipFun('请输入正整数', $(event.target))
+          $(event.target).val('')
+        } else {
+          if (date) {
+            $('#testDate').html(this.testDateFun(date, values))
+          }
+        }
+      },
+      testDateFun: function (date, days) {
+        var testDateStr = '';
+        if (date && days) {
+          if ('string' === typeof date) {
+            var formingDate = new Date(date).getTime(); // 当前时间戳
+          } else {
+            var formingDate = date;
+          }
+          var testDate = formingDate + parseFloat(days) * 24 * 60 * 60 * 1000;
+          testDateStr = new Date(testDate).Format("yyyy-MM-dd");
+        }
+
+        return testDateStr;
+      },
+      /** 新增归档地址 */
+      add: function (isSave) {
+        var data = new Date(new Date()).Format("yyyy-MM-dd");
+        var len = this.tableData.rows.length - 1;
+        if (0 === this.tableData.rows.length) {
+          if (isSave) {
+            parent.layer.close(parent.layer.getFrameIndex(window.name));
+          } else {
+            this.tableData.rows.push({
+              "periodCode": this.testObjects,
+              "formingDate": '',
+              "days": '',
+              'testTaskId': this.testTaskId,
+              'isTested': '0',
+              'isAdd': 'add'
+            })
+            this.rowHtml(this.tableData.rows)
+          }
+        } else {
+          var perData = this.tableData.rows[len];
+          var data = $('#layui-row_' + len).serializeJSON();
+          var formdata = $('#commonQueryForm').serializeJSON();
+          if (perData.id) {
+            if (isSave) {
+              parent.layer.close(parent.layer.getFrameIndex(window.name));
+            } else {
+              var periodCode = (perData.periodCode ? perData.periodCode : perData.testObjectCode)
+              this.tableData.rows.push({
+                "periodCode": periodCode,
+                "formingDate": perData.formingDate,
+                "days": perData.days,
+                'testTaskId': this.testTaskId,
+                'isTested': '0',
+                'isAdd': 'add'
+              })
+              this.rowHtml(this.tableData.rows)
+            }
+          } else {
+            if (this.dataRequired(formdata)) {
+              var data = {
+                testTaskId: perData.testTaskId,
+                formingDate: formdata.formingDate,
+                periodCode: formdata.periodCode,
+                days: formdata.days,
+                isTested: perData.isTested,
+              }
+              perData.formingDate = formdata.formingDate
+              perData.periodCode = formdata.periodCode
+              perData.days = formdata.days
+              var params = {
+                len: len,
+                isSave: isSave
+              }
+              if (this.fristConfirm) {
+                this.fristConfirm = !this.fristConfirm;
+                ajaxRequest(this.saveUrl, data, this.saveAjaxCallback, true, true, params)
+              }
+            } else {
+              formTipFun(formdata.msg, formdata.element)
+            }
+          }
+        }
+      },
+      /** 保存数据回调 再新增*/
+      saveAjaxCallback: function (res, params) {
+        var that = InitObj, len = params.len;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        }
+        that.tableData.rows[len].id = res.obj;
+        delete that.tableData.rows[len].isAdd;
+        if (params.isSave) {
+          parent.layer.close(parent.layer.getFrameIndex(window.name));
+        } else {
+          that.fristConfirm = !that.fristConfirm;
+          that.add()
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.periodCode) {
+          queryParams.msg = '样品编号不能为空'
+          queryParams.element = $('input[name="periodCode"]')
+          return false;
+        }
+        if (!queryParams.formingDate) {
+          queryParams.msg = '成型日期不能为空'
+          queryParams.element = $('input[name="formingDate"]')
+          return false;
+        }
+        if (!queryParams.days) {
+          queryParams.msg = '龄期不能为空'
+          queryParams.element = $('input[name="days"]')
+          return false;
+        }
+        if (queryParams.days < 1) {
+          queryParams.msg = '请输入正整数'
+          queryParams.element = $('input[name="days"]')
+          return false;
+        }
+        return true;
+      },
+      /** 删除数据回调并更新table */
+      deleterowAjaxCallback: function (res, rowIndex) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          that.tableData.rows.splice(rowIndex, 1)
+          that.rowHtml(that.tableData.rows)
+        }
+        that.fristDelete = !that.fristDelete;
+      },
+      /** 判断数据是否删除，无id直接删除 */
+      deleterow: function (target) {
+        var rowIndex = $('input[name="index"]:checked').val()
+        var that = this;
+        if (that.fristDelete) {
+          that.fristDelete = !that.fristDelete;
+          if (that.tableData.rows[rowIndex].id) {
+            ajaxRequest(that.delUrl, {
+              "periodId": that.tableData.rows[rowIndex].id
+            }, that.deleterowAjaxCallback, true, true, rowIndex)
+          } else {
+            that.tableData.rows.splice(rowIndex, 1);
+            that.rowHtml(that.tableData.rows);
+            that.fristDelete = !that.fristDelete;
+          }
+        }
+      },
+      // 修改是否已检测
+      changeTestStatus: function (target, index) {
+        var isDisabled = $(target).find('input').attr('disabled');
+        var periodId = this.tableData.rows[index].id;;
+        var isTested = $(target).find('input').is(':checked') ? '1' : '0';
+        var data = {
+          'periodId': periodId,
+          'isTested': isTested
+        }
+        if (!isDisabled) { // 可以点击
+          if (periodId) { // id  存在调用接口
+            ajaxRequest(this.changeTestStatusUrl, data, this.changeTestStatusAjaxCallback, false, true, index)
+          }
+        }
+      },
+      // 修改是否已检测回调
+      changeTestStatusAjaxCallback: function (res, index) {
+        if (res.success) {
+          layerAlertFun(res.msg, 6, []);
+          $('#layui-row_' + index + '').find('input[name="isTested"]').attr('disabled', true)
+        } else {
+          layerAlertFun(res.msg, 5, []);
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

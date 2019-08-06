@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- <meta charset="utf-8">
+  <title>layui</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="//res.layui.com/layui/dist/css/layui.css"  media="all"> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>试验检测管理信息系统</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/login.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+</head>
+
+<body>
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-header-left">
+        <div class="login-header-left-img"><img src="../../assets/images/img_login_logo.png"></div>
+        <div class="login-header-left-text">
+          <h2>试验检测管理信息系统</h2>
+          <p>Laboratory Information Management System</p>
+        </div>
+      </div>
+      <!-- <div class="login-header-right">
+        <p>公众远程服务平台 <span>|</span> 大厅自助查询系统 </p>
+        <p>数字证书驱动下载 <span>|</span> 系统客户端下载</p>
+      </div> -->
+    </div>
+    <div class="login-middle">
+      <div class="login-middle-modal"></div>
+      <div class="login-middle-login">
+        <div class="login-form">
+          <h2>检测机构登录</h2>
+          <div class="login-form-content">
+            <div class="input-group">
+              <span class="input-group-addon">
+                <img src="../../assets/images/icon_name.png">
+              </span>
+              <input type="text" placeholder="请输入用户名" id="uname-input" onkeyup="unamePhoneSwitch(event)">
+            </div>
+            <div class="input-group">
+              <span class="input-group-addon"> 
+                <i class="layui-icon">&#xe770;</i>  
+              </span>
+              <input type="text" placeholder="请输入公司登录名" id="uname-input" onkeyup="unamePhoneSwitch(event)">
+            </div>
+            <div class="input-group">
+              <span class="input-group-addon">
+                <img src="../../assets/images/icon_password.png">
+              </span>
+              <input type="password" placeholder="请输入密码" id="uname-input" onkeyup="unamePhoneSwitch(event)">
+            </div>
+            <div class="input-group">
+              <span class="input-group-addon">
+                  <i class="layui-icon">&#xe679;</i>  
+              </span>
+              <input type="text" class="last-input" placeholder="请输入验证码" id="uname-input"
+                onkeyup="unamePhoneSwitch(event)">
+              <span class="test-code-box">
+                <img src="../../assets/images/test-code.png">
+              </span>
+            </div>
+          </div>
+
+          <button class="login-form-btn" type="submit" onClick="onsubmitFun()">登录</button>
+          <p class="login-form-right">
+            <a href="#">公共区平台远程登录 〉</a>
+          </p>
+          <p class="login-form-last">联系客服人员，可获取试用账号</p>
+        </div>
+      </div>
+      <div class="login-middle-bottom">
+        <a href="#">客户的需求</a>
+        <a href="#">我们的追求</a>
+        <a href="#">客户的成功</a>
+        <a href="#">我们的巅峰</a>
+      </div>
+    </div>
+    <div class="login-bottom">
+      <p>渝ICP备1002727号 @1998-2015 重庆海特科技发展有限公司 客服电话：（023）68628633 QQ：2850989605 USBKey驱动程序下载 </p>
+    </div>
+  </div> 
+  <script>
+
+  </script>
+
+</body>
+
+</html>

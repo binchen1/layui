@@ -1,0 +1,236 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief height-full">
+
+    <div id="tb" class="tb-box">
+      <div class="tb-box-form">
+        <form class="layui-form" id="commonQueryForm">
+          <div class="layui-row">
+            <div class="layui-col-xs8">
+              <div class="layui-input-inline" style="width:80%">
+                <input type="text" name="quickQryParam" class="layui-input" placeholder="输入流程类型名称/组名称/人员名称即可查询"
+                  autocomplete="off">
+              </div>
+              <div class="layui-input-inline">
+                <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.quickSearch()">查询</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="tb-box-btn" id="functionButton">
+        <span>
+          <a href="#" class="easyui-linkbutton funBtn_1" iconCls="icon-add" plain="true">新增</a>
+          <a href="#" class="easyui-linkbutton funBtn_2" iconCls="icon-add" plain="true">流程类型配置</a>
+        </span>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+    <!-- </div> -->
+  </div>
+
+  <script>
+    $(function () {
+      // tabTableHeight('.layui-tab', '.layui-tab-content')
+      layui.use(['table', 'element', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var form = layui.form;
+        InitObj.init();
+      })
+
+    })
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      defaultUrl: 'processPersonController.do?datagrid', //默认获取数据url
+      addFilePageUrl: 'processPersonController.do?goEditPage', // 资料存放url页面
+      addAddressPageUrl: 'processTypeController.do?goProcessTypePage', // 归档地址配置url页面
+      delAddUrl: 'processPersonController.do?delGroup', // 删除自定义的归档资料
+      addFile: $('#functionButton .funBtn_1'), // 归档
+      addAddress: $('#functionButton .funBtn_2'), // 归档地址配置
+      queryParams: {}, // 查询条件
+      init: function () {
+        this.initDataGrid(this.columnsFun())
+        // 搜素按钮回车键盘
+        // 高级查询与普通查询切换
+        this.btnFun(this.addFile, this.addFilePageUrl, '新增')
+        this.btnFun(this.addAddress, this.addAddressPageUrl, '流程类型配置')
+        this.commonQryKeyDown()
+
+      },
+      // 点击功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          if ('新增' === openName) {
+            layerOpenFun(openUrl, openName,['90%', '90%'], ['确定', '取消']);
+            return;
+          } else if ('流程类型配置' === openName) {
+            layerOpenFun(openUrl, openName,['90%', '90%'], ['确定', '取消']);
+            return;
+          }
+        })
+      },
+
+      // table按钮点击进入详情
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addFilePageUrl + '&editId=' + did + '&detail=detailPage', openName = '查看详情';
+        layerOpenFun(openUrl, openName,['90%', '90%'], [])
+      },
+      // table按钮点击进入编辑
+      goEdit: function (did, event) {
+        layui.stope(event)
+        var openUrl = this.addFilePageUrl + '&editId=' + did, openName = '重新编辑';
+        layerOpenFun(openUrl, openName,['90%', '90%'], ['确定', '取消'])
+      },
+      // 删除此条数据
+      removes: function (did, event) {
+        layui.stope(event)
+        ajaxRequest(this.delAddUrl, { "groupId": did }, this.removesAjaxCallback, false, true)
+      },
+      removesAjaxCallback: function (res) {
+        var that = InitObj;
+        if (res.success) {
+          layer.msg(res.msg, { icon: 6 })
+          that.reloadDataGrid(false, {})
+        } else {
+          layer.msg(res.msg, { icon: 5 })
+        }
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var condition = $("input[name='quickQryParam']").val();
+        var queryParams = { 'quickQryParam': condition };
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      // 各tabs展示数据
+      columnsFun: function () {  // 查询类型: 0:待归档, 1:已归档
+        var columns = [];
+        columns.push({ title: "groupId", field: "groupId", hidden: true })
+        columns.push({ title: "流程类型名称", field: "processTypeName", width: 100 });
+        columns.push({ title: "组名称", field: "groupName", width: 90 });
+        columns.push({
+          title: "状态", field: "groupDisabled", width: 90,
+          formatter: function (value, row, index) {
+            return value === '0' ? '启用' : '停用';
+          }
+        });
+        columns.push({ title: "人员集合", field: "persons", width: 90 });
+        columns.push({
+          title: "配置时间", field: "createDate", width: 80, formatter: function (value) {
+            if (value) {
+              return new Date(value).Format("yyyy-MM-dd")
+            }
+          }
+        })
+        columns.push({ title: "配置人", field: "createName", width: 50 });
+
+        columns.push({
+          title: "操作",
+          field: "opt",
+          width: 80,
+          formatter: function (value, row, index) {
+            var btns = '';
+            btns += '<button title="查看详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.groupId + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+            btns += '<button title="重新编辑" class="layui-btn layui-btn-sm" onclick="InitObj.goEdit(&quot;' + row.groupId + '&quot;,event)"><i class="layui-icon">&#xe9aa;</i></button>';
+            btns += '<button title="删除" class="layui-btn layui-btn-sm" onclick="InitObj.removes(&quot;' + row.groupId + '&quot;,event)"><i class="layui-icon">&#x1007;</i></button>';
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      // 重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+          },
+          onDblClickRow: function (index, row) {
+            // 双击事件,进入任务分配
+            // $('#dataGrid').datagrid('checkRow', index);
+            // reAssignTask();
+          }
+        });
+      },
+
+    }
+  </script>
+</body>
+
+</html>

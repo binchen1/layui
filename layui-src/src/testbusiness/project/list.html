@@ -1,0 +1,357 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>工程项目</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+
+  <script type="text/javascript" src="plug-in/serializejson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+
+  <style>
+    .datagrid-btable .datagrid-cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    input {
+      height: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab-brief easyui-layout" fit="true">
+    <div class="dataGrid height-full" data-options="region: 'center'">
+      <div class="toolbar">
+        <div class="tb-box">
+          <div class="tb-box-form search-box">
+            <form class="layui-form" id="commonQueryForm">
+              <form class="layui-form">
+                <div class="layui-row">
+                  <div class="layui-col-xs8">
+                    <div class="layui-input-inline" style="width:80%">
+                      <input type="text" name="quickQryParam" class="layui-input" placeholder="输入工程项目/施工单位/建设单位/建设项目后回车即可查询"
+                        autocomplete="off">
+                    </div>
+                    <div class="layui-input-inline">
+                      <a href="#" class="easyui-linkbutton btn-4-search" iconCls="icon-search" plain="true">查询</a>
+                    </div>
+                  </div>
+                </div>
+              </form>
+          </div>
+        </div>
+
+        <div class="tb-box-btn">
+          <span>
+            <a style="display:none" data-funCode="addProject" class="easyui-linkbutton btn-4-add" plain="true" icon="icon-add">新增</a>
+            <a style="display:none" data-funCode="updateProject" class="easyui-linkbutton btn-4-update" plain="true" icon="icon-edit">修改</a>
+            <a style="display:none" data-funCode="delProject" class="easyui-linkbutton btn-4-delete" plain="true" icon="icon-remove">删除</a>
+          </span>
+        </div>
+      </div>
+      <table id="dataGrid" class="easyui-datagrid"></table>
+    </div>
+    <div class="dataGrid0 self-noscroll" data-options="region: 'east', title:'工程项目包含的委托单位列表', split: true" style="width: 300px;">
+      <div class="toolbar datagrid-toolbar">
+        <span>
+          <a style="display:none" data-funCode="projectRelationConsignUnit" class="easyui-linkbutton btn-4-add-relationship" plain="true" icon="icon-add">关联</a>
+          <a style="display:none" data-funCode="delProjectConsignUnitRelation" class="easyui-linkbutton btn-4-delete-relationship" plain="true" icon="icon-remove">取消关联</a>
+        </span>
+      </div>
+
+      <table id="dataGrid0"></table>
+    </div>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+      })
+      commonQryKeyDown()
+      // common.js里的此函数是获取按钮或功能权限的 勿删
+      funCode()
+      /**
+       *隐藏easyui面板的折叠按钮
+       */
+      $('a[class*=layout-button-]').hide();
+
+      initDataGrid();
+      initDataGrid0();
+
+      /**
+       * 查询按钮事件
+       */
+      $('.btn-4-search').click(function () {
+        reloadDataGrid(true);
+        reloadDataGrid0();
+      });
+
+      /**
+       * 新增按钮事件
+       */
+      $('.btn-4-add').click(function () {
+        var url = 'projectController.do?edit';
+        // layerCreateWindow('新增工程项目', url, ['保存', '取消'], ['70%', '80%'], '.btn-4-submit', '', 2, function () {
+        //   saveUpdate(this)
+        // });
+        layerOpenFun(url, '新增工程项目', ['90%', '90%'], ['保存', '取消']);
+      });
+
+      /**
+       * 修改按钮事件
+       */
+      $('.btn-4-update').click(function () {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          btnTipMsg(event, '请选择工程项目')
+          return;
+        }
+        var url = 'projectController.do?edit&editId=' + row.id;
+        // layerCreateWindow('修改工程项目', url, ['保存', '取消'], ['70%', '80%'], '.btn-4-submit', '', 2, function () {
+        //   saveUpdate(this)
+        // })
+        layerOpenFun(url, '修改工程项目', ['90%', '90%'], ['保存', '取消']);
+      });
+
+      /**
+       * 删除按钮事件
+       */
+      $('.btn-4-delete').click(function () {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          btnTipMsg(event, '请选择工程项目')
+          return;
+        }
+        ajaxRequest('projectController.do?doDel', { id: row.id }, successCallback, false, true, 'refresh')
+        // confirmAndDoReq({
+        //   url: 'projectController.do?doDel',
+        //   data: {
+        //     id: row.id
+        //   },
+        //   success: function (data) {
+        //     tip(data.msg);
+        //     if (data.success) {
+        //       reloadDataGrid();
+        //     }
+        //   }
+        // });
+      });
+      /**
+       * 关联委托单位
+      */
+      $('.btn-4-add-relationship').click(function () {
+        var row = dataGrid.datagrid('getSelected');
+        if (!row) {
+          btnTipMsg(event, '请选择工程项目')
+          return;
+        }
+        var url = 'projectController.do?editRelationship';
+        layerOpenFun(url, '关联委托单位', ['85%', '80%'], ['保存', '取消'], '', 'submitFun');
+        // layerOpenFun(url, '关联委托单位', ['70%', '80%'], ['保存', '取消']);
+      });
+
+      /**
+       * 删除工程项目、委托单位关系按钮事件
+       */
+      $('.btn-4-delete-relationship').click(function () {
+        var rows = dataGrid0.datagrid('getSelections');
+        if (!rows || rows.length == 0) {
+          btnTipMsg(event, '请选择需要删除的数据')
+          return;
+        }
+
+        var projectRow = dataGrid.datagrid('getSelected');
+
+        var consignUnitIds = [];
+        for (var i in rows) {
+          consignUnitIds.push(rows[i].id);
+        }
+        var data = {
+          projectId: projectRow.id,
+          consignUnitIds: consignUnitIds.join(',')
+        }
+        ajaxRequest('projectController.do?doDeleteRelationship', data, successCallback, false, true, projectRow)
+        // confirmAndDoReq({
+        //   url: 'projectController.do?doDeleteRelationship',
+        //   data: {
+        //     projectId: projectRow.id,
+        //     consignUnitIds: consignUnitIds.join(',')
+        //   },
+        //   success: function (data) {
+        //     tip(data.msg);
+        //     if (data.success) {
+        //       reloadDataGrid0(true, projectRow);
+        //     }
+        //   }
+        // });
+      });
+    });
+
+    var dataGrid;
+    var dataGrid0;
+    var moduleName = 'project'; // 关联委托单位子页面需要判断 是工程项目
+    /**
+    * 功能按钮操作后回调
+   */
+    function successCallback(res, refresh) {
+      if (res.success) {
+        refresh === 'refresh' ? reloadDataGrid() : reloadDataGrid0(true, refresh);
+        layerAlertFun(res.msg, 1, [])
+      } else {
+
+        layerAlertFun(res.msg, 2, [])
+      }
+    }
+
+    // 快速查询input框绑定的回车事件
+    function commonQryKeyDown() {
+      $('#commonQueryForm input').bind('keypress', function (event) {
+        var theEvent = event || window.event;
+        var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+        if (code === 13) {
+          reloadDataGrid();
+          return false;//问题解决关键
+        }
+      });
+    }
+
+    function saveUpdate(num) {
+
+      //this是子容器
+      var _this = num;
+      _this.initValidform({
+        btnSubmit: ".btn-4-submit",
+        tiptype: 4,
+        ignoreHidden: false,
+        dragonfly: false,
+        tipSweep: false,
+        showAllError: true,
+        postonce: true,
+        ajaxPost: true,
+        beforeSubmit: function (curform) {
+          // $(curform).find('input[name=consignUnitIds]').val(_this.CONSIGN_UNIT_IDS.join(','));
+          // if(_this.CONSIGN_UNIT_IDS.length == 0){
+          // 	tip('请选择委托单位');
+          // 	return false;
+          // }
+          // else if(_this.CONSIGN_UNIT_IDS[0]=="" && _this.CONSIGN_UNIT_IDS.length == 1){
+          // 	tip('请选择委托单位');
+          // 	return false;
+          // }
+        },
+        callback: function (data) {
+          console.log('callback', data)
+          if (data.success) {
+            var index = layer.getFrameIndex(_this.window.name);
+            reloadDataGrid();
+            reloadDataGrid0();
+            layer.close(index);
+            tip(data.msg);
+          } else {
+            tip(data.msg);
+          }
+        }
+      });
+      //点击保存后，配置完表单验证，立马提交表单，防止第一次点击保存不生效
+      $(_this.document).find('.btn-4-submit').trigger('click');
+    }
+
+    function initDataGrid() {
+      dataGrid = $('#dataGrid').datagrid({
+        url: 'projectController.do?datagridNew',
+        singleSelect: true,
+        pagination: true,
+        fit: true,
+        fitColumns: true,
+        toolbar: '.dataGrid .toolbar',
+        scrollbarSize: 0,
+        columns: [[
+          { title: "ID", field: "id", checkbox: true },
+          { title: "工程项目", field: "name", width: 120, formatter: applyTitleAttribute },
+          { title: "施工单位", field: "constructionUnitName", width: 120, formatter: applyTitleAttribute },
+          { title: "建设单位", field: "buildUnitName", width: 120, formatter: applyTitleAttribute },
+          { title: "建设项目", field: "buildProjectName", width: 120, formatter: applyTitleAttribute },
+          { title: "见证单位", field: "witnessUnitName", width: 80 },
+          { title: "备注", field: "remark", width: 80, formatter: applyTitleAttribute },
+        ]],
+        //加载完成事件
+        onLoadSuccess: function (data) {
+          console.log('data', data)
+          getPagerFun('#dataGrid')
+        },
+        onSelect: function (index, row) {
+          reloadDataGrid0(true, row);
+        },
+        onDblClickRow: function (index, row) {
+          bindDbclickEvent(index, 2, '.btn-4-update');
+        }
+      });
+    }
+
+    function reloadDataGrid(goFirstPage) {
+      var queryParams = $('.search-box form').serializeJSON();
+      if (goFirstPage) {
+        /*从第一页开始显示*/
+        dataGrid.datagrid('load', queryParams);
+      } else {
+        /*停留在当前页面*/
+        dataGrid.datagrid('reload', queryParams);
+      }
+    }
+
+    function initDataGrid0() {
+      dataGrid0 = $('#dataGrid0').datagrid({
+        url: 'projectController.do?getProjectConsignUnits',
+        singleSelect: false,
+        fit: true,
+        fitColumns: true,
+        scrollbarSize: 0,
+        toolbar: '.dataGrid0 .toolbar',
+        columns: [[
+          { title: "ID", field: "id", checkbox: true },
+          { title: "委托单位名称", field: "name", width: 130, formatter: applyTitleAttribute },
+          { title: "项目标段名称", field: "projectTenderName", width: 130, formatter: applyTitleAttribute }
+        ]]
+      });
+    }
+
+    function reloadDataGrid0(goFirstPage, row) {
+      if (row) {
+        var params = {
+          id: row.id
+        }
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          dataGrid0.datagrid('load', params);
+        } else {
+          /*停留在当前页面*/
+          dataGrid0.datagrid('reload', params);
+        }
+      } else {
+        dataGrid0.datagrid('loadData', { total: 0, rows: [] });
+      }
+    }
+
+    function applyTitleAttribute(value) {
+      return value ? '<span title="' + value + '">' + value + '</span>' : ''
+    }
+  </script>
+</body>
+
+</html>

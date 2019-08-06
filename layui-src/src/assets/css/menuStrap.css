@@ -1,0 +1,19 @@
+.panel-heading {
+  padding: 0px;
+}
+.panel {
+  margin-bottom: 0px;
+}
+/* 左侧菜单 */
+.nav-left {
+  width: 200px;
+  position: fixed;
+}
+/* 右侧主题 */
+.middle-box {
+  /* float: left; */
+  margin-left: 200px;
+  background: red;
+  height: 100%;
+  width: 100%;
+}

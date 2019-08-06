@@ -1,0 +1,270 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath +
+    "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+<script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+<style>
+  /* .toolbar {
+    position:fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+  }
+  .datagrid-view1, .datagrid-view2 {
+    top: 89px;
+  } */
+</style>
+
+<body>
+
+  <div class="height-full">
+    <div id="#treeList" class="toolbar" style="padding: 3px">
+      <div class="search-box">
+        <form>
+          <table>
+            <tr>
+              <td>资质类型：</td>
+              <td>
+                <select class="easyui-combobox" name="qualificationTypeId">
+                  <option value="">--请选择--</option>
+                  <c:forEach items="${qualificationTypes}" var="item">
+                    <option value="${item.id}">${item.name}</option>
+                  </c:forEach>
+                </select>
+              </td>
+              <td>参数名称：</td>
+              <td>
+                <input id="filter" name="name" style="line-height:24px; border:1px solid #ccc">
+              </td>
+              <td>
+                <a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+              </td>
+            </tr>
+          </table>
+        </form>
+      </div>
+      <div class="datagrid-toolbar">
+        <span style="float:left; height: auto;">
+          <a class="easyui-linkbutton btn-4-add" plain="true" icon="icon-add">新增</a>
+          <a class="easyui-linkbutton btn-4-update" plain="true" icon="icon-edit">修改</a>
+          <a class="easyui-linkbutton btn-4-delete" plain="true" icon="icon-remove">删除</a>
+        </span>
+      </div>
+    </div>
+    <table id="treeList" class="easyui-datagrid"></table>
+  </div>
+
+
+
+  <script>
+    $(function () {
+
+      reloadTable();
+      /**
+       *  查询按钮事件
+       **/
+      $('.btn-4-search').click(function () {
+        doFilter('treeList');
+      });
+      /*新增按钮事件*/
+      $('.btn-4-add').click(function () {
+        var url = 'bigCategoryController.do?edit';
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '新增',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '400px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /*修改按钮事件*/
+      $('.btn-4-update').click(function () {
+        var row = treeGrid.treegrid('getSelected');
+        if (!row) {
+          tip('请选择需要修改的数据');
+          return;
+        }
+        var url = 'bigCategoryController.do?edit&id=' + row.id;
+        layer.open({
+          type: 2,
+          skin: 'layui-layer-molv',
+          title: '修改',
+          content: url,
+          maxmin: false,
+          btn: ['保存', '取消'],
+          area: ['500px', '400px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            $(body).find('.btn-4-submit').trigger('click');
+            return false;
+          }
+        });
+      });
+
+      /*删除按钮事件*/
+      $('.btn-4-delete').click(function () {
+        var row = treeGrid.treegrid('getSelected');
+        if (!row) {
+          tip('请选择需要删除的数据');
+          return;
+        }
+        delObj('bigCategoryController.do?doDel&id=' + row.id, 'treeList');
+      });
+
+      /*资质下拉改变事件*/
+      $('.search-box select').combobox({
+        onChange: function () {
+          reloadTable()
+        }
+      });
+
+    });
+
+    var treeGrid;
+    var allData = new Array();
+
+    function reloadTable() {
+
+      /*收集自定义查询条件*/
+      var queryParams = $('.search-box form').serializeJSON();
+      var bFound = true;
+      treeGrid = $('#treeList').treegrid({
+        url: 'bigCategoryController.do?datagrid',
+        idField: 'id',
+        treeField: 'name',
+        singleSelect: true,
+        toolbar: '.toolbar',
+        method: 'get',
+        fit:true,
+        fitColumns: true,
+        scrollbarSize: 0,
+        queryParams: queryParams,
+        columns: [
+          [{
+              title: 'ID',
+              field: 'id',
+              checkbox: true
+            },
+            {
+              title: '大类名称',
+              field: 'name',
+              width: 120
+            },
+            {
+              title: '掩码',
+              field: 'code',
+              hidden: true
+            },
+            {
+              title: '试验类型',
+              field: 'testType',
+              width: 120,
+              formatter: function (value) {
+                var valueCN = '现场试验检测';
+                if (value == 0) {
+                  valueCN = '原材料试验检测';
+                }
+                return valueCN;
+              }
+            },
+            {
+              title: '资质名称',
+              field: 'qualificationType',
+              width: 120,
+              formatter: function (value, row) {
+                return row.qualificationType.name;
+              }
+            },
+            {
+              title: '是否禁用',
+              field: 'isDeleted',
+              align: 'center',
+              formatter: function (value) {
+                var valueCN = '是';
+                if (value == '0') {
+                  valueCN = '否';
+                }
+                return valueCN;
+              }
+            },
+            {
+              title: '备注',
+              field: 'remark',
+              width: 120
+            }
+          ]
+        ],
+        //加载完成事件
+        onLoadSuccess: function (data) {
+          console.log('data', data)
+          $(".datagrid-header-check").html("");
+        },
+        onDblClickRow: function (index, row) {
+          bindDbclickEvent(index, 2, '.btn-4-update', $(this));
+        },
+        loadFilter: function (data) {
+          if (data[0]) {
+            if (bFound && data[0].nodeName != "Root") {
+              allData = data;
+              bFound = false;
+            }
+          } else {
+            allData = data;
+          }
+          return data;
+
+        },
+      });
+    }
+    //datagrid数据格式过滤器  
+    function doFilter(idTreeGrid) {
+      var newData = new Array();
+      var filter = $("#filter").val();
+      if (allData.length == 0) {
+        console.log("请先点击Root初始化界面");
+        return false;
+      }
+      _doFilter(allData, newData);
+      if (filter == "") {
+        $('#' + idTreeGrid).treegrid('loadData', allData);
+      } else {
+        $('#' + idTreeGrid).treegrid('loadData', newData);
+      }
+    }
+
+    function _doFilter(arr, newData) {
+      var filter = $("#filter").val();
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i].name.indexOf(filter) > -1) {
+          // 定义一个数组  
+          newData.push(arr[i]);
+        }
+        if (arr[i].children.length > 0) {
+          _doFilter(arr[i].children, newData)
+        }
+      }
+      return newData
+    }
+  </script>
+</body>

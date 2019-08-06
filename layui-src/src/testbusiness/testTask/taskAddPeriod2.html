@@ -1,0 +1,370 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>龄期登记</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>龄期登记</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+</head>
+
+<body>
+
+
+  <div id="tb" class="tb-box">
+    <div class="tb-box-btn" id="functionButton">
+      <span>
+        <a href="#" class="easyui-linkbutton funBtn_2" onclick="InitObj.add()" iconCls="icon-add" plain="true">新增</a>
+        <a href="#" class="easyui-linkbutton funBtn_1" onclick="InitObj.deleterow()" iconCls="icon-cancel" plain="true">删除</a>
+      </span>
+    </div>
+  </div>
+  <table id="dataGrid" class="easyui-datagrid"></table>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" onclick="InitObj.add()" style="border:none">
+    <i class="layui-icon">&#xe61f;</i>
+  </a>
+
+  <script type="text/javascript">
+    $(function () {
+      layui.use(['layer', 'element', 'form', 'laydate'], function () {
+        var layer = layui.layer
+          , element = layui.element
+          , laydate = layui.laydate
+          , form = layui.form;
+        InitObj.init(form, laydate)
+        laydate.render({
+          elem: '#formingDate'
+          , format: 'yyyy-MM-dd'
+          , trigger: 'click'
+        })
+      })
+
+    })
+    var InitObj = {
+      // defaultUrl: 'archiveSiteController.do?datagrid',
+      defaultUrl: 'testObjectPeriodController.do?datagridByTesttask',
+      changeTestStatusUrl: 'testObjectPeriodController.do?changeTestStatus',
+      saveUrl: 'archiveSiteController.do?saveOrUpdate',
+      delUrl: 'archiveSiteController.do?delArchiveSite',
+      testTaskId: GetQueryString("testTaskId"), // 获取父页面传递过来的编辑id
+      testObjects: GetQueryString("testObjects"), // 获取父页面传递过来的样品编号(试样编号)
+      dataGrid: null,
+      laydateLayerM: null,
+      formLayerM: null,
+      tableData: null, // 追加数据的数组
+      updateIndex: '', //  保存及删除调用接口后 更新对应的 table 行
+      rowChanges: {}, //  编辑时保存数据变化
+      parentIndex: parent.layer.getFrameIndex(window.name),// 先得到当前iframe层的索引
+      init: function (form, laydate) {
+        this.formLayerM = form
+        this.laydateLayerM = laydate
+        console.log('this.testTaskId', this.testTaskId)
+        ajaxRequest(this.defaultUrl, { 'testTaskId': this.testTaskId }, this.getTestTaskAjaxCallback, false, true)
+      },
+      openCallback: function () {
+        var selectedData = this.dataGrid.datagrid("getChecked");
+        if (selectedData.length === 0) {
+          parent.layer.close(this.parentIndex);
+          return selectedData;
+        } else {
+          if (selectedData[0].site) {
+            parent.layer.close(this.parentIndex); // 再执行关闭 
+            return selectedData;
+          } else {
+            layer.msg('请先输入地址，保存数据', { icon: 2 })
+          }
+        }
+      },
+      /** 获取已有的地址数据回调 */
+      getTestTaskAjaxCallback: function (res) {
+        console.log('res', res)
+        var that = InitObj;
+        if (!res) {
+          layer.msg(res.msg, { icon: 5 });
+          //   待修改
+        } else {
+          that.tableData = res;
+          that.initDataGrid(res.rows)
+        }
+      },
+      /** 新增归档地址 */
+      add: function () {
+        var data = new Date(new Date()).Format("yyyy-MM-dd")
+        var len = this.tableData.rows.length - 1
+        console.log('data', this.tableData.rows)
+        if (0 === this.tableData.rows.length) {
+          this.tableData.rows.push({
+            "periodCode": this.testObjects, "formingDate": '', "hours": '',
+            'testTaskId': this.testTaskId, 'isTested': '0'
+          })
+        } else {
+          var perData = this.tableData.rows[len]
+          if (perData.id) {
+            console.log('this.tableData', this.tableData)
+            var periodCode = (perData.periodCode ? perData.periodCode : perData.testObjectCode)
+            this.tableData.rows.push({
+              "periodCode": periodCode, "formingDate": perData.formingDate, "hours": perData.hours,
+              'testTaskId': this.testTaskId, 'isTested': '0'
+            })
+            this.initDataGrid(this.tableData, 'add')
+          } else {
+            if (this.dataRequired(perData)) {
+
+
+            } else {
+              this.dataGrid.datagrid('beginEdit', len);
+              this.dataGrid.datagrid('selectRow', len);
+              layer.msg(perData.msg, { icon: 5 })
+            }
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        console.log('dataRequired', queryParams)
+        if (!queryParams.periodCode) {
+          queryParams.msg = '样品编号不能为空'
+          return false;
+        }
+        if (!queryParams.formingDate) {
+          queryParams.msg = '成型日期不能为空'
+          return false;
+        }
+        if (!queryParams.hours) {
+          queryParams.msg = '龄期不能为空'
+          return false;
+        }
+        return true;
+      },
+      /** 增删改后更新table */
+      updateActions: function (index) {
+        this.dataGrid.datagrid('updateRow', {
+          index: index,
+          row: {}
+        });
+      },
+      /** 点击行内按钮，获取行号 */
+      getRowIndex: function (target) {
+        var tr = $(target).closest('tr.datagrid-row');
+        return parseInt(tr.attr('datagrid-row-index'));
+      },
+      editrow: function (target) {
+        this.dataGrid.datagrid('beginEdit', this.getRowIndex(target));
+      },
+      /** 删除数据回调并更新table */
+      deleterowAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 5 });
+        } else {
+          layer.msg(res.msg, { icon: 6 });
+          that.dataGrid.datagrid('deleteRow', that.updateIndex);
+        }
+      },
+      /** 判断数据是否删除，无id直接删除 */
+      deleterow: function (target) {
+        console.log('del', target)
+        var that = this;
+        if (target) {
+          this.updateIndex = this.getRowIndex(target)
+          var row = this.tableData.rows[this.updateIndex];
+        } else {
+          var row = this.dataGrid.datagrid('getSelected');
+          this.updateIndex = this.dataGrid.datagrid('getRowIndex', row)
+        }
+
+        console.log('del row', row)
+        $.messager.confirm('Confirm', '确定要删除？', function (r) {
+          if (r) {
+            if (row.id) {
+              ajaxRequest(that.delUrl, { "archiveSiteId": row.id }, that.deleterowAjaxCallback, false, true)
+            } else {
+              console.log('delIndex', that.updateIndex)
+              // that.dataGrid.datagrid('deleteRow', that.getRowIndex(target));
+              that.dataGrid.datagrid('deleteRow', that.updateIndex);
+            }
+          }
+        });
+      },
+      /** 保存数据回调，并把id赋值给对应的行数据 */
+      saverowAjaxCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layer.msg(res.msg, { icon: 5 });
+        } else {
+          layer.msg(res.msg, { icon: 6 });
+          that.tableData.rows[that.updateIndex].id = res.obj
+          that.rowChanges = {}
+        }
+      },
+      /** 保存及编辑数据处理，数据变动才调接口 */
+      saverow: function (target) {
+        this.updateIndex = this.getRowIndex(target)
+        var row = this.tableData.rows[this.updateIndex], data;
+        this.dataGrid.datagrid('endEdit', this.getRowIndex(target));
+        if (row.id) {
+          data = { "id": row.id, "site": row.site }
+        } else {
+          data = { "site": row.site }
+        }
+        if (JSON.stringify(this.rowChanges) !== "{}") {
+          ajaxRequest(this.saveUrl, data, this.saverowAjaxCallback, false, true)
+        } else {
+          if (!data.id) {
+            layer.msg('请先输入地址，保存数据', { icon: 2 })
+            this.dataGrid.datagrid('beginEdit', this.tableData.rows.length - 1);
+            this.dataGrid.datagrid('selectRow', this.tableData.rows.length - 1);
+            this.formLayerM.render()
+          }
+        }
+      },
+      // 修改是否已检测
+      changeTestStatus: function (target, periodId, index) {
+        console.log(target)
+        console.log('periodId', periodId)
+        console.log('index', index)
+        var isTested = $(target).find('input').is(':checked') ? '1' : '0'
+        console.log('isTested', isTested)
+        var data = { 'periodId': periodId, 'isTested': isTested }
+        console.log('data', data)
+        var params = { 'index': index, 'isTested': isTested }
+        console.log(params)
+        ajaxRequest(this.changeTestStatusUrl, data, this.changeTestStatusAjaxCallback, false, true, index)
+      },
+      // 修改是否已检测回调
+      changeTestStatusAjaxCallback: function (res, params) {
+        if (res.success) {
+          InitObj.dataGrid('updateRow', {
+            index: params.index,
+            row: { 'isTested': params.isTested }
+          })
+        }
+      },
+      /** table数据渲染 */
+      initDataGrid: function (data, isAdd) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          singleSelect: true,  //  只允许选中一行
+          method: 'get',
+          fitColumns: true, //   设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0, //  滚动条宽度（当滚动条是垂直的时候）或者滚动条的高度（当滚动条是水平的时候）。
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          data: data,
+          nowrap: true, // 设置为 true，则把数据显示在一行里。设置为 true 可提高加载性能。
+          columns: [[
+            { title: "id", field: "id", checkbox: true, width: 30 },
+            {
+              field: 'periodCode', title: '样品编号', width: 180, editor: 'text', formatter: function (value, row, index) {
+                return value ? value : row.testObjectCode
+              }
+            },
+            {
+              field: 'formingDate', title: '成型日期', width: 80, align: 'center', formatter: function (value) {
+                var htmls = ''
+                // if ('add' === isAdd) {
+                  htmls = `<div class="layui-inline"> 
+                    <input type="text" class="layui-input" id="formingDate">
+                  </div>`
+                // } else {
+                //   htmls = (value ? new Date(value).Format("yyyy-MM-dd") : '')
+                // }
+                console.log('htmls', htmls)
+
+                return htmls
+              }
+            },
+            {
+              field: 'hours', title: '龄期（小时）', width: 80, align: 'center', editor: 'text'
+            },
+            {
+              field: 'testingDate', title: '实验日期', width: 80, align: 'center', formatter: function (value) {
+                console.log('试验日期通过成型日期+龄期计算而得')
+
+                return value ? new Date(value).Format("yyyy-MM-dd") : ''
+              }
+            },
+            {
+              field: 'isTested', title: '是否已检测', width: 80, align: 'center', formatter: function (value, row, index) {
+                console.log('【是否已检测】默认未检测，标记为已检测的不再在试验检测列表进行龄期提醒')
+                // 0:未检测, 1:该龄期已检测
+
+                var htmls = ' <form class="layui-form"> <div class="layui-form-item" onclick="InitObj.changeTestStatus(this,\'' + row.id + '\',\'' + index + '\')">'
+                if (value && '1' === value) {
+                  htmls += '<input type="checkbox" name="isTested" title="已检测" checked disabled>'
+                } else {
+                  htmls += '<input type="checkbox" name="isTested" title="已检测" >'
+                }
+                htmls += '</div> </form>'
+                return htmls
+              }
+            },
+            {
+              field: 'opt', title: '操作', width: 190, align: 'center',
+              formatter: function (value, row, index) {
+                var e = '<button title="编辑数据" class="layui-btn layui-btn-sm" onclick="InitObj.editrow(this)"><i class="layui-icon">&#xe642;</i></button>';
+                var d = '<button title="删除数据" class="layui-btn layui-btn-sm" onclick="InitObj.deleterow(this)"><i class="layui-icon">&#xe640;</i></button>';
+                var s = '<button title="保存数据" class="layui-btn layui-btn-sm" onclick="InitObj.saverow(this)"><i class="layui-icon">&#xe63c;</i></button>';
+                var c = '';
+                return e + d + s + c;
+              }
+            }
+          ]],
+          onLoadSuccess: function (data) {
+            console.log('initdata', data)
+            //  调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+            if ('add' === isAdd) {
+              that.dataGrid.datagrid('beginEdit', data.rows.length - 1);
+              that.dataGrid.datagrid('selectRow', data.rows.length - 1);
+            }
+            that.formLayerM.render()
+          },
+          onBeforeEdit: function (index, row) {
+            //  row.editing = true;
+            //  当用户开始编辑一行时触发，参数包括： 
+            that.updateActions(index);
+
+          },
+          onAfterEdit: function (index, row, changes) {
+            that.rowChanges = changes
+            //  当用户完成编辑一行时触发，参数包括
+            //  row.editing = false;
+            console.log(index, row, changes)
+            that.updateActions(index);
+          },
+        });
+      },
+    }
+  </script>
+</body>
+
+</html>

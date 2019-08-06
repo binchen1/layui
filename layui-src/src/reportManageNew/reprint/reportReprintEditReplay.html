@@ -1,0 +1,442 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>报告重打/修改申请</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-form-item" id="reportIdsDiv">
+      <label class="layui-form-label">报告编号：</label>
+      <div class="layui-input-block">
+        <span class="choiceShow"></span>
+        <a class="layui-btn layui-bg-blue layui-btn-xs" href="javascript:void(0);" id="reportIdsSel">选择</a>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">申请类型：</label>
+      <div class="layui-input-block" id="auditTypeDiv">
+        <input class="layui-bg-blue" type="radio" lay-filter="auditType" name="auditType" value="1" title="报告重打"
+          checked>
+        <input class="layui-bg-blue" type="radio" lay-filter="auditType" name="auditType" value="0" title="报告修改">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">报告用途：</label>
+      <div class="layui-input-block" id="reportUseDiv">
+        <input class="layui-bg-blue" type="radio" lay-filter="auditUse" name="reportUse" value="0" title="客户要求" checked>
+        <input class="layui-bg-blue" type="radio" lay-filter="auditUse" name="reportUse" value="1" title="内部使用">
+      </div>
+    </div>
+    <div id="auditEdit">
+      <div class="layui-form-item ">
+        <label class="layui-form-label">重打原因：</label>
+        <div class="layui-input-block">
+          <input type="text" name="reprintReason" placeholder="请输入重打原因" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">重打份数：</label>
+          <div class="layui-input-block">
+            <input type="text" class="layui-input" name="reprintCount" placeholder="请输入报告份数" autocomplete="off">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="auditReprint" style="display:none">
+      <div class="layui-form-item ">
+        <label class="layui-form-label">修改内容：</label>
+        <div class="layui-input-block">
+          <input type="text" name="modifyContent" placeholder="请输入修改内容" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">退回到：</label>
+        <div class="layui-input-block" id="returnToDiv">
+          <input class="layui-bg-blue" type="radio" name="returnTo" value="0" title="委托收样" checked>
+          <input class="layui-bg-blue" type="radio" name="returnTo" value="1" title="试验检测">
+        </div>
+      </div>
+      <div class="layui-form-item ">
+        <label class="layui-form-label">退回意见：</label>
+        <div class="layui-input-block">
+          <input type="text" name="returnOpinion" placeholder="请输入退回意见" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <div class="layui-form-item" id="feePriceAuditUse">
+      <div class="layui-inline">
+        <label class="layui-form-label">收取费用：</label>
+        <div class="layui-input-block">
+          <input type="text" class="layui-input" name="feePrice" placeholder="请输入收取费用金额" autocomplete="off">
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item" id="attachmentIdsDiv">
+      <label class="layui-form-label">附件：</label>
+      <div class="layui-input-block">
+        <u class="layui-color-blue choiceShow"></u>
+        <a id="uploadA" class="layui-btn layui-bg-blue layui-btn-xs">上传</a>
+      </div>
+    </div>
+
+    <div class="layui-form-item ">
+      <label class="layui-form-label">审核人员：</label>
+      <div class="layui-input-block auditPersons">
+        <div>
+          <div id="auditPersonsBox"></div>
+          <a class="layui-btn layui-btn-sm" id="auditPersonsAdd">
+            <i class="layui-icon">&#xe61f;</i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form', 'upload'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var upload = layui.upload;
+        InitObj.init(form, upload)
+        //选完文件后不自动上传
+      })
+    })
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': []
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+    }
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+    function deleteAccessory(accessoryId) {
+      // console.log('点击删除page deleteAccessory', accessoryId)
+      InitObj.addToForm(filesObj.files)
+    }
+    var InitObj = {
+      formLayerM: null, // form对象 
+      uploadLayerM: null, // upload对象 
+      detailUrl: 'reportRedoAuditController.do?getAuditDetail', // 查看详情url
+      saveUrl: 'reportRedoAuditController.do?newOrModifyAudit', // 新增申请url
+      auditId: GetQueryString("auditId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      printPage: GetQueryString("printPage"), // 报告打印，已打印报告进入此页面
+      attachmentIdsHtml: $('#attachmentIdsDiv .choiceShow'), // dom 报告文件集合,这里传commonAttachmentId
+      reportIdsHtml: $('#reportIdsDiv .choiceShow'), // 报告编号
+      reportIdsSel: $('#reportIdsDiv #reportIdsSel'), // 报告编号 点击按钮
+      reportIds: [], //  报告编号 报告id数组
+      auditTypeDiv: $('#auditTypeDiv'), //审核类型:0:修改  1:重打
+      reportUseDiv: $('#reportUseDiv'), // 报告用途: 0:客户要求  1:内部使用
+      attachmentIds: [], // 附件id集合
+      auditPersonsAdd: $('#auditPersonsAdd'), // 审核人员 点击按钮
+      auditPersonsBox: $('#auditPersonsBox'), // 审核人员盒子
+      auditPersons: [], // 审核人员 保存数据
+      auditPersonsData: [], // 审核人员  临时保存数据
+      auditEdit: $('#auditEdit'), // type 0 报告修改
+      auditReprint: $('#auditReprint'), // type 1 报告重打
+      feePriceAuditUse: $('#feePriceAuditUse'), // type 1为 隐藏 收取费用
+      reprintReason: $('input[name="reprintReason"]'), // 重新打印
+      reprintCount: $('input[name="reprintCount"]'), // 设置份数
+      modifyContent: $('input[name="modifyContent"]'), // 修改内容
+      returnToDiv: $('#returnToDiv'), // 退回到: 0:委托收样  1:试验检测
+      returnOpinion: $('input[name="returnOpinion"]'), // 退回意见
+      feePrice: $('input[name="feePrice"]'), // 收取费用
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.uploadLayerM = upload;
+        this.btnFun(this.reportIdsSel, 'reportRedoAuditController.do?goReportChoosePage', '选择报告')
+        this.btnFun(this.auditPersonsAdd, 'reportRedoAuditController.do?goAuditUserChoosePage&auditPersonsData=', '审核人员')
+        this.styleLayout(form);
+        if (this.printPage) {
+          var rowDatas = parent.$('#dataGrid').datagrid('getSelections'), html = '';
+          this.reportIds = [];
+          for (var i = 0; i < rowDatas.length; i++) {
+            this.reportIds.push(rowDatas[i].id)
+            html += (rowDatas[i].reportCode ? rowDatas[i].reportCode + ' ;' : "")
+          }
+          this.reportIdsHtml.html(html)
+          this.reportIdsSel.hide()
+        }
+        if (this.auditId) {
+          this.detailEdit();
+        }
+        form.render();
+        $('#uploadA').bind('click', function () {
+          // fileUpload.js中的方法
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArr) {
+        var html = '';
+        this.attachmentIds = [];
+        for (var i = 0; i < filesArr.length; i++) {
+          this.attachmentIds.push(filesArr[i].id)
+          html += ' <u><a class="attachmentA layui-color-blue" target="_blank" href="' + filesArr[i].realpath +
+            '">' + filesArr[i].attachmenttitle + '</a> </u>'
+        }
+        this.attachmentIdsHtml.html(html);
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 详情页面数据处理
+      detailEditData: function (data) {
+        this.reportIdsHtml.html(data.reportSn)
+        this.reportIds.push(data.reportId)
+        this.addPersonsCallback(data.listAuditPerson)
+        this.auditTypeDiv.find('input[value="' + data.auditType + '"]').attr('checked', true).siblings().attr('checked', false)
+        // 报告用途: 0:客户要求  1:内部使用
+        this.reportUseDiv.find('input[value="' + data.reportUse + '"]').attr('checked', true).siblings().attr('checked', false)
+        if ('1' === data.auditType) {
+          // 报告重打1 auditType  重打原因 reprintReason 重打分数 reprintCount
+          this.reprintReason.val(data.reprintReason);
+          this.reprintCount.val(data.reprintCount);
+          this.auditEdit.show()
+          this.auditReprint.hide()
+        } else {
+          // 报告修改0 auditType 修改内容 modifyContent 退回到 returnTo 退回意见 returnOpinion
+          this.modifyContent.val(data.modifyContent);
+          this.returnOpinion.val(data.returnOpinion);
+          this.returnToDiv.find('input[value="' + data.returnTo + '"]').attr('checked', true).siblings().attr('checked', false)
+          this.auditEdit.hide()
+          this.auditReprint.show()
+        }
+        if ('0' === data.reportUse) {
+          this.feePrice.val(data.feePrice);
+          this.feePriceAuditUse.show()
+        } else {
+          this.feePriceAuditUse.hide()
+        }
+        if (data.listFile.length > 0) {
+          var html = '';
+          for (var i = 0; i < data.listFile.length; i++) {
+            html += data.listFile[i].title + '; '
+          }
+          this.attachmentIdsHtml.html(html)
+        } else {
+          this.attachmentIdsHtml.html('未上传附件')
+        }
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, { "auditId": this.auditId }, this.detailEditCallback, false, true)
+      },
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(this.saveUrl, { moduleParamStr: JSON.stringify(saveParam) }, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function () {
+        if (this.reportIds.length === 0) {
+          formTipFun('报告编号不能为空', this.reportIdsHtml)
+          return false;
+        }
+        if (this.auditPersons.length === 0) {
+          formTipFun('审核人员不能为空', this.auditPersonsBox)
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var requiredParam = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired()) {
+          var data = {
+            "auditType": this.auditTypeDiv.find('input:checked').val(),
+            "reportUse": this.reportUseDiv.find('input:checked').val(),
+          }
+          if (this.auditId) {
+            data.id = this.auditId;
+          }
+          if ('1' === data.auditType) {
+            // 报告修改0 auditType  重打原因 reprintReason 重打分数 reprintCount
+            data.reprintReason = this.reprintReason.val();
+            data.reprintCount = this.reprintCount.val();
+          } else {
+            // 报告重打1 auditType 修改内容 modifyContent 退回到 returnTo 退回意见 returnOpinion
+            data.modifyContent = this.modifyContent.val();
+            data.returnOpinion = this.returnOpinion.val();
+            if (this.returnToDiv.find('input:checked').val()) {
+              data.returnTo = this.returnToDiv.find('input:checked').val();
+            } else {
+              data.returnTo = '';
+            }
+          }
+          if ('0' === data.reportUse) {
+            data.feePrice = this.feePrice.val();
+          }
+          var formdata = {
+            "auditEntity": data,
+            "reportIds": this.reportIds,
+            "attachmentIds": this.attachmentIds,
+            "auditPersons": this.auditPersons,
+          }
+          return formdata;
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 审核人员删除
+      addPersonsRem: function (res) {
+        for (var i = 0; i < this.auditPersonsData.length; i++) {
+          if (res === this.auditPersonsData[i].userId) {
+            this.auditPersonsData.splice(i, 1)
+            break;
+          }
+        }
+        this.addPersonsCallback(this.auditPersonsData)
+      },
+      // 审核人员回调 
+      addPersonsCallback: function (res, index) {
+        index ? layer.close(index) : ''
+        var that = InitObj;
+        that.auditPersonsData = res;
+        that.auditPersons = [];
+        var html = ''
+        for (var i = 0; i < res.length; i++) {
+          if (i === 0) {
+            html += '<div class="btnClose"><span>' + res[i].realName + '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          } else {
+            html += '<b class="layui-btn layui-btn-sm unReturn"><i class="layui-icon">&#xe65c;</i></b>'
+            html += '<div class="btnClose"><span>' + res[i].realName + '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          }
+          that.auditPersons.push({ "userId": res[i].userId, "auditSequence": i + 1 })
+        }
+        that.auditPersonsBox.html(html);
+      },
+      // 供报告编号 选择报告回调
+      reportIdsSelCallback: function (res) {
+        var that = InitObj, html = '';
+        that.reportIds = [];
+        for (var i = 0; i < res.length; i++) {
+          that.reportIds.push(res[i].id)
+          html += (res[i].reportSn ? res[i].reportSn + ' ;' : '')
+        }
+        that.reportIdsHtml.html(html)
+      },
+      // 审核人员  及 报告编号
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('选择报告' === openName) {
+            layerOpenFun(openUrl, openName, ['95%', '95%'], ['确定', '取消'], that.reportIdsSelCallback)
+          } else if ('审核人员' === openName) {
+            // layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.auditPersonsData))), openName,
+            //   ['95%', '95%'], ['确定', '取消'], that.addPersonsCallback)
+            layerOpenFun(openUrl, openName, ['95%', '95%'], ['确定', '取消'], that.addPersonsCallback)
+          }
+        })
+      },
+       // 样式布局控制
+      styleLayout: function (form) {
+        var that = this;
+        form.on('radio(auditType)', function (data) {
+          if ('1' === data.value) {
+            that.auditEdit.show()
+            that.auditReprint.hide()
+          } else {
+            that.auditEdit.hide()
+            that.auditReprint.show()
+          }
+        });
+        form.on('radio(auditUse)', function (data) {
+          if ('0' === data.value) {
+            that.feePriceAuditUse.show()
+          } else {
+            that.feePriceAuditUse.hide()
+          }
+        });
+      },
+
+    }
+  </script>
+</body>
+
+</html>

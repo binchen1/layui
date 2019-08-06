@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body,
+    .wrapper {
+      height: 100%;
+    }
+    body>.wrapper {
+      height: auto;
+      min-height: 100%;
+      background: chocolate;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .contents {
+      padding-bottom: 150px;
+      /* 必须使用和bottom相同的高度 */
+      background: cadetblue;
+    }
+
+    .bottom {
+      position: fixed;
+      margin-top: -150px;
+      /* bottom高度的负值 */
+      height: 150px;
+      clear: both;
+      background: red;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .clearfix {
+      display: inline-block;
+    }
+
+    .clearfix:after {
+      content: ".";
+      display: block;
+      height: 0;
+      clear: both;
+      visibility: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  　<div class="wrapper">
+      <div class="contents">
+          content
+          <br>
+          <br>
+          <br>
+          <br>
+          <br>
+          <br>
+          3333
+      </div>
+
+    </div>
+    <div class="bottom">bottom</div>
+</body>
+
+</html>

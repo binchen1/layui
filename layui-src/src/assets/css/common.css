@@ -1,0 +1,429 @@
+@charset "utf-8";
+
+
+html, body {
+  height: 100%;
+  overflow: auto;
+  overflow-x: hidden; 
+  background: #fff;
+  color: #444;
+  
+}
+
+* {
+  outline: none;
+  font-size: 12px;
+  font-family: Tahoma,Verdana,微软雅黑,新宋体, Helvetica, Arial, sans-serif;
+}
+a:focus {
+  outline:none;
+}
+
+button[type="reset"] {
+  outline: none;
+}
+.row-margin {
+  margin: 10px auto;
+}
+.textarea-box {
+  padding: 10px 30px;
+}
+.layui-ul {
+  margin-bottom: 10px;
+}
+
+.layui-ul>li {
+  margin-bottom: 5px;
+}
+.font-weight{
+  font-weight: bold;
+}
+.height-full {
+  height: 100%;
+}
+.width-full {
+  width: 100%;
+}
+.width-input {
+  max-width: 200px;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.text-left {
+  text-align: left;
+}
+
+.rf {
+  float: right;
+  
+}
+.lf {
+  float: left;
+}
+.cf {
+  clear: both;
+}
+.card {
+  border-radius:0;
+  border:none;
+  box-shadow:0px 6px 8px 0px rgba(4,0,0,0.1);
+}
+.border-none {
+  border: none;
+}
+
+.layui-input-width {
+  width: 40%;
+}
+
+
+/* 人员选择 搜索框样式**/
+.userNameLike {
+  width:100%;
+  padding-left:10px;
+}
+
+/** 自定义提示框样式*/
+ .layui-layer-page .layui-layer-content {
+  padding:20px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+/**自定义 保存 提交 取消样式 **/
+.layui-btn.submit-cancel {
+  background-color: #1E9FFF;
+  border-color: #1E9FFF;
+  color: #fff;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 10px;
+}
+.layui-btn.submit-cancel.cancel {
+  background-color: #fff;
+  color: #333;
+  border:1px solid #dedede;
+}
+/** layui **/
+/** layui.css的修改 **/
+.layui-color-white {
+  color: #fff;
+}
+.layui-color-green {
+  color: #339900;
+}
+.layui-color-blue {
+  color: #5baaeb;
+}
+.layui-color-red {
+  color: #ED1C2E;
+}
+.layui-color-blue:hover {
+  color: #84BFF0;
+  cursor: pointer;
+}
+.unReturn {
+  display: inline-block;
+  transform:rotate(180deg);
+  -ms-transform:rotate(180deg);  /* IE 9 */
+  -moz-transform:rotate(180deg);   /* Firefox */
+  -webkit-transform:rotate(180deg); /* Safari 和 Chrome */
+  -o-transform:rotate(180deg);   /* Opera */
+  margin-right: 15px;
+}
+
+/**委托管理新增页面 */
+.table-form .layui-form-item {
+  border-top:1px solid #D9D9D9;
+  background: #fff;
+}
+.table-form .layui-form-item:last-child{
+  border-bottom:1px solid #D9D9D9;
+}
+.table-form .layui-input { 
+  margin-left:1%;
+  width: 97%;
+}
+.table-form .layui-form-select .layui-edge {
+  right:3%;
+}
+.table-form .layui-input-block {
+  padding-top:10px;
+}
+.table-form .layui-form-label {
+  background: #F4F4F4;
+  height: 44px;
+  line-height: 44px;
+}
+
+
+/**  layui表单 */
+.layui-form-label {
+  padding: 0 5px;
+  width: 110px;
+}
+.layui-input-block {
+  margin-left: 120px;
+  min-height: 34px;
+}
+.layui-form-radio {
+  margin: 0;
+  line-height: 22px;
+}
+.layui-form-item {
+  margin-bottom: 0;
+}
+.layui-form-select dl {
+  top:25px;
+  min-width: 98%;
+}
+.layui-btn-sm i {
+  font-size: 22px !important;
+}
+
+
+/** 头部复选框样式*/
+.header-checkbox {
+  height: 28px; 
+  text-align: right;
+}
+.header-checkbox span {
+  color: #5baaeb;
+  line-height: 28px !important;
+}
+.header-checkbox i {
+  margin-top: 5px;
+}
+.layui-table-view .layui-form-radio {
+  line-height: 28px;
+}
+
+
+/** 日期选择颜色 未生效，直接layuicss*/
+.layui-laydate-content {
+  padding: 0 10px !important;
+}
+div.layui-laydate .layui-this {
+  background-color: #5baaeb !important;
+}
+div.layui-laydate-content td.laydate-selected {
+  background-color: #8fcdff;
+}
+.layui-btn {
+  background-color: transparent;
+  color: #5baaeb;
+}
+.layui-btn-sm {
+  padding: 0 1px;
+}
+.layui-btn:hover {
+ color: #5baaeb; 
+}
+.layui-col-left  {
+  text-align: right;
+  padding-right: 20px;
+}
+
+/** 单选框 */
+.layui-form-radio>i {
+  font-size: 16px;
+}
+.layui-form-radioed>i, .layui-form-radio>i:hover {
+  color: #5baaeb;
+  font-size: 16px;
+}
+.layui-form-radio * {
+  font-size: 12px;
+}
+/**复选框*/
+.layui-form-checkbox span {
+  font-size: 12px;
+}
+.layui-form-checked span,.layui-form-checked:hover span {
+  background: #5baaeb;
+}
+.layui-form-checkbox[lay-skin=primary]:hover span {
+  background:transparent;
+}
+.layui-form-checkbox[lay-skin=primary] span {
+  height: auto;
+}
+.layui-form-checkbox[lay-skin=primary] i {
+  height: 14px;
+  width: 14px;
+  line-height: 14px;
+}
+.layui-form-item .layui-form-checkbox[lay-skin=primary] {
+  margin-top: 0px;
+}
+
+.layui-form-checkbox[lay-skin=primary]:hover i {
+  border-color:#5baaeb;
+}
+
+.layui-form-checked i, .layui-form-checked:hover i {
+  color: #5baaeb;
+}
+
+.layui-form-checked[lay-skin=primary] i {
+  border-color:#5baaeb;
+  background-color:#5baaeb;
+}
+/* 下拉选择框 */
+.layui-form-select dl dd.layui-this {
+  background-color:#5baaeb;
+}
+/**弹出层样式修改 */
+.mylayui-layer-molv .layui-layer-title {
+  background: #247abb;
+  color: #fff;
+  height: 34px;
+  line-height: 34px;
+}
+.mylayui-layer-molv .layui-layer-setwin {
+  top: 11px;
+}
+/** 输入框边框 */
+.layui-input, .layui-textarea, .layui-select {
+  background: transparent;
+  height: 28px;
+  line-height: 28px;
+}
+.layui-badge-rim, .layui-colla-content, 
+.layui-colla-item, .layui-collapse, 
+.layui-elem-field, .layui-form-pane .layui-form-item[pane], 
+.layui-form-pane .layui-form-label, .layui-input, 
+.layui-layedit, .layui-layedit-tool, 
+.layui-quote-nm, .layui-select, .layui-tab-bar, 
+.layui-tab-card, .layui-tab-title, 
+.layui-tab-title .layui-this:after, .layui-textarea { 
+  border-color: #ccc;
+}
+
+.layui-input:hover, .layui-textarea:hover {
+  /* border-color: #666 !important;  */
+  border-color: #40a9ff !important; 
+}
+.layui-input:focus, .layui-textarea:focus {
+  border-color: #40a9ff !important; 
+  box-shadow:0 0 0 2px rgba(24,144,255,0.2);
+}
+/* 详情页面样式*/
+.layui-form-box {
+  padding: 10px;
+}
+.form-tips-msg.layui-layer-tips .layui-layer-content {
+  background-color: #169f95;
+  color: #fff;
+}
+.form-tips-msg.layui-layer-tips i.layui-layer-TipsB,
+.form-tips-msg.layui-layer-tips i.layui-layer-TipsT {
+  border-right-color: #169f95;
+}
+.form-tips-msg.layui-layer-tips i.layui-layer-TipsL,
+.form-tips-msg.layui-layer-tips i.layui-layer-TipsR {
+  border-bottom-color:#169f95;
+}
+
+/**layui table**/
+.layui-table-click,.layui-table tbody tr.layui-table-click:hover {
+  background-color: #C6E4FE;
+}
+.layui-table-view .layui-table td, .layui-table-view .layui-table th {
+  padding: 2px 0;
+}
+.layui-table-view .layui-table th {
+  text-align: center;
+}
+.layui-table, .layui-table-view {
+  margin: 0;
+}
+.layui-table {
+  color: #000;
+}
+.layui-table thead tr {
+  background-color: #fafafa;
+  background: -webkit-linear-gradient(top,#fdfdfd 0,#f5f5f5 100%);
+  background: -moz-linear-gradient(top,#fdfdfd 0,#f5f5f5 100%);
+  background: -o-linear-gradient(top,#fdfdfd 0,#f5f5f5 100%);
+  background: linear-gradient(to bottom,#fdfdfd 0,#f5f5f5 100%);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#fdfdfd,endColorstr=#f5f5f5,GradientType=0);
+}
+.layui-table-cell {
+  padding: 0 5px;
+}
+/** 上传按钮*/
+.layui-btn-upload {
+  color: #555;
+  border:1px solid #C9C9C9;
+  height: 28px;
+  line-height: 28px;
+}
+.layui-btn-upload.layui-btn:hover {
+  color: #333;
+}
+
+/** easyui**/
+/** 表格选中颜色 */
+.datagrid-row-selected {
+  background: #C6E4FE;
+  color: #000;
+}
+.datagrid-header .datagrid-cell span {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.datagrid-cell, .datagrid-cell-group, .datagrid-header-rownumber, .datagrid-cell-rownumber {
+  font-size: 12px;
+  color: #444;
+}
+.l-btn-text {
+  font-size: 12px;
+}
+.datagrid-header td {
+  text-align: center;
+}
+/* easyui tree */
+.tree-file ,.tree-expanded,.tree-folder-open {
+  vertical-align: middle;
+}
+.tree-title {
+  /* line-height: 34px;
+  background:red; */
+}
+/* easyui-组合框 ComboBox**/
+.combobox-box .layui-form-select{
+  display: none;
+}
+.combo-panel {
+  height: auto !important;
+}
+.combobox-item {
+  line-height: 24px;
+}
+.combobox-item-hover {
+  background-color: #f2f2f2;
+  color: #444;
+}
+.combobox-item-selected {
+  background-color: #5baaeb;
+}
+.combobox-box .textbox,.combobox-box .textbox .textbox-text{
+  width: 100% !important;
+  color: #444;
+}
+.combobox-box .textbox {
+  border-radius: 3px;
+}
+.combobox-box .textbox:hover {
+ border-color:  #40a9ff !important
+}
+.combobox-box .textbox:focus {
+  border-color: #40a9ff !important; 
+  box-shadow:0 0 0 2px rgba(24,144,255,0.2);
+}

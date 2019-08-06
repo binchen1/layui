@@ -1,0 +1,158 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+
+</head>
+
+<body>
+  <div style="height:100%;">
+    <div id="tb" class="layui-form-box">
+      <div>
+        <form id="commonQueryForm">
+          <input class="easyui-textbox" name="quickQryParam" style="width:300px" data-options="prompt:'输入委托单位/工程项目/编号/样品名称后回车即可查询'"
+            autocomplete="off">
+          <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="InitObj.quickSearch()">查询</a>
+        </form>
+      </div>
+    </div>
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+      })
+      InitObj.init();
+    })
+    // 初始化页面
+    var InitObj = {
+      defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      defaultUrl: 'reportRedoAuditController.do?getReportList', //默认获取数据url
+      datagrid: null, // table返回对象
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function () {
+        this.initDataGrid(this.columnsFun())
+        this.commonQryKeyDown()
+      },
+      // 页面打开回调函数
+      openCallback: function () {
+        var selectedData = this.dataGrid.datagrid("getChecked");
+        parent.layer.close(this.parentIndex); //再执行关闭 
+        return selectedData
+      },
+      //快速查询
+      quickSearch: function () {
+        var queryParams = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, queryParams);
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          if (event.keyCode == "13") {
+            InitObj.quickSearch();
+          }
+        });
+      },
+      /**重载datagrid*/
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        return [[
+          { title: "id", field: "id", checkbox: true, width: 50 },
+          { title: "委托单位", field: "consignUnit", width: 50 },
+          { title: "工程项目", field: "consignProject", width: 50 },
+          { title: "报告编号", field: "reportSn", width: 50 },
+          { title: "样品名称", field: "testObjectName", width: 50 },
+          { title: "已打印份数", field: "printNum", width: 50 },
+        ]]
+      },
+      // // 关联检测任务 table
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          method: 'get',
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          idField: 'id',
+          fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          fitColumns: true,
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid')
+          },
+          onClickCell: function (rowIndex, field, value) {
+            //当用户单击一个单元格时触发。
+            // 允许多选，只能选同委托单位、同工程项目的报告，在确认时检查 
+          },
+          onSelect: function (rowIndex, rowData) {
+            var rows = $("#dataGrid").datagrid("getSelections");
+            if (rows.length > 0) {// 多选时需做判断
+
+              var fristUnit, fristProject;
+              for (var i = 0; i < rows.length; i++) {
+                // 委托单位不一致，不允许多选
+                if (i == 0) {
+                  fristUnit = rows[i].consignUnit;
+                  fristProject = rows[i].consignProject;
+                } else {
+                  var temp = rows[i].consignUnit;
+                  var temp2 = rows[i].consignProject;
+                  if (fristUnit !== temp || fristProject !== temp2) {
+                    $("#dataGrid").datagrid("unselectRow", rowIndex);
+                    layer.msg('请选择相同委托单位与工程项目的报告！', { icon: 2 });
+                    break;
+                  }
+                }
+                var type = rows[i].objectType;
+                // 合同费用不允许多选（取消当前选中的这一行）
+                if (type == 'FeeContract' && rows.length > 1) {
+                  $("#dataGrid").datagrid("unselectRow", rowIndex);
+                  layer.msg('系统不支持对合同批量收费，请重新选择！', { icon: 2 });
+                  break;
+                }
+              }
+            }
+
+          },
+          onDblClickRow: function (index, row) {
+            //双击事件,进入任务分配
+          }
+        });
+      }
+    }
+
+
+
+  </script>
+</body>
+
+</html>

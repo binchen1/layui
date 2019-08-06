@@ -1,0 +1,179 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+
+<!-- <link rel="stylesheet" type="text/css" href="/ilis2/plug-in/tools/css/jquery-editable-select.css"> -->
+<link rel="stylesheet" type="text/css" href="/ilis2/plug-in/easyui-1.5.5.2/themes/gray/easyui.css" />
+<link rel="stylesheet" type="text/css" href="/ilis2/plug-in/assets/css/common.css" />
+<script type="text/javascript" src="/ilis2/plug-in/easyui-1.5.5.2/jquery.min.js"></script>
+<script type="text/javascript" src="/ilis2/plug-in/easyui-1.5.5.2/jquery.easyui.min.js"></script>
+
+<style>
+  .formtable {
+    font-size: 12px;
+    border: 1px solid lightgray;
+  }
+
+  .td-label {
+    text-align: right;
+    width: 100px;
+    border-right: 1px solid lightgray;
+  }
+
+  .formtable tr {
+    background-color: #f5f5f5;
+    border-bottom: 1px solid lightgray;
+  }
+
+  .formtable tr:last-child {
+    border-bottom: none;
+  }
+
+  .value {
+    background-color: #FFFFFF;
+    padding: 5px;
+    width: 200px;
+  }
+
+  .value input {
+    height: 28px;
+    width: 100%;
+    border: 0px;
+  }
+
+  input:focus,
+  textarea:focus,
+  keygen:focus,
+  select:focus {
+    outline-offset: -2px;
+    outline: none;
+  }
+
+  .layui-input-block {
+    margin-left: 20px;
+  }
+</style>
+<table id="attr-form" class="formtable" cellpadding="0" cellspacing="0"></table>
+<br>
+<!-- <table class="formtable" cellpadding="0" cellspacing="0">
+  <tr>
+    <td>使用人： </td>
+    <td>
+      <div class="layui-input-block combobox-box">
+        <select name="userName" class="easyui-combobox">
+          <option value="1">使用人1</option>
+          <option value="2">使用人2</option>
+          <option value="3">使用人3</option>
+        </select>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>使用人2： </td>
+    <td>
+      <div class="layui-input-block combobox-box">
+        <select name="userName" class="easyui-combobox">
+          <option value="1">使用人1</option>
+          <option value="2">使用人2</option>
+          <option value="3">使用人3</option>
+        </select>
+      </div>
+    </td>
+  </tr>
+</table> -->
+
+
+
+
+
+
+<!-- <script type="text/javascript" src="/ilis2/plug-in/jquery/jquery-3.2.1.min.js"></script> -->
+<!-- <script type="text/javascript" src="/ilis2/plug-in/tools/jquery-editable-select.js"></script> -->
+<script>
+
+  function GetQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+  }
+  var attrs = GetQueryString('attrs') ? decodeURI(GetQueryString('attrs')) : '';
+  var attrsStr = parent.$('#standard').val(), attrsArrPre = [];
+  if (attrsStr) {
+    attrsArrPre = attrsStr.split(' ');
+  }
+  var attrsObj = JSON.parse(attrs);
+  function renderSelect(attrArr) {
+    console.info("attrArr", attrArr);
+    var html = "";
+    for (var i = 0; i < attrArr.length - 1; i++) {  // 升序排序，序号小的先生成
+      for (var j = 0; j < attrArr.length - 1 - i; j++) {
+        if (attrArr[j].order > attrArr[j + 1].order) {
+          var tempOrder = attrArr[j].order;
+          var tempName = attrArr[j].name;
+          var tempValue = attrArr[j].value;
+          var tempSystemFieldName = attrArr[j].systemFieldName;
+
+          attrArr[j].order = attrArr[j + 1].order;
+          attrArr[j].name = attrArr[j + 1].name;
+          attrArr[j].value = attrArr[j + 1].value;
+          attrArr[j].systemFieldName = attrArr[j + 1].systemFieldName;
+
+          attrArr[j + 1].order = tempOrder;
+          attrArr[j + 1].name = tempName;
+          attrArr[j + 1].value = tempValue;
+          attrArr[j + 1].systemFieldName = tempSystemFieldName;
+        }
+      }
+    }
+
+    for (var i = 0; i < attrArr.length; i++) {
+      console.log('attrArr[i]', attrArr[i])
+      console.log('attrsArrPre', attrsArrPre[i])
+      var isDefaultValue = attrArr[i].isDefaultValue;
+      var arr = attrArr[i].value.split(';');
+      html += "<tr>";
+      html += "<td class='td-label' systemFieldName= '" + attrArr[i].systemFieldName + "' >"
+      html += attrArr[i].name;
+      html += "：</td>";
+      html += "<td class='value'>";
+      if (attrArr[i].value.length > 0) {
+        // html += "<select class='editable-select'>";
+        html += '<div class="layui-input-block combobox-box">';
+        html += "<select class='easyui-combobox' name='qualificationType' id='qualificationType'>";
+        for (var j = 0; j < arr.length; j++) {
+          console.log('arr[j]', arr[j])
+          if (attrsArrPre[i] === arr[j]) {
+            html += "<option selected = 'selected'>" + arr[j] + "</option>"
+          } else {
+            console.log('isDefaultValue', isDefaultValue)
+            if (isDefaultValue && 0 === j) {
+              html += "<option selected = 'selected'>" + arr[j] + "</option>"
+            } else {
+              if (0 === j) {
+                html += "<option ></option>"
+              }
+              html += "<option >" + arr[j] + "</option>"
+            }
+          }
+        }
+        html += "</select>";
+      } else {
+        var selectValue = attrsArrPre[i] || '';
+        html += "<input class='easyui-combobox' value='" + selectValue + "' />";
+      }
+
+      html += "</div>";
+      html += "</td>";
+
+      html += "</tr>";
+    }
+    console.log('html', html)
+    $('#attr-form').append(html);
+
+  }
+  renderSelect(attrsObj);
+
+  // $('.editable-select').editableSelect({
+  //   effects: 'slide'
+  // });
+
+</script>

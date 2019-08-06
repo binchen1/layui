@@ -1,0 +1,694 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<head>
+<script type="text/javascript">
+	//获得根目录
+	var strFullPath = window.document.location.href;
+	var strPath = window.document.location.pathname;
+	var pos = strFullPath.indexOf(strPath);
+	var prePath = strFullPath.substring(0, pos);
+	var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+	var path = prePath;
+	var directPath = strFullPath.substring(0, strFullPath.lastIndexOf("/") + 1);
+	var basePath = prePath + postPath;
+
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/mutiLang/zh-cn.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery-1.8.3.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery.cookie.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery-plugs/storage/jquery.storageapi.min.js'>'<\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/dataformat.js'><\/script>");
+	document.write("<link id='easyuiTheme' rel='stylesheet' href='" + basePath + "/plug-in/easyui/themes/metrole/easyui.css' type='text/css'>");
+	document.write("<link id='easyuiTheme' rel='stylesheet' href='" + basePath + "/plug-in/easyui/themes/metrole/main.css' type='text/css'>");
+	document.write("<link id='easyuiTheme' rel='stylesheet' href='" + basePath + "/plug-in/easyui/themes/metrole/icon.css' type='text/css'>");
+	document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/accordion/css/accordion.css'>");
+	document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/accordion/css/icons.css'>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/jquery.easyui.min.1.3.2.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/locale/zh-cn.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/syUtil.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/easyui/extends/datagrid-scrollview.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/My97DatePicker/WdatePicker.js'><\/script>");
+	document.write("<link href='" + basePath + "/plug-in/My97DatePicker/skin/WdatePicker.css' rel='stylesheet' type='text/css'>");
+	document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/tools/css/metrole/common.css' type='text/css'>");
+	document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/ace/css/font-awesome.css' type='text/css'>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/lhgDialog/lhgdialog.min.js?skin=metrole'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/ace/js/bootstrap-tab.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+	document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/layer/skin/layer.css' id='layui_layer_skinlayercss'>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/easyuiextend.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery-plugs/hftable/jquery-hftable.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/json2.js'><\/script>");
+
+	document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/Validform/css/style.css' type='text/css' />");
+	document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/Validform/css/tablefrom.css' type='text/css' />");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+</script>
+
+
+
+
+<script type="text/javascript">
+	var dic = new Object(); //数据字典的集合
+	/**初始化数据字典，和权限**/
+	$(document).ready(function() {
+		var _list = [];
+		_list.push("@bpm_status@");
+		_list.push("@credit_st@");
+
+		var json = new Object(); //临时对象
+		json["list"] = JSON.stringify(_list);
+		json["author"] = "402882105f4c1d6d015f4d8f0b190026";
+		$.ajax({
+			url : basePath + '/systemController.do?getDictContent',
+			data : json,
+			dataType : "json",
+			type : "POST",
+			contentType : "application/x-www-form-urlencoded",
+			//traditional: true,  
+			success : function(responseJSON) {
+				dic = responseJSON.attributes;
+				initForm();
+				getSearchFormInfo();
+			}
+		});
+
+	});
+	/**初始化列，easyui的datagrid方法，去的数据**/
+	var initForm = function() {
+		storage = $.localStorage;
+		if (!storage)
+			storage = $.cookieStorage;
+		//easyui的datagrid
+		$('#feeCreditList').datagrid({
+			idField : 'id',
+			url : basePath + '/feeCreditController.do?datagrid&field=id,createName,createBy,createDate,updateName,updateBy,updateDate,sysOrgCode,sysCompanyCode,bpmStatus,unit,creditLine,creditLimit,status,banlance',
+			fit : true,
+			loadMsg : " 数据加载中... ",
+			pageSize : 10,
+			pagination : true,
+			pageList : [ 10, 20, 30 ],
+			sortOrder : 'asc',
+			rownumbers : true,
+			singleSelect : false,
+			fitColumns : true,
+			striped : true,
+			showFooter : true,
+			scrollbarSize:0,
+			frozenColumns : [ [ {
+				field : 'ck',
+				checkbox : 'true'
+			},
+			] ],
+			columns : [ [
+				{
+					field : 'id',
+					title : '主键',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'createName',
+					title : '创建人名称',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'createBy',
+					title : '创建人登录名称',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'createDate',
+					title : '创建日期',
+					width : 120,
+					hidden : true,
+					sortable : true,
+					formatter : function(value, rec, index) {
+						return new Date().format('yyyy-MM-dd', value);
+					}
+				}
+				,
+
+				{
+					field : 'updateName',
+					title : '更新人名称',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'updateBy',
+					title : '更新人登录名称',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'updateDate',
+					title : '更新日期',
+					width : 120,
+					hidden : true,
+					sortable : true,
+					formatter : function(value, rec, index) {
+						return new Date().format('yyyy-MM-dd', value);
+					}
+				}
+				,
+
+				{
+					field : 'sysOrgCode',
+					title : '所属部门',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'sysCompanyCode',
+					title : '所属公司',
+					width : 120,
+					hidden : true,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'bpmStatus',
+					title : '流程状态',
+					width : 120,
+					hidden : true,
+					sortable : true,
+					formatter : function(value, rec, index) {
+						if (value == undefined) return '';
+						var valArray = value.split(',');
+						var item = dic['bpm_status'];
+						if (valArray.length > 1) {
+							var checkboxValue = '';
+							for (var k = 0; k < valArray.length; k++) {
+								for (var h = 0; h < item.length; h++) {
+									if (valArray[k] == item[h].typecode) {
+										checkboxValue = checkboxValue + item[h].typename + ',';
+									}
+								}
+							}
+							return checkboxValue.substring(0, checkboxValue.length - 1);
+						} else {
+							for (var c = 0; c < item.length; c++) {
+								if (value == item[c].typecode) {
+									return item[c].typename;
+								}
+							}
+						}
+					}
+				}
+				,
+
+				{
+					field : 'unit',
+					title : '委托单位',
+					width : 120,
+					sortable : true,
+				}
+				,
+
+				{
+					field : 'creditLine',
+					title : '信用额度',
+					width : 120,
+					sortable : true,
+				}
+				,
+				{
+					field : 'creditLimit',
+					title : '信用期限',
+					width : 120,
+					sortable : true,
+					formatter : function(value, rec, index) {
+						return new Date().format('yyyy-MM-dd', value);
+					}
+				}
+				,
+				{
+					field : 'arrearage',
+					title : '应缴',
+					width : 120,
+					sortable : true,
+					formatter : function(value, rec, index) {
+						return rec.creditLine-rec.banlance;
+					}
+				},
+				{
+					field : 'banlance',
+					title : '余额',
+					width : 120,
+					sortable : true,
+					
+				}
+				,
+				{
+					field : 'status',
+					title : '状态',
+					width : 120,
+					sortable : true,
+					formatter : function(value, rec, index) {
+						if (value == undefined) return '';
+						var valArray = value.split(',');
+						var item = dic['credit_st'];
+						if (valArray.length > 1) {
+							var checkboxValue = '';
+							for (var k = 0; k < valArray.length; k++) {
+								for (var h = 0; h < item.length; h++) {
+									if (valArray[k] == item[h].typecode) {
+										checkboxValue = checkboxValue + item[h].typename + ',';
+									}
+								}
+							}
+							return checkboxValue.substring(0, checkboxValue.length - 1);
+						} else {
+							for (var c = 0; c < item.length; c++) {
+								if (value == item[c].typecode) {
+									return item[c].typename;
+								}
+							}
+						}
+					}
+				}
+				,
+
+
+				{
+					field : 'opt',
+					title : '操作',
+					width : 100,
+					formatter : function(value, rec, index) {
+						if (!rec.id) {
+							return '';
+						}
+						var href = '';
+						href += "<a href='#'   class='ace_button'  onclick=delObj('" + basePath + "/feeCreditController.do?doDel&id=" + rec.id + "','feeCreditList')>  <i class=' fa fa-trash-o'></i> ";
+						href += "删除</a>&nbsp;";
+
+						var buttons = dic['buttons'];
+						if (buttons)
+							for (var i = 0; i < buttons.length; i++) {
+								href += "<a href='#'   class='ace_button'  onclick=doPpp('func','" + index + "')>  <i class=' fa fa-wrench'></i>";
+								href += buttons[i].buttonName + "</a>&nbsp;";
+						}
+						return href;
+					}
+				}
+			] ],
+			onLoadSuccess : function(data) {
+				$("#feeCreditList").datagrid("clearSelections");
+
+				/* if (!false) {
+					if (data.total && data.rows.length == 0) {
+						var grid = $('#feeCreditList');
+						var curr = grid.datagrid('getPager').data("pagination").options.pageNumber;
+						grid.datagrid({
+							pageNumber : (curr - 1)
+						});
+					}
+				} */
+			},
+			onClickRow : function(rowIndex, rowData) {
+				rowid = rowData.id;
+				gridname = 'feeCreditList';
+			},
+			onDblClickRow:function(index,row){
+				var url = 'feeCreditController.do?goAdd&id=' + row.id;
+				layerCreateWindow('录入',url,['确定','取消'],['80%','90%']);
+			},
+		});
+		$('#feeCreditList').datagrid('getPager').pagination({
+			beforePageText : '',
+			afterPageText : '/{pages}',
+			displayMsg : '{from}-{to}共 {total}条',
+			showPageList : true,
+			showRefresh : true
+		});
+		$('#feeCreditList').datagrid('getPager').pagination({
+			onBeforeRefresh : function(pageNumber, pageSize) {
+				$(this).pagination('loading');
+				$(this).pagination('loaded');
+			}
+		});
+		try {
+			restoreheader();
+		} catch (ex) {}
+	};
+	function reloadTable() {
+		try {
+			$('#' + gridname).datagrid('reload');
+			$('#' + gridname).treegrid('reload');
+		} catch (ex) {}
+	}
+	function reloadfeeCreditList() {
+		$('#feeCreditList').datagrid('reload');
+	}
+	function getfeeCreditListSelected(field) {
+		return getSelected(field);
+	}
+	function getSelected(field) {
+		var row = $('#' + gridname).datagrid('getSelected');
+		if (row != null) {
+			value = row[field];
+		} else {
+			value = '';
+		}
+		return value;
+	}
+	function getfeeCreditListSelections(field) {
+		var ids = [];
+		var rows = $('#feeCreditList').datagrid('getSelections');
+		for (var i = 0; i < rows.length; i++) {
+			ids.push(rows[i][field]);
+		}
+		ids.join(',');
+		return ids
+	}
+	;
+	function getSelectRows() {
+		return $('#feeCreditList').datagrid('getChecked');
+	}
+	function saveHeader() {
+		var columnsFields = null;
+		var easyextends = false;
+		try {
+			columnsFields = $('#feeCreditList').datagrid('getColumns');
+			easyextends = true;
+		} catch (e) {
+			columnsFields = $('#feeCreditList').datagrid('getColumnFields');
+		}
+		var cols = storage.get('feeCreditListhiddenColumns');
+		var init = true;
+		if (cols) {
+			init = false;
+		}
+		var hiddencolumns = [];
+		for (var i = 0; i < columnsFields.length; i++) {
+			if (easyextends) {
+				hiddencolumns.push({
+					field : columnsFields[i].field,
+					hidden : columnsFields[i].hidden
+				});
+			} else {
+				var columsDetail = $('#feeCreditList').datagrid("getColumnOption", columnsFields[i]);
+				if (init) {
+					hiddencolumns.push({
+						field : columsDetail.field,
+						hidden : columsDetail.hidden,
+						visible : (columsDetail.hidden == true ? false : true)
+					});
+				} else {
+					for (var j = 0; j < cols.length; j++) {
+						if (cols[j].field == columsDetail.field) {
+							hiddencolumns.push({
+								field : columsDetail.field,
+								hidden : columsDetail.hidden,
+								visible : cols[j].visible
+							});
+						}
+					}
+				}
+			}
+		}
+		storage.set('feeCreditListhiddenColumns', JSON.stringify(hiddencolumns));
+	}
+	function isShowBut() {
+		var isShowSearchId = $('#isShowSearchId').val();
+		if (isShowSearchId == "true") {
+			$("#searchColums").hide();
+			$('#isShowSearchId').val("false");
+			$('#columsShow').remove("src");
+			$('#columsShow').attr("src", "plug-in/easyui/themes/default/images/accordion_expand.png");
+		} else {
+			$("#searchColums").show();
+			$('#isShowSearchId').val("true");
+			$('#columsShow').remove("src");
+			$('#columsShow').attr("src", "plug-in/easyui/themes/default/images/accordion_collapse.png");
+		}
+	}
+	function restoreheader() {
+		var cols = storage.get('feeCreditListhiddenColumns');
+		if (!cols) return;
+		for (var i = 0; i < cols.length; i++) {
+			try {
+				if (cols.visible != false) $('#feeCreditList').datagrid((cols[i].hidden == true ? 'hideColumn' : 'showColumn'), cols[i].field);
+			} catch (e) {}
+		}
+	}
+	function resetheader() {
+		var cols = storage.get('feeCreditListhiddenColumns');
+		if (!cols) return;
+		for (var i = 0; i < cols.length; i++) {
+			try {
+				$('#feeCreditList').datagrid((cols.visible == false ? 'hideColumn' : 'showColumn'), cols[i].field);
+			} catch (e) {}
+		}
+	}
+	function feeCreditListsearch() {
+		try {
+			if (!$("#feeCreditListForm").Validform({
+					tiptype : 3
+				}).check()) {
+				return false;
+			}
+		} catch (e) {}
+		if (true) {
+			var queryParams = $('#feeCreditList').datagrid('options').queryParams;
+			$('#feeCreditListtb').find('*').each(function() {
+				queryParams[$(this).attr('name')] = $(this).val();
+			});
+			$('#feeCreditList').datagrid({
+				url : basePath + '/feeCreditController.do?datagrid&field=id,createName,createBy,createDate,updateName,updateBy,updateDate,sysOrgCode,sysCompanyCode,bpmStatus,unit,creditLine,creditLimit,status,',
+				pageNumber : 1
+			});
+		}
+	}
+	function dosearch(params) {
+		var jsonparams = $.parseJSON(params);
+		$('#feeCreditList').datagrid({
+			url : basePath + '/feeCreditController.do?datagrid&field=id,createName,createBy,createDate,updateName,updateBy,updateDate,sysOrgCode,sysCompanyCode,bpmStatus,unit,creditLine,creditLimit,status,',
+			queryParams : jsonparams
+		});
+	}
+	function feeCreditListsearchbox(value, name) {
+		var queryParams = $('#feeCreditList').datagrid('options').queryParams;
+		queryParams[name] = value;
+		queryParams.searchfield = name;
+		$('#feeCreditList').datagrid('reload');
+	}
+	$('#feeCreditListsearchbox').searchbox({
+		searcher : function(value, name) {
+			feeCreditListsearchbox(value, name);
+		},
+		menu : '#feeCreditListmm',
+		prompt : '请输入查询关键字'
+	});
+	function EnterPress(e) {
+		var e = e || window.event;
+		if (e.keyCode == 13) {
+			feeCreditListsearch();
+		}
+	}
+	function searchReset(name) {
+		$("#" + name + "tb").find(":input").val("");
+		var queryParams = $('#feeCreditList').datagrid('options').queryParams;
+
+		$('#feeCreditListtb').find('*').each(function() {
+			queryParams[$(this).attr('name')] = $(this).val();
+		});
+		queryParams['query'] = 'true';
+		$('#feeCreditList').datagrid({
+			url : basePath + '/feeCreditController.do?datagrid&field=id,createName,createBy,createDate,updateName,updateBy,updateDate,sysOrgCode,sysCompanyCode,bpmStatus,unit,creditLine,creditLimit,status,',
+			pageNumber : 1
+		});
+	}
+	var getSearchFormInfo = function() {
+		var sb = '';
+		$('#feeCreditListForm').html(sb);
+	}
+</script>
+</head>
+<body class="self-noscroll">
+	<table width="100%" id="feeCreditList" toolbar="#feeCreditListtb"></table>
+
+	<div id="feeCreditListtb" style="padding:3px; height: auto">
+
+		<div name="searchColums" id="searchColums">
+			<input id="isShowSearchId" type="hidden" value="false" /> 
+			<input id="_sqlbuilder" name="sqlbuilder" type="hidden" />
+			<form onkeydown="if(event.keyCode==13){feeCreditListsearch();return false;}" id="feeCreditListForm">
+				<span style="display:-moz-inline-box;display:inline-block;">
+					<span style="vertical-align:middle;display:-moz-inline-box;display:inline-block;width: 90px;text-align:right;text-overflow:ellipsis;-o-text-overflow:ellipsis; overflow: hidden;white-space:nowrap; " title="委托单位">
+	          			委托单位:
+	          		</span>
+	          		<input onkeypress="EnterPress(event)" onkeydown="EnterPress()" type="text" name="paymentCompany" style="width: 120px" class="inuptxt">
+	          	</span>
+				<span style="float:right"> 
+					<a href="#"	class="easyui-linkbutton" iconcls="icon-search"	onclick="feeCreditListsearch()">查询</a> 
+					<a href="#"	class="easyui-linkbutton" iconcls="icon-reload"	onclick="searchReset('feeCreditList')">重置</a>
+				</span>
+
+			</div>
+		<div style="height:30px;" class="datagrid-toolbar">
+			<span style="float:left;"> <a href="#"
+				class="easyui-linkbutton l-btn l-btn-plain" plain="true"
+				icon="icon-add"
+				onclick="layerCreateWindow('录入','feeCreditController.do?goAdd',['确定','取消'],['80%','90%'],'','reloadDataGrid')"
+				id="">录入</a> <a href="#" class="easyui-linkbutton l-btn l-btn-plain"
+				plain="true" icon="icon-edit"
+				onclick="update_credit()"
+				id="">编辑</a> <a href="#" class="easyui-linkbutton l-btn l-btn-plain"
+				plain="true" icon="icon-remove"
+				onclick="layerDeleteALLSelect('批量删除','feeCreditController.do?doBatchDel','feeCreditList',null,null)"
+				id="">批量删除</a> <a href="#"
+				class="easyui-linkbutton l-btn l-btn-plain" plain="true"
+				icon="icon-search"
+				onclick="detail_credit()"
+				id="">查看</a> 
+				<!--  
+				<a href="#" class="easyui-linkbutton l-btn l-btn-plain"
+				plain="true" icon="icon-put"
+				onclick="ImportXls('导入','null','feeCreditList',null,null)" id="">导入</a>
+				<a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true"
+				icon="icon-putout"
+				onclick="ExportXls('导出','null','feeCreditList',null,null)" id="">导出</a>
+				<a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true"
+				icon="icon-putout"
+				onclick="ExportXlsByT('模板下载','null','feeCredit',null,null)" id="">模板下载</a>
+				<a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true"
+				icon="icon-print"
+				onclick="detail('打印','feeCreditController.do?print','feeCredit',610,330)"
+				id="">打印</a>
+				-->
+			</span> 
+		</div>
+</body>
+<script type="text/javascript">
+	function testReloadPage() {
+		document.location = "http://www.baidu.com";
+	}
+	function szqm(id) {
+		createwindow('审核', 'feeCreditController.do?doCheck&id=' + id);
+	}
+	function addNewPage(id) {
+		addOneTab("TAB方式添加", "feeCreditController.do?addTab&type=table&id=" + id);
+	}
+	
+	function update_credit(){
+		var row = $('#feeCreditList').datagrid('getSelections');
+        if (!row || row.length == 0) {
+		    tip('请选择需要修改的记录');
+		    return;
+		}
+		if (row.length > 1) {
+		    tip('请选择一条记录再编辑');
+		    return;
+		}
+        var url = 'feeCreditController.do?goUpdate&id=' + row[0].id;
+		
+		layerCreateWindow('编辑',url,['确定','取消'],['80%','90%']);
+	}
+	
+	function detail_credit(){
+		var row = $('#feeCreditList').datagrid('getSelections');
+        if (!row || row.length == 0) {
+		    tip('请选择查看项目');
+		    return;
+		}
+		if (row.length > 1) {
+		    tip('请选择一条记录再查看');
+		    return;
+		}
+        var url = 'feeCreditController.do?goUpdate&id=' + row[0].id;
+		
+		layerIndex = layerCreateWindow('查看',url,['确定','取消'],['80%','90%'],'no-submit','closeLayer');
+	}
+	
+	function closeLayer(){
+		layer.close(layerIndex);
+	}
+
+	$(document).ready(function() {
+		//给时间控件加上样式
+		$("#feeCredittb").find("input[name='birthday_begin']").attr("class", "Wdate").click(function() {
+			WdatePicker({
+				dateFmt : 'yyyy-MM-dd'
+			});
+		});
+		$("#feeCredittb").find("input[name='birthday_end']").attr("class", "Wdate").click(function() {
+			WdatePicker({
+				dateFmt : 'yyyy-MM-dd'
+			});
+		});
+		$("#feeCredittb").find("input[name='createDate_begin']").attr("class", "Wdate").click(function() {
+			WdatePicker({
+				dateFmt : 'yyyy-MM-dd'
+			});
+		});
+		$("#feeCredittb").find("input[name='createDate_end']").attr("class", "Wdate").click(function() {
+			WdatePicker({
+				dateFmt : 'yyyy-MM-dd'
+			});
+		});
+		$("#feeCredittb").find("input[name='updateDate_begin']").attr("class", "Wdate").click(function() {
+			WdatePicker({
+				dateFmt : 'yyyy-MM-dd'
+			});
+		});
+		$("#feeCredittb").find("input[name='updateDate_end']").attr("class", "Wdate").click(function() {
+			WdatePicker({
+				dateFmt : 'yyyy-MM-dd'
+			});
+		});
+	});
+
+
+
+	//导入
+	function ImportXls() {
+		openuploadwin('Excel导入', 'feeCreditController.do?upload', "feeCredit");
+	}
+
+	//导出
+	function ExportXls() {
+		JeecgExcelExport("feeCreditController.do?exportXls", "feeCredit");
+	}
+
+	//模板下载
+	function ExportXlsByT() {
+		JeecgExcelExport("feeCreditController.do?exportXlsByT", "feeCredit");
+	}
+	/**
+	 * 获取表格对象
+	 * @return 表格对象
+	 */
+	function getDataGrid(){
+		var datagrid = $('#'+gridname);
+		return datagrid;
+	}
+	function reloadDataGrid(){
+		$('#feeCreditList').datagrid('reload');
+	}
+</script>
+
+

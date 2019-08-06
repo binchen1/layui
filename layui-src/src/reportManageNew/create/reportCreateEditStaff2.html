@@ -1,0 +1,322 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+         pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告设置人员</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    .datagrid-cell,
+    .datagrid-cell-group,
+    .datagrid-header-rownumber,
+    .datagrid-cell-rownumber {
+      white-space: normal;
+    }
+
+    .layui-row {
+      padding: 10px;
+    }
+  </style>
+
+</head>
+
+<body>
+<div class="layui-row height-full">
+  <div class="layui-col-xs6 height-full">
+    <!-- 你的内容 9/12 -->
+    <table class="easyui-datagrid height-full" id="dataGridReveal"></table>
+  </div>
+  <div class="layui-col-xs1 height-full">
+  </div>
+  <div class="layui-col-xs5 height-full">
+    <div id="tb" class="layui-form-box">
+      <div>
+        <p>
+          <input type="text" class="userNameLike" id="userNameLike" oninput="InitObj.doFilter();" name="userNameLike"
+                 placeholder="请输入用户/部门">
+        </p>
+      </div>
+    </div>
+    <table class="easyui-datagrid height-full" id="dataGridStaff"></table>
+  </div>
+
+</div>
+<script>
+
+  $(function () {
+    layui.use('layer', function () {
+      var layer = layui.layer;
+    });
+    InitObj.init()
+  });
+
+  var InitObj = {
+    staffObj: null, // 人员展示table返回对象
+    treeObj: null, // 树形table返回对象 testInfoTreeGrid
+    staffRowIndex: null, // 点击设置人员 当前行的下标rowIndex
+    staffRowArr: [], // 点击设置人员 当前行的数据 arr
+    firstLoad: true,// 标识首次加载
+    treeResultStr: '', // 树形结构 对象转换字符串
+    allData: [], // 搜素数组
+    isSingleSelect:false, // 是否多选
+    staffUrl: '../../data/table/staff.json', // 获取人员列表
+    treeUrl: 'reportCreateController.do?getPersonsForChoose', // 获取人员树形列表
+    staffData: JSON.parse(decodeURI(GetQueryString("staffData"))), // 获取传递的人员列表
+    init: function () {
+      this.initStaffGrid();
+      this.initStaffTreeData();
+    },
+    // 窗口关闭传递数据
+    openCallback: function () {
+      return this.staffData;
+    },
+    //搜索数据
+    doFilter: function () {
+      //装筛选结果的数组
+      var newData = new Array();
+      var filter = $("#userNameLike").val();
+      if (this.allData.length == 0) {
+        return false;
+      }
+      var dataRows = this.allData.rows;
+      for (var i = 0; i < dataRows.length; i++) {
+        if (dataRows[i].name.indexOf(filter) >= 0) {
+          //先匹配的是部门名字,如果部门匹配上了,直接全部门放到newData里面
+          newData.push(dataRows[i]);
+        } else {
+          //如果部门没有匹配上,继续处理部门下的人员
+          var persons = dataRows[i].children
+          if (persons.length > 0) {
+            for (var j = 0; j < persons.length; j++) {
+              //匹配人名
+              if (persons[j].name.indexOf(filter) >= 0) {
+                newData.push(persons[j]);
+              }
+            }
+          }
+        }
+      }
+      if (filter == "") {
+        this.treeObj.treegrid('loadData', this.allData);
+      } else {
+        this.treeObj.treegrid('loadData', newData);
+      }
+    },
+    // 点击 datagrid 根据此单元格人员数据 更新  treegrid 表数据（保存rowIndex）
+    onClickDatagrid: function (treeStr, valueArr, isSingleSelect) {
+      console.log('onClickDatagrid', valueArr, isSingleSelect);
+      // this.treeObj.treegrid({ 'singleSelect': isSingleSelect });
+      for (var i = 0; i < valueArr.length; i++) {
+        // console.log('valueArr[i]',valueArr[i])
+        // var index = this.treeObj.treegrid('getRowIndex', [valueArr[i]]);
+        // console.log('index', index);
+        // this.treeObj.treegrid('selectRow', this.treeObj.treegrid('getRowIndex', [valueArr[i]]));
+        var node = this.treeObj.treegrid('find', valueArr[i].id);
+        console.log('node', node);
+        this.treeObj.treegrid('select', valueArr[i].id);
+        // var idIndex = treeStr.indexOf('"id":"' + valueArr[i].id + '",')
+        // var checkedIndex = treeStr.indexOf('checked', idIndex);
+        // // 开始位置+true+最后的位置
+        // treeStr = treeStr.slice(0, checkedIndex + 9) + true + treeStr.slice(checkedIndex + 9 + 5)
+      }
+      // var data = JSON.parse(treeStr);
+
+      // this.treeObj.treegrid('loadData', data);
+      // this.treeObj.treegrid('loadData', {});
+      // this.treeObj.treegrid('reload', {});
+    },
+    // 点击 treegrid 表更新  datagrid表 (rowIndex)
+    // onClickTreegrid: function (isOnCheck, id, value) {
+    onClickTreegrid: function (arr) {
+      console.log('2222', arr)
+      // if (true === isOnCheck) {
+      //   var strStaffRowArr = JSON.stringify(this.staffRowArr)
+      //   var index = strStaffRowArr.indexOf(':' + id + ',')
+      //   if (index < 0) {
+      //     var datagridArr = { "id": id, "name": value }
+      //     if(this.staffRowIndex === 0 || this.staffRowIndex === 1){
+      //       this.staffRowArr.length = 0;
+      //     }
+      //     this.staffRowArr.push(datagridArr)
+      //   }
+      // } else {
+      //   if(this.staffRowIndex === 0 || this.staffRowIndex === 1){
+      //     this.staffRowArr.length = 0;
+      //   }else{
+      //     for (var i = 0; i < this.staffRowArr.length; i++) {
+      //       if (id === this.staffRowArr[i].id) {
+      //         this.staffRowArr.splice(i, 1)
+      //       }
+      //     }
+      //   }
+      // }
+      // var arr = JSON.parse(JSON.stringify(this.staffRowArr));
+      // console.log('this.staffRowIndex', this.staffRowIndex, typeof this.staffRowIndex)
+      // console.log('arr', arr)
+      var staffObjArr = [];
+      if (2 === this.staffRowIndex) {
+        var rowsData = this.staffObj.datagrid('getData');
+        console.log('newData', newData);
+        var newData = rowsData.rows[this.staffRowIndex].staffname;
+        console.log('rowsData', rowsData);
+        staffObjArr=newData.concat(arr)
+        // var data222 = this.treeObj.treegrid('getSelected');
+        // console.log('data222', data222);
+        // if (data222) {
+        //   staffObjArr[0] = data222
+        // } else {
+        //   staffObjArr[0] = arr[arr.length - 1];
+        // }
+      } else {
+        staffObjArr = arr;
+      }
+      console.log('staffObjArr', staffObjArr)
+
+      this.staffObj.datagrid('updateRow', {
+        index: this.staffRowIndex,
+        row: {
+          staffname: staffObjArr
+        }
+      })
+
+
+    },
+    // 初始化选择人员数据，以table方式显示
+    initStaffGrid: function () {
+      var that = this;
+      this.staffObj = $('#dataGridReveal').datagrid({
+        data: this.staffData,
+        pagination: false, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+        singleSelect: true, // 只允许选中一行
+        fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+        fitColumns: true,
+        scrollbarSize: 0,
+        sortName: 'experience', // 报告时间
+        sortOrder: 'desc', // 倒序，降序 asc desc
+        columns: [[
+          { title: "报告编号", field: "typename", width: 50 },
+          {
+            title: "人员", field: "staffname", width: 150, formatter: function (value, row, index) {
+              var html = '<div style="padding-right:72px;position:relative;min-height:28px">';
+              $.each(row.staffname, function (i, v) {
+                if ((i + 1) === row.staffname.length) {
+                  html += '<span>' + v.name + ' </span>'
+                } else {
+                  html += '<span>' + v.name + ', </span>'
+                }
+              });
+              html += '<span style="position:absolute;right:0;top:1px">&gt;&gt;设置人员</span></div>'
+              return html;
+            }
+          }
+        ]],
+        onClickCell: function (rowIndex, field, value) {
+          /** 当用户单击一个单元格时触发
+           *  1.取消树形结构之前选中的数据
+           *  2.保存行号以及行内选中的数据
+           *  3. 把当前行内数据渲染到treegrid中
+           */
+          console.log('onClickCell',rowIndex, field, value);
+          layer.closeAll('dialog'); //关闭信息框
+          that.treeObj.treegrid('uncheckAll');
+          $("#userNameLike").val('');
+          that.staffRowIndex = rowIndex;
+          that.staffRowArr = value;
+          that.isSingleSelect = (rowIndex === 2 ? false : true);
+          that.treeObj.treegrid({ 'singleSelect': that.isSingleSelect });
+          // console.log('that.treeObj',that.treeObj.treegrid)
+          that.onClickDatagrid(that.treeResultStr, value, that.isSingleSelect)
+          // that.treeObj.treegrid('reload', {});
+        }
+      });
+    },
+    // 初始化人员数据待选择，以树形方式显示
+    initStaffTreeData: function () {
+      var that = this;
+      this.treeObj = $('#dataGridStaff').treegrid({
+        url: this.treeUrl,
+        idField: 'id',
+        treeField: 'name',
+        singleSelect: false, // 设置为 true，则只允许选中一行。
+        toolbar: '#tb',
+        fit: true,
+        fitColumns: true,
+        columns: [[
+          { title: 'id', field: 'id', checkbox: true },
+          { title: '部门/人员', field: 'name', width: 180 },
+          { title: '待处理数量', field: 'taskCount', width: 180, align: 'center' }
+        ]],
+        loadFilter: function (data) {
+          if (that.firstLoad) {
+            that.treeResultStr = JSON.stringify(data.rows); // js对象深度复制成字符串
+            that.allData = data;
+            that.firstLoad = false;
+          }
+          return data;
+        },
+        onLoadSuccess: function () {
+          $(".datagrid-header-check input").hide();
+        },
+        onSelect: function (row, rowData) {
+          console.log('onSelect', row, rowData, that.staffRowIndex);
+
+          that.onClickTreegrid([row])
+          // if (that.staffRowIndex === 0 || that.staffRowIndex) {
+          //   t = $(this);
+          //   if(that.staffRowIndex === 0 || that.staffRowIndex === 1){
+          //     for(var i=0;i<that.staffRowArr.length;i++){
+          //       t.treegrid("unselect", that.staffRowArr[i].id);
+          //     }
+          //   }
+          //
+          //   opts = t.treegrid("options");
+          //   var idField = opts.idField, id = row[idField];
+          //   //如果当前节点被勾选,那么勾选该节点的子节点
+          //   $.each(t.treegrid("getChildren", id), function (i, n) {
+          //     t.treegrid("select", n[idField]);
+          //   });
+          //   var treeField = opts.treeField, treeValue = row[treeField];
+          //   var arr = JSON.stringify(that.staffRowArr);
+          //   if (3 === that.staffRowIndex) {
+          //     that.onClickTreegrid(true, id, row)
+          //     return;
+          //   }
+          //   if (arr.indexOf(id) < 0) {
+          //     that.onClickTreegrid(true, id, treeValue)
+          //   }
+          // } else {
+          //   layer.msg('请先选择人员');
+          // }
+        },
+        onUnselect: function (row, rowData) {
+          console.log('onUnselect', row, rowData);
+          if (that.staffRowIndex === 0 || that.staffRowIndex) {
+            t = $(this);
+            opts = t.treegrid("options");
+            var idField = opts.idField, id = row[idField];
+            $.each(t.treegrid("getChildren", id), function (i, n) {
+              t.treegrid("unselect", n[idField]);
+            });
+            var treeField = opts.treeField, treeValue = row[treeField]
+            that.onClickTreegrid(false, id, treeValue)
+          } else {
+            layer.msg('请先选择人员');
+          }
+        }
+      })
+    }
+  }
+
+</script>
+</body>
+
+</html>

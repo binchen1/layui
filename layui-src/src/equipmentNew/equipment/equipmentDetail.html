@@ -1,0 +1,661 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>设备详情</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增/编辑设备</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .title-name {
+      font-size: 22px;
+      margin-right: 10px;
+    }
+
+    .layui-form-label,
+    .layui-form-item .layui-input-inline {
+      width: auto;
+      font-size: 14px;
+    }
+
+    .layui-form-item {
+      height: 35px;
+      line-height: 20px;
+    }
+
+    .more-header {
+      padding: 8px;
+      border-bottom: 1px dashed;
+      margin-bottom: 10px;
+    }
+
+    .img_code_box {
+      width: 145px;
+      text-align: center;
+    }
+
+    .img_code_box img {
+      max-width: 100%;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .layui-btn {
+      height: 30px;
+      line-height: 30px;
+      border-radius: 3px;
+    }
+
+    .layui-btn.mylayui-btn {
+      color: #fff;
+      height: 22px;
+      line-height: 22px;
+      padding: 0px 8px;
+    }
+
+    .layui-btn.layui-btn-warm {
+      background: #73D13D;
+    }
+
+    .layui-btn.layui-btn-normal {
+      background: #40A9FF;
+    }
+
+    .combobox-box .textbox {
+      width: 155px !important;
+      border-color: transparent;
+    }
+
+    .combobox-box .textbox-addon {
+      display: none;
+    }
+
+    .combobox-box input:disabled {
+      height: 22px !important;
+      line-height: 22px !important;
+      background: #fff;
+      color: #000 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div> <span class="title-name">八轮平整度仪</span>
+      <button type="button" class="layui-btn mylayui-btn layui-btn-warm">正常</button>
+      <button type="button" class="layui-btn mylayui-btn layui-btn-normal">借出</button>
+      <button type="button" class="layui-btn layui-btn-primary">打印设备标签</button>
+    </div>
+    <div class="layui-row">
+      <div class="layui-col-xs9">
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">设备编号：</label>
+            <div class="layui-input-inline">
+              <span name="equipmentSn">3214321432</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">档案编号：</label>
+            <div class="layui-input-inline">
+              <span name="archiveSn">3214321432</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">资产编号：</label>
+            <div class="layui-input-inline">
+              <span name="assetSn">3214321432</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">检测管理编号：</label>
+            <div class="layui-input-inline">
+              <span name="testManageSn">3214321432</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">保管人：</label>
+            <div class="layui-input-inline">
+              <span name="keeperName">张三</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">使用人：</label>
+            <div class="layui-input-inline">
+              <span name="userName">张三</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">所属单位：</label>
+            <div class="layui-input-inline">
+              <span name="unitName">XX检测中心</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">所属部门：</label>
+            <div class="layui-input-inline combobox-box">
+              <input id="departId" value="" name="departId">
+            </div>
+            <!-- <div class="layui-input-inline">
+              <span name="departName">综合室</span>
+            </div> -->
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">存放地点：</label>
+            <div class="layui-input-inline">
+              <span name="storageSite">综合检测室1</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">规格型号：</label>
+            <div class="layui-input-inline">
+              <span name="standard">(0-10) mm</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">量程：</label>
+            <div class="layui-input-inline">
+              <span name="eqRange">1234123421</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">精度：</label>
+            <div class="layui-input-inline">
+              <span name="accuracy"> 0.01mm</span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-xs4">
+          <div class="layui-form-item">
+            <label class="layui-form-label">外型尺寸：</label>
+            <div class="layui-input-inline">
+              <span name="size"> 11m*11m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="img_code_box">
+          <img src="plug-in/assets/images/equipment_code.png">
+          <button type="button" class="layui-btn layui-btn-primary">打印二维码</button>
+        </div>
+      </div>
+
+    </div>
+    <div onclick="InitObj.moreFun()" class="layui-color-blue more-header">更多信息 &gt;&gt;</div>
+    <div class="layui-row moreInfo" style="display: none;">
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">供应商(补)：</label>
+          <div class="layui-input-inline">
+            <span name="supplierName">xxx设备有限公司</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">供应商电话：</label>
+          <div class="layui-input-inline">
+            <span name="supplierTel">185 0000 0000</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">购置日期：</label>
+          <div class="layui-input-inline">
+            <span name="buyDate">2018-12-12</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">出厂编号：</label>
+          <div class="layui-input-inline">
+            <span name="factorySn">G00445566</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">生产厂家：</label>
+          <div class="layui-input-inline">
+            <span name="factory">xxx设备有限公司</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">功率：</label>
+          <div class="layui-input-inline">
+            <span name="power">800W</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">出厂日期：</label>
+          <div class="layui-input-inline">
+            <span name="productionDate">2018-7-5</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">数量：</label>
+          <div class="layui-input-inline">
+            <span name="quantity">1</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">净值：</label>
+          <div class="layui-input-inline">
+            <span name="netValue">21,125</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">出厂价：</label>
+          <div class="layui-input-inline">
+            <span name="factoryPrice">21,125</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">运杂费：</label>
+          <div class="layui-input-inline">
+            <span name="transportFee">21,125</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">安装费：</label>
+          <div class="layui-input-inline">
+            <span name="installFee">21,125</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">折旧费：</label>
+          <div class="layui-input-inline">
+            <span name="depreciationFee">21,125</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">复杂系数(机)：</label>
+          <div class="layui-input-inline">
+            <span name="coefficientMachine">2018-12-12</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">复杂系数(电)：</label>
+          <div class="layui-input-inline">
+            <span name="coefficientElectronic">2018-12-12</span>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs3">
+        <div class="layui-form-item">
+          <label class="layui-form-label">复杂系数(热)：</label>
+          <div class="layui-input-inline">
+            <span name="coefficientHot">2018-12-12</span>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+    <div class="moreInfo" style="display: none;">
+      <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+        <ul class="layui-tab-title">
+          <li class="layui-this">附件档案</li>
+          <li>检校信息</li>
+          <li>期间核查记录</li>
+          <li>维修记录</li>
+          <li>外出记录</li>
+          <li>折旧记录</li>
+          <li>使用记录</li>
+        </ul>
+        <div class="layui-tab-content" style="height: 500px;padding-top: 20px;">
+          <iframe src="eqFolderController.do?goEquipmentFile" id="fileBox" style="width:100%;height: 100%;"></iframe>
+          <div style="display: none" id="dataGridBox">
+            <table class="easyui-datagrid" id="dataGrid" style="height: 500px;"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var that = InitObj;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          console.log('data.index', data.index, typeof data.index)
+
+          if (0 === data.index) {
+            $('#dataGridBox').hide();
+            $('#fileBox').show().attr('src', that.filePageUrl + '&editId=' + that.editId);
+          } else {
+            $('#dataGridBox').show();
+            $('#fileBox').hide();
+            that.initDataGrid(that.columnsFun(data.index))
+          }
+        });
+        InitObj.init(form)
+        $('#fileBox').attr('src', InitObj.filePageUrl + '&editId=' + InitObj.editId)
+        //选完文件后不自动上传
+      })
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      detailUrl: 'equipmentNewController.do?getById', // 查看详情url
+      filePageUrl: 'eqFolderController.do?goEquipmentFile', // 附件档案页面
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      moreInfo: $('.moreInfo'),
+      // parentIndex: parent.layer.getFrameIndex(window.name),
+      dataGrid: null, // table返回对象
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.styleLayout(form);
+        if (this.editId) {
+          this.detailEdit();
+          this.moreInfo.show();
+          this.initDataGrid(this.columnsFun(0));
+        } else {
+         
+        }
+        form.render();
+      },
+      moreFun: function () {
+        if (this.moreInfo.is(':hidden')) {
+          this.moreInfo.show();
+          // this.initDataGrid(this.columnsFun(0))
+        } else {
+          this.moreInfo.hide();
+        }
+
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 获取所属部门信息
+      orgComboCallback: function (res, departId) {
+        console.log('获取所属部门信息', res)
+        if (res && res.length > 0) {
+          $('#departId').combotree({
+            data: res,
+            panelHeight: 200,
+            width: 157,
+            textField: 'text',
+            valueField: 'id',
+            onLoadSuccess: function (node, data) {
+              $('#departId').combotree('setValue', departId || '').combotree('disable');
+
+            }
+          });
+        }
+      },
+      // 详情页面数据处理
+      detailEditData: function (datas) {
+
+        console.log('detailEditData', datas)
+        // $('span[name="name"]').html(datas.name);
+        $('span[name="equipmentSn"]').html(datas.equipmentSn);
+        $('span[name="archiveSn"]').html(datas.archiveSn);
+        $('span[name="assetSn"]').html(datas.assetSn);
+        $('span[name="testManageSn"]').html(datas.testManageSn);
+        $('span[name="keeperName"]').html(datas.keeperName);
+        $('span[name="userName"]').html(datas.userName);
+        $('span[name="unitName"]').html(datas.unitName);
+        // $('input[name="departId"]').html(datas.departId);
+        ajaxRequest('orgController.do?getOrgComboTree', {}, this.orgComboCallback, false, true, datas.departId);
+        $('span[name="storageSite"]').html(datas.storageSite);
+        $('span[name="standard"]').html(datas.standard);
+        $('span[name="eqRange"]').html(datas.eqRange);
+        $('span[name="accuracy"]').html(datas.accuracy);
+        $('span[name="size"]').html(datas.accuracy);
+
+
+        $('span[name="supplierName"]').html(datas.supplierName);
+        $('span[name="supplierTel"]').html(datas.supplierTel);
+        var buyDate = datas.buyDate ? new Date(datas.buyDate).Format("yyyy-MM-dd") : '';
+        $('span[name="buyDate"]').html(buyDate);
+        $('span[name="factorySn"]').html(datas.factorySn);
+        $('span[name="factory"]').html(datas.factory);
+        $('span[name="power"]').html(datas.power);
+        var productionDate = datas.productionDate ? new Date(datas.productionDate).Format("yyyy-MM-dd") : '';
+        $('span[name="productionDate"]').html(productionDate);
+        $('span[name="quantity"]').html(datas.quantity);
+        $('span[name="netValue"]').html(datas.netValue);
+        $('span[name="factoryPrice"]').html(datas.factoryPrice);
+        $('span[name="transportFee"]').html(datas.transportFee);
+        $('span[name="installFee"]').html(datas.installFee);
+        $('span[name="depreciationFee"]').html(datas.depreciationFee);
+        $('span[name="coefficientMachine"]').html(datas.coefficientMachine);
+        $('span[name="coefficientElectronic"]').html(datas.coefficientElectronic);
+        $('span[name="coefficientHot"]').html(datas.coefficientHot);
+
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        console.log('detailEditCallback', res)
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, { "id": this.editId }, this.detailEditCallback, false, true)
+      },
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {
+        var columns = [];
+        if (1 === num) { // 检校信息
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({
+            title: "检校日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "有效期", field: "reportSn", width: 100 });
+          columns.push({ title: "检校单位", field: "unitName", width: 120 });
+          columns.push({ title: "检校类型", field: "projectName", width: 90 });
+          columns.push({ title: "检校依据", field: "projectName1", width: 90 });
+          columns.push({ title: "检校结论", field: "projectName2", width: 90 });
+
+        } else if (2 === num) { // 期间核查记录
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({
+            title: "折旧日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "原值", field: "reportSn", width: 100 });
+          columns.push({ title: "折旧值", field: "unitName", width: 120 });
+          columns.push({ title: "余值", field: "projectName", width: 90 });
+
+        } else if (3 === num) { // 维修记录
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({
+            title: "报修日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "维修单号", field: "reportSn", width: 100 });
+          columns.push({ title: "故障现象", field: "unitName", width: 120 });
+          columns.push({ title: "故障原因分析", field: "projectName", width: 90 });
+          columns.push({ title: "申请人", field: "projectName1", width: 90 });
+          columns.push({ title: "申请日期", field: "projectName2", width: 90 });
+        } else if (4 === num) { // 外出记录
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({
+            title: "借出日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "借出人", field: "reportSn", width: 100 });
+          columns.push({ title: "借出状态", field: "unitName", width: 120 });
+          columns.push({ title: "归还时间", field: "projectName", width: 90 });
+          columns.push({ title: "归还状态", field: "projectName1", width: 90 });
+          columns.push({ title: "归还确认", field: "projectName2", width: 90 });
+          columns.push({ title: "备注", field: "projectName3", width: 90 });
+
+        } else if (5 === num) { // 折旧记录
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({
+            title: "折旧日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "原值", field: "reportSn", width: 100 });
+          columns.push({ title: "折旧值", field: "unitName", width: 120 });
+          columns.push({ title: "余值", field: "projectName", width: 90 });
+
+        } else if (6 === num) { // 使用记录
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({
+            title: "借出日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+          columns.push({ title: "使用人", field: "reportSn", width: 100 });
+          columns.push({ title: "借出状态", field: "unitName", width: 120 });
+          columns.push({ title: "归还时间", field: "projectName", width: 90 });
+          columns.push({ title: "归还状态", field: "projectName1", width: 90 });
+          columns.push({ title: "归还确认", field: "projectName2", width: 90 });
+          columns.push({ title: "备注", field: "projectName3", width: 90 });
+
+        } else { // 附件档案
+          columns.push({ title: "id", field: "id", hidden: true });
+          columns.push({ title: "报告编号", field: "reportSn", width: 100 });
+          columns.push({ title: "委托单位", field: "unitName", width: 120 });
+          columns.push({ title: "工程项目", field: "projectName", width: 90 });
+          columns.push({
+            title: "报告创建日期", field: "createDate", width: 50, formatter: function (value, row, index) {
+              return value ? new Date(value).Format("yyyy-MM-dd") : ''
+            }
+          });
+        }
+
+        return [columns];
+      },
+
+      // table展示
+      initDataGrid: function (columns) {
+        var that = InitObj;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: 'reportCreateController.do?datagrid&reportStatus=compile',
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: true, // 只允许选中一行
+          toolbar: '#tb',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            //禁用表头的全选框(需求如此)
+            $(".datagrid-header-check").html("");
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid');
+          }
+        });
+      },
+
+      // 样式布局控制
+      styleLayout: function (form) {
+        var that = this;
+      }
+
+    }
+  </script>
+</body>
+
+</html>

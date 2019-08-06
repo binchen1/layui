@@ -1,0 +1,1071 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>样品流转登记</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/list.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .form-table {
+      padding: 10px;
+      border: 1px solid rgb(56, 55, 55);
+    }
+
+    .form-table .layui-row {
+      min-height: 34px;
+    }
+
+    .form-table .layui-row:nth-child(2n) {
+      background: #eee;
+    }
+
+    #auditBox {
+      text-align: left;
+      position: relative;
+    }
+
+    .auditPersons {
+      margin-left: 70px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" id="receiveBox" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="tabs-receive" style="display:none">领取样品</li>
+      <li class="tabs-collect" style="display:none">收样处留样</li>
+      <li class="tabs-receive" style="display:none">测后样品处理</li>
+      <li class="layui-this">留样样品处理</li>
+    </ul>
+    <div class="layui-tab-content">
+      <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+      <input type="hidden" id="userName" value="${ LOCAL_CLINET_USER.realName }" />
+      <form class="layui-form layui-form-box" id="commonQueryForm">
+        <div class="form-box"> </div>
+
+        <div class="form-middle layui-row">
+          <div class="layui-col-xs3 font-weight">样品列表：</div>
+          <div class="layui-col-xs9 text-right" id="allSetBox" style="display:none">
+            <div class="layui-form-item">
+              <div class="layui-inline">
+                <label class="layui-form-label">废弃数量：</label>
+                <div class="layui-input-inline">
+                  <input type="text" name="amountAll" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-input-inline" style="width: auto;">
+                  <a href="#" onclick="InitObj.allSet()" class="layui-btn layui-bg-blue layui-btn-xs">批量设置</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-table"> </div>
+        <br>
+        <br>
+        <br>
+        <div class="layui-form-item" id="auditBox" style="display:none">
+          <!-- <label class="layui-form-label">审核人员：</label> -->
+          <!-- <label class="layui-form-label">审核人员：</label>
+          <div class="auditPersons layui-input-block layui-input-width"> -->
+          <label class="font-weight">审核人员：</label>
+          <div class="auditPersons">
+            <div>
+              <div id="auditPersonsBox"></div>
+              <a class="layui-btn layui-btn-sm" id="auditPersonsAdd">
+                <i class="layui-icon">&#xe61f;</i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 测试 -->
+
+
+  <script>
+    $(function () {
+      layui.use(['table', 'laydate', 'form'], function () {
+        var table = layui.table;
+        // var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        // operationDate
+        var newDate = new Date(new Date).Format("yyyy-MM-dd");
+        // laydate.render({
+        //   elem: '#operationDate'
+        //   , trigger: 'click'
+        //   , value: newDate
+        // });
+        InitObj.init(form, laydate);
+      })
+    })
+    var InitObj = {
+      // defaultUrl: '../../data/table/demo1.json', //默认获取数据url
+      detailUrl: 'objectDisposeController.do?getProcessObjectAndAllRecord', // 默认获取数据url
+      auditlUrl: 'objectAuditController.do?getAuditDetail', // 默认审批信息
+      saveUrl: 'objectDisposeController.do?dispose', // 样品流转-通用处理接口
+      saveUrlReceive: 'objectDisposeController.do?objectGet', // 样品流转-领样
+      saveUrlCollect: 'objectDisposeController.do?sampleRoomSave', // 样品流转-收样处留样
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的详情id
+      auditId: GetQueryString("auditId"), // 获取父页面传递过来的是否切换checkout
+      // 0:领样,1:收样处留样,2:测后留样,3:测后废弃,4:留样到期废弃,5:留样到期返还,6:提前废弃,7:提前返还,8:利用,9:提前利用,10:作废
+      tabsStatus: GetQueryString("tabsStatus"), // 状态
+      flowType: GetQueryString("flowType"), // 获取父页面传递过来的编辑id
+      consignIds: GetQueryString("consignIds"), // 获取父页面传递的委托ID
+      receiveBox: $('#receiveBox'), // 1.待打印 2.已打印
+      formLayerM: null,
+      laydateLayerM: null,
+      tabsStatus0: null, // 领取样品
+      tabsStatus1: null, // 领取样品
+      tabsStatus3: null, // 测后样品处理 废弃
+      tabsStatus2: null, // 测后样品处理 留样
+      tabsStatus4: null, // 留样样品处理 废弃
+      tabsStatus5: null, // 留样样品处理 返还
+      tabsStatus8: null, // 留样样品处理 利用申请
+      tabsStatus11: null, // 审核处理利用申请 
+      userId: $('#userId').val(), // 用户id 
+      userName: $('#userName').val(), // 用户name
+      parentSel: parent.InitObj.rowSelect,
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      allSetBox: $('#allSetBox'),
+      operationTypes: '', // 当前页面保存的数据类型
+      // operationTypeAduit: '', // 审核页面提交后的类型
+      operationTypeArr: [], // 获取详情后储存切换显示类型
+      auditBox: $('#auditBox'), // 审核人员 点击按钮
+      auditPersonsAdd: $('#auditPersonsAdd'), // 审核人员 点击按钮
+      auditPersonsBox: $('#auditPersonsBox'), // 审核人员盒子
+      auditPersons: [], // 审核人员 保存数据
+      auditPersonsData: [], // 审核人员  临时保存数据
+      recordVosId: '', // 操作id
+      fristConfirm: true, //是否第一次点击提交
+      init: function (form, laydate) {
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        if ('detailPage' === this.detail) {
+          layui.use(['element'], function () {
+            var element = layui.element,
+              that = InitObj;
+            element.on('tab(docDemoTabBrief)', function (data) {
+              that.statusRenderHtml(data.index)
+              if (2 === data.index || 3 === data.index) {
+                if (that.operationTypeArr[1] && 2 === data.index) {
+                  that.statusRenderHtml(that.operationTypeArr[1])
+                } else if (that.operationTypeArr[2] && 3 === data.index) {
+                  that.statusRenderHtml(that.operationTypeArr[2])
+                } else {
+                  that.statusRenderHtml(data.index + 1)
+                }
+              }
+            });
+          })
+        }
+        if (this.initData()) {
+          if (this.editId || this.auditId) {
+            this.detailEdit();
+          } else {
+            this.styleLayout(form, this.tabsStatus, this.flowType);
+          }
+        }
+        this.btnFun(this.auditPersonsAdd, 'reportRedoAuditController.do?goAuditUserChoosePage&auditPersonsData=',
+          '审核人员')
+      },
+      // 审核人员  及 报告编号
+      btnFun: function (btnName, openUrl, openName) {
+        var that = this;
+        btnName.on('click', function () {
+          if ('选择报告' === openName) {
+            layerOpenFun(openUrl, openName, ['95%', '95%'], ['确定', '取消'], that.reportIdsSelCallback)
+          } else if ('审核人员' === openName) {
+            layerOpenFun(openUrl + encodeURI(encodeURI(JSON.stringify(that.auditPersonsData))), openName,
+              ['95%', '95%'], ['确定', '取消'], that.addPersonsCallback)
+          } else {
+            console.log(openName)
+          }
+        })
+      },
+      // 审核人员删除
+      addPersonsRem: function (res) {
+        for (var i = 0; i < this.auditPersonsData.length; i++) {
+          if (res === this.auditPersonsData[i].userId) {
+            this.auditPersonsData.splice(i, 1)
+            break;
+          }
+        }
+        this.addPersonsCallback(this.auditPersonsData)
+      },
+      // 审核人员回调 
+      addPersonsCallback: function (res, index) {
+        index ? layer.close(index) : ''
+        var that = InitObj;
+        // that.staffData = res;
+        that.auditPersonsData = res;
+        that.auditPersons = [];
+        var html = ''
+        for (var i = 0; i < res.length; i++) {
+          if (i === 0) {
+            html += '<div class="btnClose"><span>' + res[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          } else {
+            html += '<b class="layui-btn layui-btn-sm unReturn"><i class="layui-icon">&#xe65c;</i></b>'
+            html += '<div class="btnClose"><span>' + res[i].realName +
+              '</span><a   onclick="InitObj.addPersonsRem(&quot;' + res[i].userId + '&quot;)">×</a></div>'
+          }
+          that.auditPersons.push({
+            "userId": res[i].userId,
+            "auditSequence": i + 1
+          })
+        }
+        that.auditPersonsBox.html(html); 
+      },
+
+      // 初始化需要提交的数据，展示页面
+      initData: function () {
+
+        // 0:领样,1:收样处留样,2:测后留样,3:测后废弃,4:留样到期废弃,5:留样到期返还,6:提前废弃,7:提前返还,8:利用,9:提前利用,10:作废
+
+        this.tabsStatus0 = {
+          "receiver": {
+            "name": "领样人",
+            "values": ''
+          },
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "领样日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "remark": {
+            "name": "备注",
+            "values": ''
+          },
+          "isAmountAll": false,
+          "tablecol": {
+            "name": "试样数量",
+            "values": ''
+          },
+          "amountAll": {
+            "name": "领样数量",
+            "values": ''
+          },
+        }
+        this.tabsStatus1 = {
+          "receiver": {
+            "name": "留样人",
+            "values": ''
+          },
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "留样日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "saveDayLimit": {
+            "name": "留样期限(天)",
+            "values": "90"
+          },
+          "saveSite": {
+            "name": "留样地点",
+            "values": ""
+          },
+          "reason": {
+            "name": "留样原因",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "试样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "留样数量",
+            "values": ""
+          },
+        }
+        this.tabsStatus3 = {
+          "operationType": [{
+              "values": "3",
+              "lables": "废弃",
+              "checkeds": "checked"
+            },
+            {
+              "values": "2",
+              "lables": "留样"
+            }
+          ],
+          "operationTitle": '测后样品处理方式',
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "样品废弃日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "reason": {
+            "name": "废弃原因",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "领样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "废弃数量",
+            "values": ""
+          },
+        }
+        this.tabsStatus2 = {
+          "operationType": [{
+              "values": "3",
+              "lables": "废弃"
+            },
+            {
+              "values": "2",
+              "lables": "留样",
+              "checkeds": "checked"
+            }
+          ],
+          "operationTitle": '测后样品处理方式',
+          "receiver": {
+            "name": "留样人",
+            "values": ''
+          },
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "留样日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "saveDayLimit": {
+            "name": "留样期限(天)",
+            "values": "90"
+          },
+          "saveSite": {
+            "name": "留样地点",
+            "values": ""
+          },
+          "reason": {
+            "name": "留样原因",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "领样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "留样数量",
+            "values": ""
+          },
+        }
+        this.tabsStatus4 = {
+          "operationType": [{
+              "values": "4",
+              "lables": "废弃",
+              "checkeds": "checked"
+            },
+            {
+              "values": "5",
+              "lables": "返还"
+            },
+            {
+              "values": "8",
+              "lables": "利用"
+            }
+          ],
+          "operationTitle": "留样处理方式",
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "样品废弃日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "reason": {
+            "name": "废弃原因",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "留样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "废弃数量",
+            "values": ""
+          },
+        }
+        this.tabsStatus5 = {
+          "operationType": [{
+              "values": "4",
+              "lables": "废弃"
+            },
+            {
+              "values": "5",
+              "lables": "返还",
+              "checkeds": "checked"
+            },
+            {
+              "values": "8",
+              "lables": "利用"
+            }
+          ],
+          "operationTitle": "留样处理方式",
+          "receiver": {
+            "name": "接受人",
+            "values": ''
+          },
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "样品返还日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "remark": {
+            "name": "备注",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "留样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "返还数量",
+            "values": ""
+          },
+        }
+        this.tabsStatus8 = {
+          "operationType": [{
+              "values": "4",
+              "lables": "废弃"
+            },
+            {
+              "values": "5",
+              "lables": "返还"
+            },
+            {
+              "values": "8",
+              "lables": "利用",
+              "checkeds": "checked"
+            }
+          ],
+          "operationTitle": "留样处理方式",
+          "reason": {
+            "name": "申请利用原因",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "留样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "利用数量",
+            "values": ""
+          },
+        }
+        this.tabsStatus11 = {
+          "operationType": [{
+              "values": "4",
+              "lables": "废弃"
+            },
+            {
+              "values": "5",
+              "lables": "返还"
+            },
+            {
+              "values": "8",
+              "lables": "利用",
+              "checkeds": "checked"
+            }
+          ],
+          "operationTitle": "留样处理方式",
+          "operator": {
+            "name": "经办人",
+            "values": this.userName
+          },
+          "operationDate": {
+            "name": "留样日期",
+            "values": new Date().Format("yyyy-MM-dd")
+          },
+          "reason": {
+            "name": "样品用途",
+            "values": ""
+          },
+          "remark": {
+            "name": "备注",
+            "values": ""
+          },
+          "isAmountAll": true,
+          "tablecol": {
+            "name": "留样数量",
+            "values": ""
+          },
+          "amountAll": {
+            "name": "利用数量",
+            "values": ""
+          },
+        }
+
+        return true;
+      },
+      // 渲染form表单
+      renderHtml: function (obj, data) {
+        if ('detailPage' === this.detail && !obj.amountAll.values) {
+          var html = '当前样品无'
+          if (obj.operationTitle.indexOf('测后样品') > -1) {
+            html += '<span class="layui-color-red">“测后样品处理”</span>记录！'
+          } else {
+            html += '<span class="layui-color-red">“留样样品处理”</span>记录！'
+          }
+          $('.form-box').html(html)
+          $('.form-table').css("border-color", "transparent").html('')
+          $('.form-middle').html('')
+        } else {
+          var html = ''
+          if (obj.operationTitle) {
+            html += '<div class="layui-form-item">'
+            html += ' <label class="layui-form-label" >' + obj.operationTitle + '：</label >'
+            html += '    <div class="layui-input-block layui-input-width" id="saveTypeDiv">'
+            for (var key in obj.operationType) {
+              if (obj.operationType.hasOwnProperty(key)) {
+                var element = obj.operationType[key]
+                html += '<input class="layui-bg-blue layui-input" type = "radio" lay-filter="saveType" '
+                html += ' name = "operationType" value = "' + element.values + '" title = "' + element.lables + '"'
+                if (element.checkeds) {
+                  html += ' checked="' + element.checkeds + '" > '
+                } else {
+                  html += '> '
+                }
+              }
+            }
+            html += '</div> </div > '
+          }
+          if (obj.receiver) {
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.receiver.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="text" name="receiver"  class="layui-input" value="' + obj.receiver.values +
+              '" autocomplete="off">'
+            html += '</div>'
+            html += '</div>'
+          }
+          if (obj.operator) {
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.operator.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="text" name="operator" class="layui-input" value="' + obj.operator.values + '">'
+            html += '</div>'
+            html += '</div>'
+          }
+          if (obj.operationDate) {
+            var serverTime = new Date().Format("yyyy-MM-dd");
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.operationDate.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="text" class="layui-input" name="operationDate" id="operationDate" value="' + obj.operationDate
+              .values + '">'
+            html += '</div>'
+            html += '</div>'
+          }
+          if (obj.saveDayLimit) {
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.saveDayLimit.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="number"  name="saveDayLimit" value="' + obj.saveDayLimit.values +
+              '" class="layui-input" autocomplete="off">'
+            html += '</div>'
+            html += '</div>'
+          }
+          if (obj.saveSite) {
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.saveSite.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="text" name="saveSite"  class="layui-input" value="' + obj.saveSite.values +
+              '" autocomplete="off">'
+            html += '</div>'
+            html += '</div>'
+          }
+          if (obj.reason) {
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.reason.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="text" name="reason"  class="layui-input" value="' + obj.reason.values +
+              '" autocomplete="off">'
+            html += '</div>'
+            html += '</div>'
+          }
+          if (obj.remark) {
+            html += '<div class="layui-form-item" >'
+            html += '<label class="layui-form-label">' + obj.remark.name + '：</label>'
+            html += '<div class="layui-input-block layui-input-width">'
+            html += '<input type="text" name="remark"  class="layui-input" value="' + obj.remark.values +
+              '" autocomplete="off">'
+            html += '</div>'
+            html += '</div>'
+          }
+
+          $('.form-box').html(html);
+          this.formLayerM.render();
+          this.laydateLayerM.render({
+            elem: '#operationDate',
+            trigger: 'click'
+          });
+          this.tableHtml(obj.isAmountAll, obj.tablecol, obj.amountAll)
+        }
+      },
+      // 渲染table
+      tableHtml: function (isAmountAll, tablecol, amountAll) {
+        // 是否显示批量设置
+        if (isAmountAll) {
+          this.allSetBox.find('.layui-form-label').html(amountAll.name)
+          this.allSetBox.show()
+        } else {
+          this.allSetBox.hide()
+        }
+        // 审核人员是否显示
+        if (this.auditId || this.detail) {
+          this.auditBox.hide()
+        } else {
+          '利用数量' === amountAll.name ? this.auditBox.show() : this.auditBox.hide();
+        }
+        var html = '<div class="layui-row  layui-col-space10">'
+        html += '<div class="layui-col-xs3"> 样品编号 </div>'
+        html += '<div class="layui-col-xs2"> 样品名称 </div>'
+        html += '<div class="layui-col-xs2"> 规格型号 </div>'
+        html += '<div class="layui-col-xs2"> ' + tablecol.name + ' </div>'
+        html += '<div class="layui-col-xs3"> ' + amountAll.name + ' </div>'
+        html += '</div>'
+        // sampleNum :试样数量,getAmount:领样数量,savedAmount:留样数量
+        $.each(this.parentSel, function (i, v) {
+          html += '<div class="layui-row  layui-col-space10">'
+          html += '<div class="layui-col-xs3"> ' + v.testObjectCode + ' </div>'
+          html += '<div class="layui-col-xs2"> ' + v.displayName + ' </div>'
+          html += '<div class="layui-col-xs2"> ' + v.standard + '</div>'
+          var tablecolValue = '';
+          if ('试样数量' === tablecol.name) {
+            tablecolValue = v.sampleNum || ''
+          }
+          if ('领样数量' === tablecol.name) {
+            tablecolValue = v.getAmount || ''
+          }
+          if ('留样数量' === tablecol.name) {
+            tablecolValue = v.savedAmount || ''
+          }
+          html += '<div class="layui-col-xs2"> ' + tablecolValue + ' </div>'
+          html += '<div class="layui-col-xs3">'
+          if (amountAll.values || v.amount) {
+            var amounts = amountAll.values || v.amount
+            html += '<input type="text" name="amount' + i + '" value="' + amounts +
+              '" class="layui-input " autocomplete="off">'
+          } else {
+            html += '<input type="text" name="amount' + i +
+              '" value="" class="layui-input " autocomplete="off">'
+          }
+          html += '</div>'
+          html += '</div>'
+        })
+        $('.form-table').css("border-color", "#383737").html(html)
+        this.detailDisplay()
+      },
+      openCallback: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+            var saveType = {
+                "0": "saveUrlReceive",
+                "1": "saveUrlCollect",
+                "default": "saveUrl"
+              },
+              dataJson, params;
+            var url = saveType[this.operationTypes] || saveType['default']
+            if ('8' === this.operationTypes && !this.auditId && !this.detail) { // 已到期利用 提起申请
+              params = {
+                "operations": saveParam,
+                "auditPersons": this.auditPersons
+              }
+              if (this.fristConfirm) {
+                this.fristConfirm = !this.fristConfirm;
+                ajaxRequest('objectAuditController.do?addAudit', {
+                  moduleParamStr: JSON.stringify(params)
+                }, this.saveAjaxCallback, true, true)
+              } else {
+                SHOW_LOAD_LAYER('数据提交中...');
+              }
+
+            } else { // 审核后的利用及其他
+              console.log('this.fristConfirm',this.fristConfirm)
+              if (this.fristConfirm) {
+                this.fristConfirm = !this.fristConfirm;
+                ajaxRequest(this[url], { params: JSON.stringify(saveParam) }, this.saveAjaxCallback, true, true)
+              } else {
+                SHOW_LOAD_LAYER('数据提交中...');
+              }
+            }
+            return true;
+          }
+        } else {
+          parent.layer.close(this.parentIndex); //再执行关闭 
+          return false;
+        }
+      },
+      // 批量设置
+      allSet: function () {
+        var amountAll = $('input[name="amountAll"]').val();
+        $('.form-table input').val(amountAll);
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+          this.allSetBox.hide()
+        }
+        if (this.auditId) { // 审核通过后数据部门不允许修改
+          $('.form-table input').attr('readonly', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 编辑详情页面数据处理
+      detailEditData: function (data) {
+        this.flowType = 'receive', this.parentSel = [], this.operationTypeArr = [];
+        this.parentSel = data.testObjectArr;
+        if (this.auditId) { // 留样 申请通过
+          this['tabsStatus' + data.operationType].isAmountAll = false;
+          this.styleLayout(this.formLayerM, data.operationType, this.flowType);
+        } else { // 详情和撤销
+          for (var i = 0; i < data.recordVos.length; i++) {
+            var arr = data.recordVos[i]
+            if ('0' === arr.operationType) {
+              this.parentSel[0].getAmount = arr.amount
+              this.operationTypeArr[0] = arr.operationType
+              this.tabsStatus = arr.operationType
+            } else if ('2' === arr.operationType) {
+              this.parentSel[0].savedAmount = arr.amount
+              this.operationTypeArr[1] = arr.operationType
+            } else if ('1' === arr.operationType) {
+              this.flowType = 'collect';
+              this.parentSel[0].savedAmount = arr.amount
+              this.operationTypeArr[0] = arr.operationType
+              this.tabsStatus = arr.operationType
+            } else if ('3' === arr.operationType) {
+              this.operationTypeArr[1] = arr.operationType
+            } else {
+              this.operationTypeArr.push(arr.operationType)
+            }
+            // 获取编辑保存id
+            if (data.status === arr.operationType) {
+              this.recordVosId = arr.id
+            }
+            if ('8' === arr.operationType || '9' === arr.operationType) {
+              // 处理利用申请最后的状态
+              arr.operationType = '11';
+              data.status = '11';
+            }
+            if (arr.receiver) {
+              this['tabsStatus' + arr.operationType].receiver.values = arr.receiver
+            }
+            if (arr.operator) {
+              this['tabsStatus' + arr.operationType].operator.values = arr.operator
+            }
+            if (arr.operationDate) {
+              this['tabsStatus' + arr.operationType].operationDate.values =
+                new Date(arr.operationDate).Format('yyyy-MM-dd')
+            }
+            if (arr.saveDayLimit) {
+              this['tabsStatus' + arr.operationType].saveDayLimit.values = arr.saveDayLimit
+            }
+            if (arr.saveSite) {
+              this['tabsStatus' + arr.operationType].saveSite.values = arr.saveSite
+            }
+            if (arr.reason) {
+              this['tabsStatus' + arr.operationType].reason.values = arr.reason
+            }
+            if (arr.remark) {
+              this['tabsStatus' + arr.operationType].remark.values = arr.remark
+            }
+            if (arr.tablecol) {
+              this['tabsStatus' + arr.operationType].tablecol.values = arr.sampleNum || arr.getAmount || arr.savedAmount
+            }
+            if (arr.amount) {
+              this['tabsStatus' + arr.operationType].amountAll.values = arr.amount
+            }
+          }
+          if (1 === this.operationTypeArr.length) {
+            delete this.tabsStatus3.operationType[0].checkeds
+            this.tabsStatus3.operator.values = ''
+            this.tabsStatus3.operationDate.values = ''
+            // delete this.tabsStatus4.operationType[0].checkeds // 2019-02-26 修改详情展示时注释的
+            this.tabsStatus4.operator.values = ''
+            this.tabsStatus4.operationDate.values = ''
+          } else if (2 === this.operationTypeArr.length) {
+            if ('receive' === this.flowType) {
+              // delete this.tabsStatus4.operationType[0].checkeds // 2019-02-26 修改详情展示时注释的
+              this.tabsStatus4.operator.values = ''
+              this.tabsStatus4.operationDate.values = ''
+            }
+          }
+          this.styleLayout(this.formLayerM, data.status, this.flowType);
+        }
+        this.formLayerM.render();
+      },
+      detailEditAudit: function (data) {
+        var dataObj = {
+          operationType: '',
+          testObjectArr: []
+        }
+        for (var i = 0; i < data.length; i++) {
+          var applyData = JSON.parse(data[i].auditVo.applyData)
+          // this.operationTypeAduit=applyData['disposeWay']
+          if ('9' === applyData['disposeWay'] || '8' === applyData['disposeWay']) {
+            dataObj.operationType = '11'
+            this.tabsStatus11.operationType[2].values = applyData['disposeWay']
+
+          } else if ('6' === applyData['disposeWay']) {
+            dataObj.operationType = '4'
+            this.tabsStatus11.operationType[0].values = applyData['disposeWay']
+          } else if ('7' === applyData['disposeWay']) {
+            dataObj.operationType = '5'
+            this.tabsStatus11.operationType[1].values = applyData['disposeWay']
+          }
+          var testObjectVO = data[i].testObjectVO
+          dataObj.testObjectArr.push({
+            displayName: testObjectVO.testSampleDisplayName,
+            savedAmount: data[i].saveAmount,
+            standard: testObjectVO.standard,
+            testObjectCode: testObjectVO.testObjectCode,
+            testObjectId: testObjectVO.id,
+            amount: applyData['amount'],
+            objectProcessId: data[i].auditVo.relationObjId, // 流转id
+          })
+        }
+        return dataObj
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          if (that.auditId) {
+            that.detailEditData(that.detailEditAudit(res.obj))
+          } else {
+            res.obj.testObjectArr = [res.obj.testObjectInfo]
+            that.detailEditData(res.obj)
+          }
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        if (this.editId) {
+          ajaxRequest(this.detailUrl, {
+            "objectProcessId": this.editId
+          }, this.detailEditCallback, false, true)
+        } else if (this.auditId) {
+          ajaxRequest(this.auditlUrl, {
+            "auditId": this.auditId
+          }, this.detailEditCallback, false, true)
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (requiredParam) {
+        var len = this.parentSel.length;
+        if (requiredParam.saveDayLimit < 0) {
+          formTipFun('留样期限不能小于0', $('input[name="saveDayLimit"]'))
+          return false;
+        }
+        for (var i = 0; i < len; i++) {
+          if (!requiredParam['amount' + i]) {
+            formTipFun('数量不能为空', $('input[name="amount' + i + '"]'))
+            return false;
+          }
+        }
+        if (!this.auditId && !this.detail) {
+          if ('8' === requiredParam.operationType) {
+            if (0 === this.auditPersons.length) {
+              formTipFun('审核人员不能为空', this.auditPersonsAdd)
+              return false;
+            }
+          }
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var requiredParam = $('#commonQueryForm').serializeJSON();
+        if (this.dataRequired(requiredParam)) {
+          this.operationTypes = requiredParam.operationType || this.tabsStatus
+          var arr = []
+          // 保存数据
+          for (var i = 0; i < this.parentSel.length; i++) {
+            arr.push({
+              "testObjectId": this.parentSel[i].testObjectId,
+              "objectProcessId": this.parentSel[i].objectProcessId || this.editId || '',
+              "operationType": this.operationTypes,
+              "operator": requiredParam.operator || '',
+              "receiver": requiredParam.receiver || '',
+              "operationDate": requiredParam.operationDate || '',
+              "amount": requiredParam['amount' + i],
+              "saveSite": requiredParam.saveSite || '',
+              "saveDayLimit": requiredParam.saveDayLimit || '',
+              "reason": requiredParam.reason || '',
+              "remark": requiredParam.remark || '',
+              "id": this.recordVosId || '',
+            })
+          }
+          return arr;
+        }
+      },
+      // 是否打印退回签领表
+      printBack: function () {
+        console.log('打印退回签领表')
+        var parentThat = parent.InitObj,
+          that = InitObj;
+        var rows = InitObj.parentSel;
+        for (var i = 0; i < rows.length; i++) {
+          var objectProcessId = rows[i].objectProcessId;
+          parentThat.printReturnSignTable(objectProcessId);
+        }
+        parent.layer.close(that.parentIndex); //再执行关闭 
+        parentThat.reloadDataGrid(false);
+      },
+      // 是否打印留样标签？
+      printLabel: function () {
+        var parentThat = parent.InitObj,
+          that = InitObj;
+        var consignIds = that.consignIds.split(",");
+        for (var i = 0; i < consignIds.length; i++) {
+          var consignId = consignIds[i];
+          parentThat.printRemainedSampleLable(consignId);
+        }
+        console.log('是否打印留样标签？')
+        parent.layer.close(that.parentIndex); //再执行关闭 
+        parentThat.reloadDataGrid(false);
+      },
+      layerConfirmFun: function (msg, callName) {
+        var parentThat = parent.InitObj,
+          that = InitObj;
+        layer.confirm(msg, {
+          icon: 3,
+          btn: ['确认', '取消']
+        }, function (index) {
+          callName()
+        }, function (index) {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          return;
+        })
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        console.log('saveAjaxCallback',res)
+        var parentThat = parent.InitObj,
+          that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          if ('2' === that.operationTypes) { // 2:测后留样
+            console.log('是否打印留样标签？')
+            that.layerConfirmFun('是否打印留样标签？', that.printLabel)
+          } else if ('5' === that.operationTypes) { // 5:留样到期返还
+            console.log('是否打印退回签领表?')
+            that.layerConfirmFun('是否打印退回签领表', that.printBack)
+          } else {
+            parent.layer.close(that.parentIndex); //再执行关闭 
+            parentThat.reloadDataGrid(false);
+          }
+          return;
+        }
+      },
+      statusRenderHtml: function (nums) {
+        this.renderHtml(this['tabsStatus' + nums])
+      },
+      // 样式布局控制
+      styleLayout: function (form, tabsStatus, flowType) {
+        if ('receive' === flowType) {
+          this.receiveBox.find('li.tabs-receive').show()
+          this.receiveBox.find('li.tabs-collect').hide()
+        } else if ('collect' === flowType) {
+          this.receiveBox.find('li.tabs-receive').hide()
+          this.receiveBox.find('li.tabs-collect').show()
+        }
+        if ('0' === tabsStatus || '1' === tabsStatus) {
+          this.receiveBox.find('.layui-tab-title li').eq(parseInt(tabsStatus)).addClass('layui-this').siblings('li')
+            .removeClass('layui-this')
+        } else if ('2' === tabsStatus || '3' === tabsStatus) {
+          this.receiveBox.find('.layui-tab-title li').eq(2).addClass('layui-this').siblings('li').removeClass(
+            'layui-this')
+        } else if ('4' === tabsStatus || '5' === tabsStatus || '8' === tabsStatus) {
+          this.receiveBox.find('.layui-tab-title li').eq(3).addClass('layui-this').siblings('li').removeClass(
+            'layui-this')
+        }
+
+        this.statusRenderHtml(tabsStatus)
+        var that = this;
+        form.on('radio(saveType)', function (data) {
+          that.statusRenderHtml(data.value)
+        });
+      },
+    }
+  </script>
+</body>
+
+</html>

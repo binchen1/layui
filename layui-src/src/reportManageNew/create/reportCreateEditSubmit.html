@@ -1,0 +1,161 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告提交界面</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+  <style>
+    /* .layui-form-radioed>i, .layui-form-radio>i:hover {
+  color: #1e9fff;
+}
+
+.layui-btn {
+  background-color: transparent;
+}
+.layui-form-label{
+  width:100px;
+} */
+.layui-input-block{
+  min-height: 24px;
+}
+</style>
+</head>
+
+<body>
+  <form class="layui-form row-margin"  id="commonQueryForm">
+    <div class="layui-form-item">
+      <label class="layui-form-label">报告类型：</label>
+      <div class="layui-input-block">
+        <input class="layui-bg-blue" type="radio" name="synthesis" title="" checked>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">报告编号：</label>
+        <div class="layui-inline">
+          <div class="layui-input-inline">
+            <input type="text" id="reportNumberInput" name="reportNumber" class="layui-input" disabled>
+          </div>
+        </div>
+        <!-- <a id="reportCodeA" class="layui-color-blue"
+            href="javascript:void(0);">>>>修改</a> -->
+      </div>
+    </div>
+    <div id="reportPersons"> </div>
+    <br>
+    <div class="layui-form-item">
+      <label class="layui-form-label">检测结果：</label>
+      <div class="layui-input-block">
+        <input class="layui-bg-blue" type="radio" name="isQualified"  title="" checked>
+      </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">试验结论：</label>
+      <div class="layui-input-block" id="verdict">依据《公路工程竣（交量等级为优良。</div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">试验备注：</label>
+      <div class="layui-input-block" id="verdictRemark">111</div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">报告文件：</label>
+      <div class="layui-input-block">
+        <u class="layui-color-blue" id="fileNames">榆林至佳县高速公路竣工验收前工程质量检测报告.doc</u>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">报告签发日期：</label>
+        <div class="layui-inline">
+          <div class="layui-input-inline">
+            <input type="text" class="layui-input" name="signDate" id="signDate" reayonly autocomplete="off" placeholder="请选择签发日期">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item" >
+      <label class="layui-form-label">提交意见：</label>
+      <div class="textarea-box">
+        <textarea id="commitOpinion" name="opinion" placeholder="请输入内容" class="layui-textarea "></textarea>
+      </div>
+    </div>
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'laydate','form'], function () {
+
+        var laydate = layui.laydate;
+        var form = layui.form;
+        laydate.render({
+          elem: '#signDate'
+          , trigger: 'click'
+          ,format: 'yyyy-MM-dd'
+        });
+        InitObj.init(form)
+      })
+    })
+    var InitObj = {
+      formData: JSON.parse(decodeURI(GetQueryString("staffData"))), // 获取form信息
+      reportNumberInput: $('#reportNumberInput'), // 报告编号
+      verdictRemark: $('#verdictRemark'), // 备注
+      verdict: $('#verdict'), // 结论
+      isQualified: $('#isQualified'), // 是否合格
+      reportPersons: $('#reportPersons'), // 设置人员
+      fileNames: $('#fileNames'), // 文件
+      signDate: $('#signDate'), // 签发时间
+      commitOpinion: $('#commitOpinion'), // 提交意见
+      formLayerM: null, // form对象 
+      init: function (form) {
+        this.formLayerM =form  
+        this.defaultFun(this.formData)
+      },
+      defaultFun: function (data) { 
+        $('input[name="synthesis"]')[0].title=data.reportType
+        $('input[name="isQualified"]')[0].title=data.isQualified
+        this.reportNumberInput.val(data.reportNumber); // 报告编号 
+        this.verdictRemark.html(data.verdictPemark); // 备注
+        this.verdict.html(data.verdict); // 结论
+        this.fileNames.html(data.files);
+        var html = ''
+        for (var i = 0; i < data.reportPersons.length; i++) {
+          var personsArr = data.reportPersons[i].staffname;
+
+          html += '<div class="layui-form-item">'
+          html += '<label class="layui-form-label">' + data.reportPersons[i].typename + '：</label><div>'
+          if (personsArr) {
+
+            for (var j = 0; j < personsArr.length; j++) {
+              html += personsArr[j].name + ' '
+            }
+          }
+          if ('0' === data.reportPersons[i].type) {
+            // html += '<a href="#" class="layui-color-blue" style="margin-left:20px">>>>重新指定人员</a></div></div>'
+          } else {
+
+            html += '</div></div>'
+          }
+        }
+        this.reportPersons.append(html);
+        this.formLayerM.render()
+      },
+      openCallback: function () {
+        var obj = { "commitOpinion": this.commitOpinion.val(), "signDate": this.signDate.val() } 
+        return obj
+      }
+    }
+  </script>
+</body>
+
+</html>

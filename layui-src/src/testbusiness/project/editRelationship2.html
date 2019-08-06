@@ -1,0 +1,167 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools" />
+<script>
+  var strFullPath = window.document.location.href;
+  var strPath = window.document.location.pathname;
+  var pos = strFullPath.indexOf(strPath);
+  var prePath = strFullPath.substring(0, pos);
+  var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+  var basePath = prePath + postPath;
+
+  document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+</script>
+<style>
+  .datagrid-btable .datagrid-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    input {
+        height: 24px;
+    }
+</style>
+<div class="easyui-layout" fit="true">
+  <div data-options="region: 'center', split: true">
+    <div class="toolbar">
+
+      <div class="search-box">
+        <form class="formtable">
+          <table>
+            <tr>
+              <td>委托单位名称：</td>
+              <td>
+                <input name="name" style="line-height:24px; height: 24px; border:1px solid #ccc">
+              </td>
+              <span style="float:right; height: auto;">
+                <a class="easyui-linkbutton btn-4-search" plain="true" icon="icon-search">查询</a>
+                <a class="easyui-linkbutton btn-4-reset" plain="true" icon="icon-reload">重置</a>
+              </span>
+            </tr>
+          </table>
+        </form>
+      </div>
+    </div>
+    <table id="dataGrid"></table>
+  </div>
+  <input type="hidden" id="btn_sub" class="btn-4-submit">
+</div>
+
+<%--suppress JSUnresolvedFunction, JSUnresolvedVariable --%>
+<script>
+
+  $(function () {
+
+    initDataGrid();
+
+    $('.btn-4-submit').click(function () {
+      console.log('btn-4-submit')
+      var rows = dataGrid.datagrid('getSelections');
+      console.log('btn-4-submit', rows)
+      if (rows && rows.length > 0) {
+
+        var consignUnitIds = [];
+        for (var i in rows) {
+          consignUnitIds.push(rows[i].id);
+        }
+
+        var projectRow = parent.dataGrid.datagrid('getSelected');
+        var dataJson = {
+          consignUnitIds: consignUnitIds.join(',')
+        }, urls = '';
+        if ('project' === parent.moduleName) {
+          dataJson.projectId = projectRow.id
+          urls = 'projectController.do?doAddRelationship'
+        } else if ('sampleSender' === parent.moduleName) {
+          dataJson.sampleSenderId = projectRow.id
+          urls = 'sampleSenderController.do?doAddRelationship'
+        }
+        console.log('dataJson', dataJson)
+        ajaxSubmitResponseJSON({
+          url: urls,
+          data: dataJson,
+          success: function (data) {
+            if (data.success) {
+              parent.reloadDataGrid0(false, projectRow);
+            }
+            /*关闭弹窗*/
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+            parent.tip(data.msg);
+          }
+        });
+      } else {
+        parent.tip("请选择委托单位");
+      }
+    });
+
+    $('.btn-4-search').click(function () {
+      reloadDataGrid(true);
+    });
+
+    $('.btn-4-reset').click(function () {
+      $('.search-box form')[0].reset();
+      $('.btn-4-search').trigger('click');
+    });
+  });
+
+  var dataGrid;
+
+  function initDataGrid() {
+    dataGrid = $('#dataGrid').datagrid({
+      url: 'consignUnitController.do?datagrid',
+      singleSelect: false,
+      rownumbers: true,
+      toolbar: '.toolbar',
+      fit: true,
+      columns: [[
+        { title: "ID", field: "id", checkbox: true },
+        { title: "委托单位名称", field: "name", width: 200, formatter: applyTitleAttribute },
+        { title: "施工单位名称", field: "constructionUnitName", width: 200, formatter: applyTitleAttribute },
+        { title: "项目标段名称", field: "projectTenderName", width: 200, formatter: applyTitleAttribute },
+        { title: "联系人", field: "contactPerson" },
+        { title: "联系人电话", field: "contactPhone" },
+        { title: "联系地址", field: "contactAddress" },
+        { title: "卡号/账号", field: "cardNumber" },
+        { title: "备注", field: "remark", width: 200, formatter: applyTitleAttribute },
+        { title: "创建时间", field: "createDate" }
+      ]],
+      onLoadSuccess: function (data) {
+        var hiddenRowIds = [];
+        var deleteRows = [];
+        var hiddenRows = parent.dataGrid0.datagrid('getRows');
+        if (hiddenRows && hiddenRows.length > 0) {
+          for (var i in hiddenRows) {
+            hiddenRowIds.push(hiddenRows[i].id);
+          }
+        }
+        for (var i in data.rows) {
+          if ($.inArray(data.rows[i].id, hiddenRowIds) >= 0) {
+            deleteRows.push(data.rows[i]);
+          }
+        }
+        for (var i in deleteRows) {
+          dataGrid.datagrid('deleteRow', dataGrid.datagrid('getRowIndex', deleteRows[i]));
+        }
+      }
+    });
+  }
+
+  function reloadDataGrid(goFirstPage) {
+    var queryParams = $('.search-box form').serializeJSON();
+    if (goFirstPage) {
+      /*从第一页开始显示*/
+      dataGrid.datagrid('load', queryParams);
+    } else {
+      /*停留在当前页面*/
+      dataGrid.datagrid('reload', queryParams);
+    }
+  }
+
+  function applyTitleAttribute(value) {
+    return '<span title="' + value + '">' + value + '</span>';
+  }
+</script>

@@ -1,0 +1,676 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>报告发放</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="plug-in/assets/js/jSignature.min.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <script type="text/javascript" src="plug-in/signature-canvas/jq-signature.min.js"></script> -->
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script>
+  <script src="./jSignature.min.js"></script>
+  <script src="./jqsigna.js"></script> -->
+  <style>
+    /* 自有样式及 样式覆盖 */
+    .layui-form-box {
+      margin-bottom: 50px;
+    }
+
+    .btnPrevNext {
+      text-align: right;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #fff;
+      padding: 10px 15px;
+      box-sizing: border-box;
+      z-index: 20;
+    }
+
+    #signature {
+      background: #fff;
+      border: 1px solid #666;
+    }
+
+    .jSignature {
+      height: 180px !important;
+    }
+
+    #sigImg {
+      width: 100%;
+      position: absolute;
+      /* background: #009f95; */
+
+    }
+
+    #sigImg img {
+      width: 100%;
+      height: 180px;
+      /* background: red; */
+    }
+
+    .choiceShow u {
+      margin-right: 5px;
+    }
+
+    .layui-form-select dl {
+      top: 25px;
+      min-width: 98%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="mailList" class="height-full">
+    <form class="layui-form" id="commonQueryForm">
+      <div class="layui-form-box">
+        <div class="layui-form-item">
+          <label class="layui-form-label">发放方式：</label>
+          <div class="layui-input-block" id="issueWayDiv">
+            <!-- 1:自取,2:代领,3:邮寄,4:传真 -->
+            <input class="layui-bg-blue" type="radio" lay-filter="issueWay" name="issueWay" value="1" title="自取"
+              checked>
+            <input class="layui-bg-blue" type="radio" lay-filter="issueWay" name="issueWay" value="3" title="邮寄">
+            <input class="layui-bg-blue" type="radio" lay-filter="issueWay" name="issueWay" value="4" title="传真">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">经办人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="operatorName" class="layui-input" lay-verify="required"
+              value="${LOCAL_CLINET_USER.realName }" autocomplete="off">
+            <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+            <input type="hidden" id="userName" value="${ LOCAL_CLINET_USER.realName }" />
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">发放日期：</label>
+          <div class="layui-input-block">
+            <input type="text" class="layui-input" name="issueDate" id="issueDate" placeholder="请选择发放日期"
+              lay-verify="required" autocomplete="off" readonly>
+          </div>
+        </div>
+        <div class="layui-form-item issueWay-one">
+          <label class="layui-form-label">领取人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="receiverone" placeholder="请输入领取人" class="layui-input" lay-verify="required"
+              autocomplete="off">
+          </div>
+        </div>
+        <div style="display:none" class="issueWay-four">
+          <div class="layui-form-item ">
+            <label class="layui-form-label">传真号：</label>
+            <div class="layui-input-block">
+              <input type="text" name="faxNumber" placeholder="请输入传真号" class="layui-input" lay-verify="required"
+                autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <div style="display:none" class="issueWay-three">
+          <div class="layui-form-item ">
+            <label class="layui-form-label">收件人：</label>
+            <div class="layui-input-block">
+              <input type="text" name="receiverthree" placeholder="请输入收件人" class="layui-input" lay-verify="required"
+                autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label">收件人电话：</label>
+            <div class="layui-input-block">
+              <input type="number" maxlength="11" name="receiverPhone" placeholder="请输入电话号码" class="layui-input"
+                autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label">邮寄地址：</label>
+            <div class="layui-input-block">
+              <input type="text" name="mailAddress" placeholder="请输入邮寄地址" class="layui-input" autocomplete="off">
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">邮寄公司：</label>
+            <div class="layui-input-block" id="mailCompanyDiv">
+              <select name="mailCompany">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
+          <div class="layui-form-item ">
+            <label class="layui-form-label">邮寄单号：</label>
+            <div class="layui-input-block">
+              <input type="text" name="mailNumber" placeholder="请输入邮寄单号" class="layui-input" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item ">
+          <label class="layui-form-label">备注：</label>
+          <div class="layui-input-block">
+            <input type="text" name="remark" placeholder="请输入备注" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+        <div class="layui-form-item" id="attachmentIdsDiv">
+          <label class="layui-form-label">附件：</label>
+          <div class="layui-input-block">
+            <span class="layui-color-blue choiceShow"></span>
+            <a id="uploadA" class="layui-btn layui-bg-blue layui-btn-xs">上传</a>
+          </div>
+        </div>
+        <br>
+        <div class="layui-form-item issueWay-one">
+          <label class="layui-form-label">领取人签名：</label>
+          <input id="signatureImageSrc" name="signatureImageSrc" type="hidden">
+          <div class="layui-input-block">
+            <div>
+              <div id="sigImg">
+                <img src="">
+              </div>
+              <div id="signature"></div>
+              <a class="layui-btn" onclick="InitObj.sigReset()">重置</a>
+            </div>
+          </div>
+        </div>
+        <br>
+      </div>
+      <div class="btnPrevNext">
+        <a class="layui-btn submit-cancel issueWay-threebtn" style="display:none" onclick="InitObj.print()">
+          打印邮寄单
+        </a>
+        <a class="layui-btn submit-cancel" onclick="InitObj.save()">
+          确定
+        </a>
+        <a class="layui-btn submit-cancel cancel" onclick="InitObj.cancel()">
+          取消
+        </a>
+      </div>
+    </form>
+  </div>
+  <!-- <a href="#" target="_blank" id="downloadFile" style="display:none"></a> -->
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer', 'upload'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        var upload = layui.upload;
+        laydate.render({
+          elem: '#issueDate',
+          trigger: 'click',
+          format: 'yyyy-MM-dd'
+        });
+        InitObj.init(form, upload)
+      })
+    })
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': []
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+    }
+
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      InitObj.addToForm(filesObj.files)
+    }
+
+    var InitObj = {
+      formLayerM: null, // form对象 
+      uploadLayerM: null, // upload对象 
+      issueId: GetQueryString("issueId"), // 发放报告id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      reportId: GetQueryString("reportId"), // 报告id
+      issueWayLen: GetQueryString("issueWayLen"), // 报告id
+      detailUrl: 'reportIssueController.do?getDetail', // 获取数据详情
+      saveUrl: 'reportIssueController.do?saveOrUpdate', // 获取数据详情
+      expressUrl: 'dictionaryController.do?getListByGroupId', // 获取快遞公司
+      isExpressUrl: true, // 是否第一次加载快递公司
+      issueWayOne: $('.issueWay-one'), // 自取
+      issueWayThree: $('.issueWay-three'), // 邮寄
+      issueWayThreeBtn: $('.issueWay-threebtn'), // 邮寄
+      issueWayFour: $('.issueWay-four'), // 传真
+      issueWayStatus: '1', // 发放方式状态
+      userId: $('#userId').val(),
+      userName: $('#userName').val(),
+      reportIds: [], // 报告id集合
+      attachmentIdsHtml: $('#attachmentIdsDiv .choiceShow'), // dom 报告文件集合,这里传commonAttachmentId
+      attachmentIds: [], // 附件id 集合
+      issueWayDiv: $('#issueWayDiv'), // 发放方式
+      operatorName: $('input[name="operatorName"]'),
+      issueDate: $('input[name="issueDate"]'),
+      receiverone: $('input[name="receiverone"]'),
+      faxNumber: $('input[name="faxNumber"]'),
+      receiverthree: $('input[name="receiverthree"]'),
+      receiverPhone: $('input[name="receiverPhone"]'),
+      mailAddress: $('input[name="mailAddress"]'),
+      mailCompany: $('select[name="mailCompany"]'),
+      mailNumber: $('input[name="mailNumber"]'),
+      remark: $('input[name="remark"]'),
+      receiverSignature: $('#signatureImageSrc'),
+      signEdit: true, // 画图板 编辑
+      sigdiv: $("#signature").jSignature(),
+      sigImg: $('#sigImg'),
+      fristConfirm: true, // 是否第一次提交 
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.uploadLayerM = upload;
+        this.styleLayout(form)
+        if (this.issueId) {
+          this.detailEdit();
+          this.detailDisplay()
+        } else { // 新增发放报告
+          this.reportIds = this.reportId.split(',')
+          // this.sigBox.show()
+          this.sigImg.hide()
+          if ('1' !== this.issueWayLen) {
+            this.issueWayDiv.find('input[value="1"]').attr('checked', false)
+            this.issueWayDiv.find('input[value="' + this.issueWayLen + '"]').attr('checked', true)
+          } else {
+            if (this.reportIds.length > 1) {
+              this.issueWayDiv.find('input[value="1"]').attr('checked', true).siblings().attr('checked', false)
+            }
+          }
+        }
+        $('#uploadA').bind('click', function () {
+          // fileUpload.js中的方法
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArr) {
+        var html = '';
+        this.attachmentIds = [];
+        for (var i = 0; i < filesArr.length; i++) {
+
+          this.attachmentIds.push(filesArr[i].id)
+          html += ' <u><a class="attachmentA layui-color-blue" target="_blank" href="' + filesArr[i].realpath +
+            '">' + filesArr[i].attachmenttitle + '</a> </u>'
+        }
+        this.attachmentIdsHtml.html(html);
+      },
+      // 获取快递公司回调
+      mailCompanyHtml: function (res, selected) {
+        var html = '',
+          that = InitObj;
+        if (res.success && res.obj) {
+          $.each(res.obj, function (i, v) {
+            if (selected === v.typename) {
+              html += '<option value="' + v.typename + '" selected >' + v.typename + '</option>'
+            } else {
+              html += '<option value="' + v.typename + '">' + v.typename + '</option>'
+            }
+          })
+        }
+        that.mailCompany.append(html)
+        that.formLayerM.render()
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务 
+          $('a').hide();
+          $('.attachmentA').show();
+          $('select').attr('disabled', true);
+          $("input").attr('readonly', true);
+          $("input[name='issueDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 画板重置
+      sigReset: function () {
+        if (this.issueId && this.signEdit) {
+          this.sigImg.html('')
+          this.signEdit = false;
+          this.receiverSignature.val('')
+        }
+        this.sigdiv.jSignature('reset')
+      },
+      // 画板url处理
+      dataURLtoFile: function (dataurl, filename) {
+        var arr = dataurl.split(','),
+          mime = arr[0].match(/:(.*?);/)[1],
+          bstr = atob(arr[1]),
+          n = bstr.length,
+          u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        // return new File([u8arr], filename, { type: mime });
+        return new File([u8arr], filename, {
+          type: mime
+        });
+      },
+      convertBase64UrlToBlob: function (urlData, filename) {
+
+        var bytes = window.atob(urlData.split(',')[1]); //去掉url的头，并转换为byte
+        var mime = urlData.split(',')[0].match(/:(.*?);/)[1];
+        //处理异常,将ascii码小于0的转换为大于0
+        var ab = new ArrayBuffer(bytes.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < bytes.length; i++) {
+          ia[i] = bytes.charCodeAt(i);
+        }
+
+        //  return new Blob( [ab] , {type : 'image/png'});
+        return new Blob([ab], {
+          type: mime
+        });
+      },
+      // 保存画板图片
+      saveSignature: function () {
+        var dataurl = this.sigdiv.jSignature('getData');
+        var fd = new FormData();
+        var that = this;
+        // fd.append('file', this.dataURLtoFile(dataurl, 'test.png'));
+        fd.append('file', this.convertBase64UrlToBlob(dataurl, 'test.png'));
+        $.ajax({
+          url: "uploadController.do?upload&folderId=",
+          type: "POST",
+          processData: false,
+          contentType: false,
+          data: fd,
+          dataType: 'json',
+          async: false,
+          success: function (data) {
+            if (data.obj[0] && data.obj[0].realpath) {
+              that.receiverSignature.val(data.obj[0].realpath)
+            }
+          }
+        });
+      },
+      // 编辑数据处理
+      detailEditData: function (data) {
+        this.reportIds.push(data.reportId)
+        this.formDisplay(data.issueWay, data.mailCompany)
+        this.operatorName.val(data.operatorName)
+        this.issueDate.val(new Date(data.issueDate).Format("yyyy-MM-dd"))
+        this.remark.val(data.remark)
+        this.receiverSignature.val(data.receiverSignature)
+        if (data.receiverSignature) {
+          this.sigImg.find('img').attr('src', data.receiverSignature);
+        } else {
+          this.sigImg.html('')
+        }
+        if ('1' === data.issueWay) {
+          this.receiverone.val(data.receiver)
+        } else if ('3' === data.issueWay) {
+          this.receiverthree.val(data.receiver)
+          this.receiverPhone.val(data.receiverPhone)
+          this.mailAddress.val(data.mailAddress)
+          this.mailNumber.val(data.mailNumber)
+          this.issueWayDiv.find('input[value="' + data.issueWay + '"]').attr('checked', true).siblings().attr(
+            'checked', false)
+        } else if ('4' === data.issueWay) {
+          this.faxNumber.val(data.faxNumber)
+          this.issueWayDiv.find('input[value="' + data.issueWay + '"]').attr('checked', true).siblings().attr(
+            'checked', false)
+        }
+        if (data.listFile && data.listFile.length > 0) {
+          var html = '';
+          for (var i = 0; i < data.listFile.length; i++) {
+            filesObj.files.push({
+              'id': data.listFile[i].id,
+              'realpath': data.listFile[i].url || '',
+              'attachmenttitle': data.listFile[i].title || ''
+            })
+            this.attachmentIds.push(data.listFile[i].id)
+            // html += '<p><a class="attachmentA layui-color-blue" target="_blank" href="' + data.listFile[i].url + '">' + data.listFile[i].title + '</a></p>';
+            html += '<u><a class="attachmentA layui-color-blue" target="_blank" href="' + data.listFile[i].url +
+              '">' + data.listFile[i].title + '</a> </u>';
+          }
+          this.attachmentIdsHtml.html(html)
+        } else {
+          this.attachmentIdsHtml.html('未上传附件')
+        }
+        this.detailDisplay()
+        this.formLayerM.render();
+      },
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, {
+          "issueId": this.issueId
+        }, this.detailEditCallback, false, true)
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          InitObj.detailEditData(res.obj)
+          return;
+        }
+      },
+      // 保存数据处理
+      saveData: function () {
+        var data = $('#commonQueryForm').serializeJSON();
+        var receiverData = {
+          '1': ['receiverone'],
+          '3': ['receiverthree'],
+        }
+        var formdata = {
+          issueWay: this.issueWayDiv.find('input:checked').val(),
+          operatorName: data.operatorName,
+          issueDate: data.issueDate,
+          remark: data.remark,
+        }
+
+        formdata.operatorId = (this.userName === data.operatorName ? this.userId : '')
+
+        if ('1' === this.issueWayStatus) {
+          formdata.receiverone = data.receiverone
+        } else if ('3' === this.issueWayStatus) {
+          formdata.receiverthree = data.receiverthree
+          formdata.receiverPhone = data.receiverPhone
+          formdata.mailCompany = data.mailCompany
+          formdata.mailAddress = data.mailAddress
+          formdata.mailNumber = data.mailNumber
+        } else if ('4' === this.issueWayStatus) {
+          formdata.faxNumber = data.faxNumber
+        }
+        if (this.dataRequired(formdata)) {
+          formdata.receiver = formdata[receiverData[this.issueWayStatus]]
+          var isEmpty = this.sigdiv.jSignature('getData', 'native').length;
+          if (isEmpty > 0) { // 是否有签名数据
+            this.saveSignature()
+          }
+          formdata.receiverSignature = this.receiverSignature.val();
+          delete formdata[receiverData[this.issueWayStatus]]
+          if (this.issueId) {
+            formdata.id = this.issueId
+          }
+          var saveParam = {
+            'reportIds': this.reportIds,
+            'attachmentIds': this.attachmentIds,
+            'reportIssueEntity': formdata
+          }
+          return saveParam
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      save: function () {
+        if (this.detail !== 'detailPage') {
+          var saveParam = this.saveData();
+          if (saveParam) {
+            if (this.fristConfirm) {
+              this.fristConfirm = !this.fristConfirm;
+              ajaxRequest(this.saveUrl, {
+                saveParamStr: JSON.stringify(saveParam)
+              }, this.saveAjaxCallback, true, true)
+            }
+          }
+        } else {
+          this.cancel()
+        }
+      },
+      // 保存报告回调
+      saveAjaxCallback: function (res, params) {
+        var that = InitObj, parentThat = parent.InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          layerAlertFun(res.msg, 6, []);
+          parentThat.reloadDataGrid(false);
+          if (params) {
+            // 数据保存成功，打印邮寄单
+            parentThat.printMailList();
+
+          }
+          that.cancel()
+          return;
+        }
+      },
+      // 点击取消 关闭弹出框
+      cancel: function () {
+        //假设这是iframe页
+        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        parent.layer.close(index); //再执行关闭 
+      },
+      // 打印邮寄单
+      print: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          // 保存报告
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm
+            ajaxRequest(this.saveUrl, {
+              saveParamStr: JSON.stringify(saveParam)
+            }, this.saveAjaxCallback, true, true, 'print')
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.operatorName) {
+          queryParams.msg = '经办人不能为空'
+          queryParams.element = this.operatorName
+          return false;
+        }
+        if (!queryParams.issueDate) {
+          queryParams.msg = '发放日期不能为空'
+          queryParams.element = this.issueDate
+          return false;
+        }
+        if ('1' === this.issueWayStatus && !queryParams.receiverone) {
+          queryParams.msg = '领取人不能为空'
+          queryParams.element = this.receiverone
+          return false;
+        }
+        if ('3' === this.issueWayStatus && !queryParams.receiverthree) {
+          queryParams.msg = '收件人不能为空'
+          queryParams.element = this.receiverthree
+          return false;
+        }
+        if ('3' === this.issueWayStatus) {
+          if (!queryParams.receiverthree) {
+            queryParams.msg = '收件人不能为空'
+            queryParams.element = this.receiverthree
+            return false;
+          }
+          if (!queryParams.receiverPhone) {
+            queryParams.msg = '收件人电话不能为空'
+            queryParams.element = this.receiverPhone
+            return false;
+          }
+          if (!queryParams.mailAddress) {
+            queryParams.msg = '邮寄地址不能为空'
+            queryParams.element = this.mailAddress
+            return false;
+          }
+          if (!queryParams.mailCompany) {
+            queryParams.msg = '邮寄公司不能为空'
+            queryParams.element = $('#mailCompanyDiv')
+            return false;
+          }
+        }
+        if ('4' === this.issueWayStatus && !queryParams.faxNumber) {
+          queryParams.msg = '传真号不能为空'
+          queryParams.element = this.faxNumber
+          return false;
+        }
+        if (queryParams.receiverPhone) {
+          var isPass = checkPhone(queryParams.receiverPhone)
+          if (!isPass) {
+            queryParams.msg = '电话号码有误，请重填';
+            queryParams.element = this.receiverPhone
+            return false;
+          }
+        }
+        return true;
+      },
+      formDisplay: function (status, mailCompany) {
+        this.issueWayStatus = status;
+        if ('1' === status) {
+          this.issueWayOne.show()
+          this.issueWayThree.hide()
+          this.issueWayThreeBtn.hide()
+          this.issueWayFour.hide()
+        } else if ('3' === status) {
+          this.issueWayOne.hide()
+          this.issueWayThree.show()
+          this.issueWayThreeBtn.show()
+          this.issueWayFour.hide()
+          // 获取快递公司
+          if (this.isExpressUrl) {
+            ajaxRequest(this.expressUrl, {
+              "dictGroupId": "402882206762317b0167626787270002"
+            }, this.mailCompanyHtml, false, true, mailCompany)
+            this.isExpressUrl = !this.isExpressUrl;
+          }
+        } else if ('4' === status) {
+          this.issueWayOne.hide()
+          this.issueWayThree.hide()
+          this.issueWayThreeBtn.hide()
+          this.issueWayFour.show()
+        }
+      },
+      styleLayout: function (form) {
+        var that = this;
+        form.on('radio(issueWay)', function (data) {
+          that.formDisplay(data.value)
+        });
+      },
+    }
+  </script>
+</body>
+
+</html>

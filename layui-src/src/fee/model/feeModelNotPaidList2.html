@@ -1,0 +1,1039 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<head>
+<script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+<script type="text/javascript">
+	//获得根目录
+	var strFullPath = window.document.location.href;
+	var strPath = window.document.location.pathname;
+	var pos = strFullPath.indexOf(strPath);
+	var prePath = strFullPath.substring(0, pos);
+	var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+	var path = prePath;
+	var directPath = strFullPath.substring(0,strFullPath.lastIndexOf("/")+1);
+	var basePath = prePath + postPath;
+	document.write("<script type='text/javascript' src='" + basePath + "/webpage/common/standardimport/standardimport.js'><\/script>");
+	document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/fee/model/feeModel.js'><\/script>");
+</script>
+<script type="text/javascript">
+		var dic = new Object();//数据字典的集合
+	/**初始化数据字典，和权限**/
+	$(document).ready(function(){
+	var _list = [];  
+	_list.push( "@bpm_status@");  
+	_list.push( "@feeStatus@");  
+	_list.push( "t_s_depart@id@departname");  
+	_list.push( "@feeType@");  
+
+	var json = new Object();//临时对象
+	json["list"]=JSON.stringify(_list);	
+	json["author"]="402882105ebd052e015ebd095c240001";	
+		$.ajax({  
+    		url:basePath+ '/systemController.do?getDictContent',  
+    		data: json,  
+    		dataType: "json",  
+    		type: "POST",  
+    		contentType: "application/x-www-form-urlencoded",
+    		//traditional: true,  
+    		success: function (responseJSON) {  
+        		dic = responseJSON.attributes;
+        		initForm();
+        		//getSearchFormInfo();
+    			}  
+			});
+			
+	 });
+	 function GetQueryString(name) {
+	     var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+	     var r = window.location.search.substr(1).match(reg);
+	     if(r!=null)return  unescape(r[2]); return null;
+	}
+	/**初始化列，easyui的datagrid方法，去的数据**/
+	var initForm= function() {
+		storage = $.localStorage;
+		if (!storage)
+			storage = $.cookieStorage; 
+		//easyui的datagrid
+		var status = GetQueryString('status');
+		var currentMouseOverDom = null;	// 当前鼠标移动到的对象
+		var tipMsgSetTimeOut;
+        $('#feeModelList').datagrid({
+			idField: 'id',
+			url : basePath + '/feeModelController.do?datagrid&field=id,unitId,bpmStatus,createName,createBy,updateName,updateBy,sysOrgCode,sysCompanyCode,createDate,updateDate,feeOrigin,feeTotal,feePaid,status,paymentCompany,consignUnitName,objectType,objectId,sn&status='+status,
+			fit : true,
+			loadMsg : " 数据加载中... ",
+			pageSize : 10,
+			pagination : true,
+			pageList : [ 10, 20, 30 ],
+			sortOrder : 'desc',
+			sortName:'createDate',
+			rownumbers : true,
+			singleSelect : false,
+			fitColumns : true,
+			scrollbarSize:0,
+			striped : true,
+			showFooter : true,
+			frozenColumns : [ [ {
+				field : 'ck',
+				checkbox : 'true'
+			},
+			] ],
+			columns : [ [ 
+			{
+				field : 'id',
+				title : '主键',
+				width : 120,
+				hidden : true,				sortable : true,
+			}
+			,
+			{
+				field : 'bpmStatus',
+				title : '流程状态',
+				width : 120,
+				hidden : true,				
+				sortable : true,
+				formatter : function(value, rec, index) {
+						if (value == undefined) return '';
+						var valArray = value.split(',');
+						var item = dic['bpm_status'];
+						if (valArray.length > 1) {
+							var checkboxValue = '';
+							for (var k = 0; k < valArray.length; k++) {
+								for(var h =0 ;h<item.length;h++){
+									if (valArray[k] == item[h].typecode) {
+										checkboxValue = checkboxValue + item[h].typename + ',';
+									}
+								}
+							}
+							return checkboxValue.substring(0, checkboxValue.length - 1);
+						} else {
+							for(var c =0 ;c<item.length;c++){
+									if (value == item[c].typecode) {
+										return item[c].typename ;
+									}
+								}
+						}
+					} 
+			}
+			,
+			
+			{
+				field : 'createName',
+				title : '创建人名称',
+				width : 120,
+				hidden : true,
+			}
+			,
+			
+			{
+				field : 'createBy',
+				title : '创建人登录名称',
+				width : 120,
+				hidden : true,
+			}
+			,
+			
+			{
+				field : 'updateName',
+				title : '更新人名称',
+				width : 120,
+				hidden : true,				
+			}
+			,
+			
+			{
+				field : 'updateBy',
+				title : '更新人登录名称',
+				width : 120,
+				hidden : true,				
+			}
+			,
+			
+			{
+				field : 'sysOrgCode',
+				title : '所属部门',
+				width : 120,
+				hidden : true,				
+			}
+			,
+			
+			{
+				field : 'sysCompanyCode',
+				title : '所属公司',
+				width : 120,
+				hidden : true,				
+			}
+			
+			,
+			{
+				field : 'sn',
+				title : '编号',
+				width : 120,
+				hidden : false
+			}
+			
+			/* ,
+			{
+				field : 'paymentCompany',
+				title : '缴费单位',
+				width : 150,
+				sortable : true
+			} */
+			,
+			{
+				field : 'consignUnitName',
+				title : '委托单位',
+				width : 300,
+				sortable : true
+			}
+			,
+			
+			{
+				field : 'updateDate',
+				title : '更新日期',
+				width : 120,
+				hidden : true,				
+				sortable : true,
+				formatter : function(value, rec, index) {
+							return new Date().format('yyyy-MM-dd', value);
+							}
+			}
+			,
+			
+			{
+				field : 'status',
+				title : '状态',
+				width : 80,
+				sortable : true,
+				hidden : true,	
+				formatter : function(value, rec, index) {
+						if (value == undefined) return '';
+						var valArray = value.split(',');
+						var item = dic['feeStatus'];
+						if (valArray.length > 1) {
+							var checkboxValue = '';
+							for (var k = 0; k < valArray.length; k++) {
+								for(var h =0 ;h<item.length;h++){
+									if (valArray[k] == item[h].typecode) {
+										checkboxValue = checkboxValue + item[h].typename + ',';
+									}
+								}
+							}
+							return checkboxValue.substring(0, checkboxValue.length - 1);
+						} else {
+							for(var c =0 ;c<item.length;c++){
+									if (value == item[c].typecode) {
+										return item[c].typename ;
+									}
+								}
+						}
+					} 
+			}
+			
+			,
+			{
+				field : 'feeTotal',
+				title : '应缴费用',
+				width : 120,
+				sortable : true
+			}
+			,
+			
+			{
+				field : 'feePaid',
+				title : '已缴费用',
+				width : 120,
+				hidden : true,	
+				sortable : true,
+			}
+			,
+			
+			{
+				field : 'objectType',
+				title : '缴费类型',
+				width : 100,
+				hidden : true,	
+				sortable : true,
+				formatter : function(value, rec, index) {
+						if (value == undefined) return '';
+						var valArray = value.split(',');
+						var item = dic['feeType'];
+						if (valArray.length > 1) {
+							var checkboxValue = '';
+							for (var k = 0; k < valArray.length; k++) {
+								for(var h =0 ;h<item.length;h++){
+									if (valArray[k] == item[h].typecode) {
+										checkboxValue = checkboxValue + item[h].typename + ',';
+									}
+								}
+							}
+							return checkboxValue.substring(0, checkboxValue.length - 1);
+						} else {
+							for(var c =0 ;c<item.length;c++){
+									if (value == item[c].typecode) {
+										return item[c].typename ;
+									}
+								}
+						}
+					} 
+			}
+			
+			,
+			{
+				field : 'createDate',
+				title : '生成日期',
+				width : 80,
+				hidden : false,				
+				sortable : true,
+				formatter : function(value, rec, index) {
+							return new Date().format('yyyy-MM-dd', value);
+				}
+			}
+			,
+			
+			{
+				field : 'objectId',
+				title : '关联对象',
+				width : 120,
+				hidden : true,				
+			}
+			,
+        {
+            field: 'opt',
+            title: '操作',
+            width: 100,
+            formatter: function(value, rec, index) {
+                if (!rec.id) {
+                    return '';
+                }
+                var href = '';
+             	var status  = GetQueryString("status");
+             	if(status == '3'){
+                	//href += "<a href='#'   class='ace_button'  onclick=goDetail('"+ rec.id + "')>  <i title='查看详情' class=' fa fa-list-alt'></i> ";
+                	href += '<a href="#"   class="ace_button"  onclick=\'goDetail("' + rec.id + '", "' + rec.objectId + '", "' + rec.objectType + '", "80%", "90%", "auto")\'>  <i title="查看详情" class=" fa fa-list-alt"></i> ';
+                	//href += '<a href="#"   class="ace_button"  onclick=\'goAddFeeItem("' + rec.id + '", "' + rec.objectId + '", "' + rec.objectType + '", "80%", "90%", "auto")\'>  <i title="新增收费" class=" fa fa-list-alt"></i> ';
+                	href += "</a>&nbsp;";
+                	//href += "<a href='#'   class='ace_button'  onclick=revoke('"+ rec.id + "')>  <i class=' fa fa-trash-o'></i> ";
+                	//href += "撤回</a>&nbsp;";	
+                }
+                var buttons = dic['buttons'];
+                if(buttons)
+                for(var i =0 ;i<buttons.length;i++){
+					href += "<a href='#'   class='ace_button'  onclick=doPpp('func','" + index + "')>  <i class=' fa fa-wrench'></i>";
+                	href += buttons[i].buttonName+"</a>&nbsp;";
+				}	
+                return href;
+            }
+        }
+			 ] ],
+			onLoadSuccess : function(data) {
+				$("#feeModelList").datagrid("clearSelections");
+				if (!false) {
+					if (data.total && data.rows.length == 0) {
+						var grid = $('#feeModelList');
+						var curr = grid.datagrid('getPager').data("pagination").options.pageNumber;
+						grid.datagrid({
+							pageNumber : (curr - 1)
+						});
+					}
+				}
+				
+				$(".datagrid-row").on("mouseover mouseout",function(){
+			  		if(event.type == "mouseover"){
+						clearTimeout(tipMsgSetTimeOut);	// 清空，重新计时
+						// 当前鼠标移动到的页面DOM对象
+						if(currentMouseOverDom != null){
+							$(currentMouseOverDom).removeAttr("id");
+						}
+						currentMouseOverDom = document.elementFromPoint(event.pageX,event.pageY);	
+						$(currentMouseOverDom).attr("id", "mouseOverDom");
+						
+						//console.info($("#mouseOverDom")); 
+						var attrValue = $(this).attr("datagrid-row-index");
+						tipMsgSetTimeOut=setTimeout("showFeeRecordDetail("+attrValue+")",1500);	// 1.5秒倒计时
+					
+					} else if(event.type == "mouseout"){
+						if(currentMouseOverDom != null){
+							$(currentMouseOverDom).removeAttr("id");
+							currentMouseOverDom = null;
+						}
+						clearTimeout(tipMsgSetTimeOut);	// 清空
+						layer.close(tipIndex);
+					}
+					
+			    });
+			},
+			onSelect: function(rowIndex,rowData){
+				var rows = $("#feeModelList").datagrid("getSelections");
+				if(rows.length > 0){// 多选时需做判断
+						
+						var consignUnit;
+						for(var i=0; i < rows.length; i++){
+							
+							// 委托单位不一致，不允许多选
+							if(i == 0){
+								consignUnit = rows[i].unitId;
+							} else {
+								var temp = rows[i].unitId;
+								if(consignUnit != temp){
+									$("#feeModelList").datagrid("unselectRow", rowIndex);
+									layer.msg('您所选的数据，包含多个单位，不能批量收费，请重新选择！', {icon: 2});
+									break;
+								}
+							}
+							
+							var type = rows[i].objectType;
+							// 合同费用不允许多选（取消当前选中的这一行）
+							if(type == 'FeeContract' && rows.length > 1){	
+								$("#feeModelList").datagrid("unselectRow", rowIndex);
+								//$("#feeModelList").datagrid("uncheckRow", rowIndex);
+								layer.msg('系统不支持对合同批量收费，请重新选择！', {icon: 2});
+								break;
+							}
+						}
+				}
+				
+			},
+			onDblClickRow:function(index,row){
+			    //layerCreateWindow('编辑','feeModelController.do?goUpdate&id='+row.id,['保存','关闭'],['80%','90%']);
+			    dbClick('委托收费','feeModelController.do?goUpdate&id='+row.id);
+			},
+			singleSelect:false
+		});
+		$('#feeModelList').datagrid('getPager').pagination({
+			beforePageText : '',
+			afterPageText : '/{pages}',
+			displayMsg : '{from}-{to}共 {total}条',
+			showPageList : true,
+			showRefresh : true
+		});
+		$('#feeModelList').datagrid('getPager').pagination({
+			onBeforeRefresh : function(pageNumber, pageSize) {
+				$(this).pagination('loading');
+				$(this).pagination('loaded');
+			}
+		});
+		try {
+			restoreheader();
+		} catch (ex) {}
+	};
+	
+	var tipIndex;
+	// 弹出提示信息，展示支付详情
+	function showFeeRecordDetail(index){
+		var feeModelList = $("#feeModelList").datagrid("getData");
+		var row = feeModelList.rows[index];
+		var consignUnitName = row.consignUnitName;
+		var feeTotal = row.feeTotal;
+		var objectType = row.objectType;
+		var id = row.id;
+		var msg = "<p>委托单位："+consignUnitName +"</p>";
+		$.get(basePath+"/feeModelController.do?doQueryFeeExtend", { id: id },function(data){
+				var jsonobj=eval("("+data+")");
+				if(objectType == 'FeeContract'){
+					msg += "<p>合同类型："+jsonobj.contractType+"</p>";
+					msg += "<p>合同名称："+jsonobj.contractName +"</p>"; 
+				} else if (objectType == 'FeeConsign'){
+					msg += "<p>合计金额："+row.feeOrigin+"</p>";
+					msg += "<p>优惠金额："+ (parseFloat(row.feeOrigin) - parseFloat(row.feeTotal)).toFixed(2) +"</p>";
+					msg += "<p>委托金额："+row.feeTotal+"</p>";
+					//TODO 现在下委托时还不能关联合同，暂时不能显示委托的合同 20180709
+				}
+				tipIndex = layer.tips(msg, '#mouseOverDom',  {tips: 1, time: 20000});
+			}
+		);
+	}
+	
+	function reloadTable() {
+		try{
+			$('#' + gridname).datagrid('reload');
+			$('#' + gridname).treegrid('reload');
+		}
+		catch(e){}
+	}
+	function reloadfeeModelList() {
+		$('#feeModelList').datagrid('reload');
+	}
+	function getfeeModelListSelected(field) {
+		return getSelected(field);
+	}
+	function getSelected(field) {
+		var row = $('#' + gridname).datagrid('getSelected');
+		if (row != null) {
+			value = row[field];
+		} else {
+			value = '';
+		}
+		return value;
+	}
+	function getfeeModelListSelections(field) {
+		var ids = [];
+		var rows = $('#feeModelList').datagrid('getSelections');
+		for (var i = 0; i < rows.length; i++) {
+			ids.push(rows[i][field]);
+		}
+		ids.join(',');
+		return ids
+	}
+	;
+	function getSelectRows() {
+		return $('#feeModelList').datagrid('getSelections');
+	}
+	function saveHeader() {
+		var columnsFields = null;
+		var easyextends = false;
+		try {
+			columnsFields = $('#feeModelList').datagrid('getColumns');
+			easyextends = true;
+		} catch (e) {
+			columnsFields = $('#feeModelList').datagrid('getColumnFields');
+		}
+		var cols = storage.get('feeModelListhiddenColumns');
+		var init = true;
+		if (cols) {
+			init = false;
+		}
+		var hiddencolumns = [];
+		for (var i = 0; i < columnsFields.length; i++) {
+			if (easyextends) {
+				hiddencolumns.push({
+					field : columnsFields[i].field,
+					hidden : columnsFields[i].hidden
+				});
+			} else {
+				var columsDetail = $('#feeModelList').datagrid("getColumnOption", columnsFields[i]);
+				if (init) {
+					hiddencolumns.push({
+						field : columsDetail.field,
+						hidden : columsDetail.hidden,
+						visible : (columsDetail.hidden == true ? false : true)
+					});
+				} else {
+					for (var j = 0; j < cols.length; j++) {
+						if (cols[j].field == columsDetail.field) {
+							hiddencolumns.push({
+								field : columsDetail.field,
+								hidden : columsDetail.hidden,
+								visible : cols[j].visible
+							});
+						}
+					}
+				}
+			}
+		}
+		storage.set('feeModelListhiddenColumns', JSON.stringify(hiddencolumns));
+	}
+	function isShowBut() {
+		var isShowSearchId = $('#isShowSearchId').val();
+		if (isShowSearchId == "true") {
+			$("#searchColums").hide();
+			$('#isShowSearchId').val("false");
+			$('#columsShow').remove("src");
+			$('#columsShow').attr("src", "plug-in/easyui/themes/default/images/accordion_expand.png");
+		} else {
+			$("#searchColums").show();
+			$('#isShowSearchId').val("true");
+			$('#columsShow').remove("src");
+			$('#columsShow').attr("src", "plug-in/easyui/themes/default/images/accordion_collapse.png");
+		}
+	}
+	function restoreheader() {
+		var cols = storage.get('feeModelListhiddenColumns');
+		if (!cols) return;
+		for (var i = 0; i < cols.length; i++) {
+			try {
+				if (cols.visible != false) $('#feeModelList').datagrid((cols[i].hidden == true ? 'hideColumn' : 'showColumn'), cols[i].field);
+			} catch (e) {}
+		}
+	}
+	function resetheader() {
+		var cols = storage.get('feeModelListhiddenColumns');
+		if (!cols) return;
+		for (var i = 0; i < cols.length; i++) {
+			try {
+				$('#feeModelList').datagrid((cols.visible == false ? 'hideColumn' : 'showColumn'), cols[i].field);
+			} catch (e) {}
+		}
+	}
+	function feeModelListsearch() {
+		try {
+			if (!$("#feeModelListForm").Validform({
+					tiptype : 3
+				}).check()) {
+				return false;
+			}
+		} catch (e) {}
+		if (true) {
+        		var queryParams = $('#feeModelList').datagrid('options').queryParams;
+				$('#feeModelListtb').find('*').each(function() {
+					queryParams[$(this).attr('name')] = $(this).val();
+				});
+				
+				var status = GetQueryString('status');
+       			$('#feeModelList').datagrid({
+					url :basePath+ '/feeModelController.do?datagrid&field=id,unitId,bpmStatus,createName,createBy,updateName,updateBy,sysOrgCode,sysCompanyCode,createDate,updateDate,feeOrigin,feeTotal,feePaid,status,paymentCompany,consignUnitName,objectType,objectId,sn&status='+status,
+					pageNumber : 1
+				});
+		}
+	}
+	function dosearch(params) {
+		var jsonparams = $.parseJSON(params);
+		$('#feeModelList').datagrid({
+			url : basePath+'/feeModelController.do?datagrid&field=id,unitId,bpmStatus,createName,createBy,updateName,updateBy,sysOrgCode,sysCompanyCode,createDate,updateDate,feeOrigin,feeTotal,feePaid,status,paymentCompany,consignUnitName,objectType,objectId,',
+			queryParams : jsonparams
+		});
+	}
+	function feeModelListsearchbox(value, name) {
+		var queryParams = $('#feeModelList').datagrid('options').queryParams;
+		queryParams[name] = value;
+		queryParams.searchfield = name;
+		$('#feeModelList').datagrid('reload');
+	}
+	$('#feeModelListsearchbox').searchbox({
+		searcher : function(value, name) {
+			feeModelListsearchbox(value, name);
+		},
+		menu : '#feeModelListmm',
+		prompt : '请输入查询关键字'
+	});
+	function EnterPress(e) {
+		var e = e || window.event;
+		if (e.keyCode == 13) {
+			feeModelListsearch();
+		}
+	}
+	function searchReset(name) {
+		$("#" + name + "tb").find(":input").val("");
+		var queryParams = $('#feeModelList').datagrid('options').queryParams;
+		
+		$('#feeModelListtb').find('*').each(function() {
+			queryParams[$(this).attr('name')] = $(this).val();
+		});
+		queryParams['query'] ='true';
+		
+		var status = GetQueryString('status');
+		$('#feeModelList').datagrid({
+			url : basePath+'/feeModelController.do?datagrid&field=id,unitId,bpmStatus,createName,createBy,updateName,updateBy,sysOrgCode,sysCompanyCode,createDate,updateDate,feeOrigin,feeTotal,feePaid,status,paymentCompany,consignUnitName,objectType,objectId,sn&status='+status,
+			pageNumber : 1
+		});
+	}
+	var getSearchFormInfo = function(){
+		var sb=$('#feeModelListForm').html();
+     	 		/*sb+= '<span style="display:-moz-inline-box;display:inline-block;"><span style="vertical-align:middle;display:-moz-inline-box;display:inline-block;width: 90px;text-align:right;text-overflow:ellipsis;-o-text-overflow:ellipsis; overflow: hidden;white-space:nowrap; " title="状态">状态：</span>';
+    		 
+					sb+='<select name="status" width="120" style="width: 120px"> <option value="">---请选择---</option> ';
+	     			var item = dic['feeStatus'];
+					for(var h =0 ;h<item.length;h++){
+						sb+='<option value="'+item[h].typecode+'">'+item[h].typename +'</option> ';
+						}	
+					sb+='</select>';
+					
+	   		sb+='</span>';	   	*/	
+	   		sb+='<span style="display:-moz-inline-box;display:inline-block;"><span style="vertical-align:middle;display:-moz-inline-box;display:inline-block;width: 90px;text-align:right;text-overflow:ellipsis;-o-text-overflow:ellipsis; overflow: hidden;white-space:nowrap; " title="委托单位">';
+          	sb+='委托单位:';
+          	sb+='</span>';
+          	sb+='<input onkeypress="EnterPress(event)" onkeydown="EnterPress()" type="text" name="paymentCompany" style="width: 120px" class="inuptxt">';
+          	sb+='</span>';
+	$('#feeModelListForm').html(sb);
+	}
+	/**
+	* 批量收费
+	*/
+	function doBitchFee(){
+		
+		//取得选中的所有费用
+		var selectItems = getSelectRows();
+		if(selectItems.length<=0){
+		 	layer.confirm('请勾选费用', { title: "错误" ,btn : [ '确定' ]}, function(index) {
+                layer.close(index);
+        	});
+        }
+        
+        var title = "委托收费";
+        if(selectItems.length==1 && selectItems[0].objectType == 'FeeContract') {
+        	title = "合同收费";
+        }
+        updateWithId(title,'feeModelController.do?goUpdate','feeModelList',870,600);
+        
+        //if(selectItems.length==1){
+        	//如果只有1条数据则，打开详情界面
+        	//updateWithId('委托收费','feeModelController.do?goUpdate','feeModelList',870,600);
+        /* } else{
+        	layer.confirm("您一共选择了"+selectItems.length+"条数据，确定要批量收费吗？",{title:"提示",btn:['确定','取消']},
+        		function(index){
+        			var json = new Object();//临时对象
+        			var loadindex = layer.load(1, {
+						shade: [0.1,'#fff'] //0.1透明度的白色背景
+					});
+					json["feeModels"]=JSON.stringify(selectItems);	
+					$.ajax({  
+		    		url:basePath+ '/feeModelController.do?doBitchFee',  
+		    		data: json,  
+		    		dataType: "json",  
+		    		type: "POST",  
+		    		contentType: "application/x-www-form-urlencoded",
+		    		success: function (response) {  
+		    			layer.close(loadindex);
+		    			layer.close(index);
+        				tip("收费成功");
+       					$("#feeModelList").datagrid('reload');
+		    		}  
+				},
+				function(index){
+					layer.close(index);
+				});
+       		}); 
+		}*/
+	}
+	
+	
+	/**
+	* 流程回退  -- 20190112 弃用， goRollbackPage代替
+	* weiheng 20180705
+	*/
+	function doBackProcess(){
+	
+		//取得选中的所有费用
+		var selectItems = getSelectRows();
+		if(selectItems.length<=0){
+		 	layer.confirm('请勾选费用', { title: "错误" ,btn : [ '确定' ]}, function(index) {
+            	layer.close(index);
+        	});
+        	return;
+        }
+
+		var consignIds = "";        
+        for(var i = 0; i < selectItems.length; i++){
+        	if(selectItems[i].objectType != "FeeConsign"){	// 委托费用
+        		continue;
+        	}
+        	if(i == 0){
+        		consignIds += selectItems[i].objectId;
+        	} else {
+        		consignIds += "," + selectItems[i].objectId;
+        	}
+        }
+        
+        $.ajax({  
+    		url:basePath+ '/feeModelController.do?doBackProcess',  
+    		data: {"consignIds":consignIds },  
+    		dataType: "json",  
+    		type: "POST",  
+    		success: function (response) {  
+   				tip(response.msg);
+   				$("#feeModelList").datagrid('reload');
+   			}  
+		});
+	}
+	
+	/**
+	* 撤销流程，既把已经提交的流程回退到当前节点，、
+	* 注意不允许跨步骤撤销，那样的话会引起混乱
+	*/
+     function revoke(id){
+		$.ajax({  
+    		url:basePath+ '/feeModelController.do?doRevoke',  
+    		data: {"id":id ,"taskName":"fee"},  
+    		dataType: "json",  
+    		type: "POST",  
+    		contentType: "application/x-www-form-urlencoded",
+    		//traditional: true,  
+    		success: function (response) {  
+        				tip(response.msg);
+        				$("#feeModelList").datagrid('reload');
+    			}  
+			});
+     }
+     
+     // 批量选择
+     function doBitchSelect(){
+     
+     	var row = $("#feeModelList").datagrid("getSelected");
+     	
+   		var data = $("#feeModelList").datagrid("getData");
+   		var rows = data.rows;
+   		
+     	if(row == null){	
+     		
+     		// 未选择，智能选择与第一条委托，单位相同的数据
+     		var unitId = "";
+     		for(var i=0; i< rows.length; i++){
+     			if(rows[i].objectType == 'FeeConsign' && unitId == ""){
+     				unitId = rows[i].unitId;
+     				var index = $("#feeModelList").datagrid("getRowIndex", rows[i]);
+     				$("#feeModelList").datagrid("selectRow", index);
+     			} else if(rows[i].objectType == 'FeeConsign' && rows[i].unitId == unitId){
+     				var index = $("#feeModelList").datagrid("getRowIndex", rows[i]);
+     				$("#feeModelList").datagrid("selectRow", index);
+     			}
+     		}
+     		
+     		/* // 未选择，智能选择委托单位相同数最多的
+     		var unitCount = {};
+     		for(var i=0; i< rows.length; i++){
+     			if (unitCount.hasOwnProperty(rows[i].unitId)) {
+     				unitCount[rows[i].unitId] = (parseInt(unitCount[rows[i].unitId]) + 1);
+     			} else {
+     				unitCount[rows[i].unitId] = 1;	// 不包含这个key
+     				continue;
+     			}
+     		}
+     		
+     		//console.info(unitCount);
+     		// 判断，取数量最多的委托单位
+     		var index = 0;
+     		var consignUnitId = "";
+     		var consignSize = 0;
+     		for(var key in unitCount){
+     			//console.info(key + ":" +  unitCount[key]);
+     			if(index == 0){	// 初始化
+     				consignUnitId = key;
+     				consignSize = parseInt(unitCount[key]);
+     			} else {
+     				if(parseInt(unitCount[key]) > consignSize){
+     					consignSize = parseInt(unitCount[key]);
+     					consignUnitId = key;
+     				}
+     			}
+     			index ++;
+     		}
+     		// 自动选择
+     		for(var i=0; i< rows.length; i++){
+     			if(rows[i].unitId == consignUnitId && rows[i].objectType == 'FeeConsign'){
+     				var index = $("#feeModelList").datagrid("getRowIndex", rows[i]);
+     				$("#feeModelList").datagrid("selectRow", index);
+     			}
+     		} */
+     		
+     	} else {	// 已选择了一个
+     		
+     		// 合同不允许多选（当前已勾选了一个合同）
+     		if(row.objectType == 'FeeContract') {
+     			tip('合同不能批量选择！');
+     			return;
+     		}
+     		
+     		var unitId = row.unitId;
+     		for(var i=0; i< rows.length; i++){
+     			if(rows[i].unitId == unitId && rows[i].objectType == 'FeeConsign') {	// 委托单位相同
+     				var index = $("#feeModelList").datagrid("getRowIndex", rows[i]);
+     				$("#feeModelList").datagrid("selectRow", index);
+     			}
+     		}
+     	
+     	}
+     }
+     
+</script>
+</head>
+<body class="self-noscroll">
+	<table width="100%" id="feeModelList"
+		toolbar="#feeModelListtb"></table>
+
+ <div id="feeModelListtb" style="padding:3px; height: auto">
+ 
+   <div name="searchColums" id="searchColums">
+    <input id="isShowSearchId" type="hidden" value="false" />
+    <input id="_sqlbuilder" name="sqlbuilder" type="hidden" />
+    <form onkeydown="if(event.keyCode==13){feeModelListsearch();return false;}" id="feeModelListForm">
+    
+	    <div hidden="hidden" id="advancedQuery">
+    		<span>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</span>
+		    	<span style="color: green;">高级查询</span>
+		    	&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+		    	<a href="#" class="easyui-linkbutton" plain="true" onclick="commonQuery()">切换到普通查询</a>
+    		<table>
+    			<tr>
+    				<td style="text-align: right;">编号：</td>
+    				<td colspan="2"><input type="text" name="consignCode" id="" kind="query" placeholder="" autocomplete="off" style="width: 200px"></td>
+    			</tr>
+    			<tr>
+    				<td style="text-align: right;">单位：</td>
+    				<td colspan="2"><input type="text" name="consignUnit" id="" kind="query" placeholder="" autocomplete="off" style="width: 400px"></td>
+    			</tr>
+    			<tr>
+    				<td style="text-align: right;">工程项目：</td>
+    				<td colspan="2"><input type="text" name="project" id="" kind="query" placeholder="" autocomplete="off" style="width: 400px"></td>
+    			</tr>
+    			<tr>
+    				<td style="text-align: right;">合同名称：</td>
+    				<td colspan="2"><input type="text" name="contractName" id="" kind="query" placeholder="" autocomplete="off" style="width: 400px"></td>
+    			</tr>
+    			<tr>
+    				<td style="text-align: right;">费用生成日期：</td>
+    				<td><input type="text" name="minCreateDate" kind="query" class="easyui-datebox" id="beginProduce" placeholder="" autocomplete="off" style="width: 200px"><span>~</span></td>
+	     			<td><input type="text" name="maxCreateDate" kind="query" class="easyui-datebox" id="endProduce" placeholder="" autocomplete="off" style="width: 200px"></td>	
+    			</tr>
+    			<tr>
+    				<td style="text-align: right;">收费日期：</td>
+    				<td><input type="text" name="minTransferSucTime" kind="query" class="easyui-datebox" id="beginCharge" placeholder="" autocomplete="off" style="width: 200px"><span>~</span></td>
+	     			<td><input type="text" name="maxTransferSucTime" kind="query" class="easyui-datebox" id="endCharge" placeholder="" autocomplete="off" style="width: 200px"></td>
+    			</tr>
+    		</table>
+    		<div>
+			<span>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</span>
+	   			<a href="#" class="easyui-linkbutton" iconcls="icon-search" onclick="feeModelListsearch()">查询</a>
+	   			&emsp;&emsp;&emsp;&emsp;&emsp;
+	   			<a href="#" class="easyui-linkbutton" iconcls="icon-reload" onclick="searchReset('feeModelList')">重置</a>
+		  	</div>    
+    	</div>
+	    <div id="commonQueryFrame">
+	    	<span>&emsp;&emsp;</span>
+          	     委托单位：<input id="commonQuery" onkeypress="EnterPress(event)" onkeydown="EnterPress()" type="text" name="paymentCompany" style="width: 200px">
+          	<span>&emsp;&emsp;</span><a href="#" class="easyui-linkbutton" iconcls="icon-search" onclick="feeModelListsearch()">查询</a>
+	     	<span>
+	     			&emsp;&emsp;<a href="#" class="easyui-linkbutton" plain="true"  onclick="expandAdvancedQuery()">切换到高级查询</a>
+	     	</span>
+     	</div>
+    </form>
+   </div>
+   <div style="height:30px;" class="datagrid-toolbar">
+   <span style="float:left;">
+ <!--   <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-add" onclick="addWithId('录入','feeModelController.do?goAdd','feeModelList',870,600)" id="">录入</a> -->
+  <!--   <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-edit" onclick="updateWithId('编辑','feeModelController.do?goUpdate','feeModelList',870,600)" id="">查看</a>-->
+   <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-edit" onclick="doBitchFee()" id="">收费</a>
+   <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-undo" onclick="goRollbackPage()" id="">回退</a>
+   <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-tip" onclick="doBitchSelect()" id="">批量选择</a>
+   <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-add" onclick="doNewCharge()" id="">新增收费</a>
+<!--    <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-remove" onclick="deleteALLSelect('批量删除','../../../../feeModelController.do?doBatchDel','feeModelList',null,null)" id="">批量作废</a> -->
+<!--    <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-search" onclick="detail('查看','feeModelController.do?goUpdate','feeModelList',870,600)" id="">查看</a> -->
+<!--    <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-put" onclick="ImportXls('导入','null','feeModelList',null,null)" id="">导入</a> -->
+   <!-- <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-putout" onclick="ExportXls('导出','feeModelList')" id="">导出</a> -->
+        <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-putout" onclick="ExportXls('导出','null','feeModelList',null,null)" id="">导出</a>
+<!--    <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-putout" onclick="ExportXlsByT('模板下载','null','feeModel',null,null)" id="">模板下载</a> -->
+   <!-- <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-print" onclick="detail('打印','feeModelController.do?print','feeModel',610,330)" id="">打印</a> -->
+   <!-- <a href="#" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-print" onclick="printDetail()" id="">打印费用明细</a> -->
+  <!--  <a href="#" type="export" class="easyui-linkbutton l-btn l-btn-plain" plain="true" icon="icon-back" onclick="doExport()" id="export">导出</a> -->
+   </span>
+   </div>
+  
+	
+</body>
+<script type="text/javascript">
+	 //展开高级查询
+	 function expandAdvancedQuery(){
+	 	$("#advancedQuery").removeAttr("hidden");
+	 	$("#commonQueryFrame").attr("hidden","hidden");
+	 	$("#commonQuery").val("");
+ 	}
+	function commonQuery(){
+	 	$("#advancedQuery").attr("hidden","hidden");
+	 	$("input[kind='query']").val("");
+	 	$("#commonQueryFrame").removeAttr("hidden");
+	 	searchReset('feeModelList');
+	 }
+    function printDetail(){
+      //打印报告领取单
+      var arr=$('#feeModelList').datagrid('getSelections');
+      if(arr.length!=1){
+         tip('请选择一条记录!');
+         return;
+      }
+	    window.open( 'udrController.do?openUdrCommonTemplate&&objectId='+arr[0].objectId+'&&type=feeDetailTable');    
+    }
+
+	function testReloadPage() {
+		document.location = "http://www.baidu.com";
+	}
+	function szqm(id) {
+		createwindow('审核', 'feeModelController.do?doCheck&id=' + id);
+	}
+	function addNewPage(id) {
+		addOneTab("TAB方式添加", "feeModelController.do?addTab&type=table&id=" + id);
+	}
+
+
+/**
+ * 添加事件打开窗口,带默认第二层 id的
+ * @param title 编辑框标题
+ * @param addurl//目标页面地址
+ */
+function addWithId(title, addurl, gname, width, height) {
+   // gridname = gname;
+    createActivitiWindow(title, addurl, width, height);
+}
+
+//updateWithId('委托收费','feeModelController.do?goUpdate','feeModelList',870,600);
+function updateWithId(title, url, id, width, height, isRestful) {
+
+    var rowsData = $('#' + id).datagrid('getSelections');
+    if (!rowsData || rowsData.length == 0) {
+        tip('请选择编辑项目');
+        return;
+    }
+    
+    var feeid = "";
+    if (rowsData.length > 1) {
+        for(var i = 0; i < rowsData.length; i++){
+        	if(i == (rowsData.length - 1)){
+        		feeid += rowsData[i].id;
+        	} else {
+	        	feeid += rowsData[i].id + ",";
+        	}
+        }
+    } else {
+    	feeid = rowsData[0].id;
+    }
+    
+    if (isRestful != 'undefined' && isRestful) {
+        url += '/' + rowsData[0].id;
+    } else {
+        url += '&id=' + feeid;
+    }
+    dbClick(title, url);
+   // layerCreateWindow(title,url,['保存','关闭'],['80%','90%']);
+    /* var index = layer.open({
+        type: 2,
+        title: title,
+        skin: 'layui-layer-molv',
+        content: url,
+        closeBtn: 0,
+        btn: ['提交', '保存','取消'],
+        area: ['80%', '90%'],
+        btn1:function (){
+        	 var body = layer.getChildFrame('body', index);
+	         $(body).find('#isSubmit').val('1');
+			 $(body).find('#btn_sub').trigger('click');
+        },
+        btn2:function (){
+        	 var body = layer.getChildFrame('body', index);
+			 $(body).find('#btn_sub').trigger('click');
+			 return false;
+        },
+        btn3:function (){
+          layer.close();
+        },
+    }); */
+}
+	//导入
+	function ImportXls() {
+		openuploadwin('Excel导入', 'feeModelController.do?upload', "feeModel");
+	}
+
+	//导出
+	function ExportXls() {
+		var queryParams = $('#feeModelList').datagrid('options').queryParams;
+			$('#feeModelListtb').find('*').each(function() {
+				//console.info($(this).attr('name')+"====="+$(this).val())
+				queryParams[$(this).attr('name')] = $(this).val();
+			});
+		var status = GetQueryString('status');
+		/* console.info(queryParams);
+		console.info(status); */
+		JeecgExcelExport("feeModelController.do?exportXls&status="+status, "feeModelList");
+	}
+
+	//模板下载
+	function ExportXlsByT() {
+		JeecgExcelExport("feeModelController.do?exportXlsByT", "feeModel");
+	}
+	/**
+	 * 获取表格对象
+	 * @return 表格对象
+	 */
+	function getDataGrid(){
+		var datagrid = $('#'+gridname);
+		return datagrid;
+	}
+</script>
+
+

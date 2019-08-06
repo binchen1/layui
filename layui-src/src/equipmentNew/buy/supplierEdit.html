@@ -1,0 +1,515 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增/编辑供应商</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/auditStaff.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type='text/javascript' src='webpage/com/hitek/common/upload//fileUpload.js'></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新增/编辑供应商</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" href="../../assets/css/auditStaff.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+
+  <style>
+    .layui-textarea {
+      margin-bottom: 6px;
+      min-height: 56px;
+    }
+
+    .row-header {
+      padding-left: 30px;
+      line-height: 30px;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed;
+    }
+
+    .row-bottom input {
+      margin-top: 10px;
+      width: 65px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <form class="layui-form layui-form-box" id="commonQueryForm">
+    <div class="layui-color-blue row-header">供应商联系信息</div>
+    <div class="layui-row">
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label"><span class="layui-color-red">* </span>名称：</label>
+          <div class="layui-input-block">
+            <input type="text" name="name" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">地址：</label>
+          <div class="layui-input-block">
+            <input type="text" name="site" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">联系人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="contacts" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">联系电话：</label>
+          <div class="layui-input-block">
+            <input type="text" name="tel" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">手机：</label>
+          <div class="layui-input-block">
+            <input type="text" name="mobile" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">邮编：</label>
+          <div class="layui-input-block">
+            <input type="text" name="postcode" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs12">
+        <div class="layui-form-item">
+          <label class="layui-form-label">经营内容：</label>
+          <div class="layui-input-block">
+            <textarea name="operationContent" class="layui-textarea" autocomplete="off"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs12">
+        <div class="layui-form-item">
+          <label class="layui-form-label">备注：</label>
+          <div class="layui-input-block">
+            <input type="text" name="remark" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+    <div class="layui-color-blue row-header">质保体系资料</div>
+    <div class="layui-row">
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">营业执照：</label>
+          <div class="layui-input-block">
+            <input type="hidden" name="1" class="layui-input" autocomplete="off">
+            <span class="layui-color-blue choiceShow"></span>
+            <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">税务登记证：</label>
+          <div class="layui-input-block">
+            <input type="hidden" name="2" class="layui-input" autocomplete="off">
+            <u class="layui-color-blue choiceShow"></u>
+            <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">产品认证：</label>
+          <div class="layui-input-block">
+            <input type="hidden" name="4" class="layui-input" autocomplete="off">
+            <u class="layui-color-blue choiceShow"></u>
+            <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">组织机构代码证：</label>
+          <div class="layui-input-block">
+            <input type="hidden" name="3" class="layui-input" autocomplete="off">
+            <u class="layui-color-blue choiceShow"></u>
+            <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">通过质保体系：</label>
+          <div class="layui-input-block">
+            <input type="hidden" name="5" class="layui-input" autocomplete="off">
+            <u class="layui-color-blue choiceShow"></u>
+            <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">其他：</label>
+          <div class="layui-input-block">
+            <input type="hidden" name="0" class="layui-input" autocomplete="off">
+            <u class="layui-color-blue choiceShow"></u>
+            <a class="uploadA layui-btn layui-btn-upload layui-btn-xs"><i class="iconfont icon-upload"></i>上传文件</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- 勿删 暂时保留 -->
+    <!-- <div class="layui-color-blue row-header">供应商评价(补)</div>
+    <div class="layui-row">
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">设备管理部门：</label>
+          <div class="layui-input-block">
+            <input type="number" name="name" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">评价人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="equipmentSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs12">
+        <div class="layui-form-item">
+          <label class="layui-form-label">评价：</label>
+          <div class="layui-input-block">
+            <textarea name="desc" class="layui-textarea" autocomplete="off"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">使用人：</label>
+          <div class="layui-input-block">
+            <input type="number" name="assetSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">评价人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="testManageSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs12">
+        <div class="layui-form-item">
+          <label class="layui-form-label">评价：</label>
+          <div class="layui-input-block">
+            <textarea name="desc" class="layui-textarea" autocomplete="off"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">业务处室负责人：</label>
+          <div class="layui-input-block">
+            <input type="number" name="assetSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs6">
+        <div class="layui-form-item">
+          <label class="layui-form-label">评价人：</label>
+          <div class="layui-input-block">
+            <input type="text" name="testManageSn" class="layui-input" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="layui-col-xs12">
+        <div class="layui-form-item">
+          <label class="layui-form-label">评价：</label>
+          <div class="layui-input-block">
+            <textarea name="desc" class="layui-textarea" autocomplete="off"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="row-bottom">
+        <span>综合平均得分</span>
+        <input type="text" name="testManageSn" class="layui-input" autocomplete="off">
+        <span>(相关人员输入评价得分后系统自动计算平均分)</span>
+      </div>
+
+    </div> -->
+
+  </form>
+  <script>
+    $(function () {
+      layui.use(['table', 'element', 'laydate', 'form'], function () {
+        var table = layui.table;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        InitObj.init(form)
+        //选完文件后不自动上传
+      })
+    })
+    // 保存文件已上传的文件 fileUpload.html需要数据
+    var filesObj = {
+      'files': []
+    };
+    // 上传文件回调 勿删
+    function uploadCallBack(res) {
+      console.log('uploadCallBack', res)
+      $.each(res, function (i, v) {
+        filesObj.files.push({
+          'id': v.id,
+          'realpath': v.realpath || '',
+          'attachmenttitle': v.attachmenttitle || ''
+        })
+      })
+      InitObj.addToForm(filesObj.files)
+    }
+
+    function downloadAccessory(accessoryId) {
+      window.open("uploadController.do?download&accessoryId=" + accessoryId);
+    }
+
+    function deleteAccessory(accessoryId) {
+      for (var i = 0; i < filesObj.files.length; i++) {
+        if (accessoryId === filesObj.files[i].id) {
+          filesObj.files.splice(i, 1);
+          break;
+        }
+      }
+      InitObj.addToForm(filesObj.files)
+    }
+    var InitObj = {
+      formLayerM: null, // form对象 
+      detailUrl: 'supplierController.do?getById', // 查看详情url
+      saveUrl: 'equipmentNewController.do?saveSupplier', // 新增申请url
+      editId: GetQueryString("editId"), // 获取父页面传递过来的编辑id
+      detail: GetQueryString("detail"), // 获取父页面传递过来的编辑id
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      fristConfirm: true, //是否第一次点击提交
+      fileGroup: {
+        "0": { "tEqFileVos": [], "files": [] }, "1": { "tEqFileVos": [], "files": [], "numbers": 1 },
+        "2": { "tEqFileVos": [], "files": [], "numbers": 1 }, "3": { "tEqFileVos": [], "files": [], "numbers": 1 },
+        "4": { "tEqFileVos": [], "files": [], "numbers": 1 }, "5": { "tEqFileVos": [], "files": [], "numbers": 1 }
+      },
+      fileU: null,
+      fileName: '',
+      init: function (form, upload) {
+        this.formLayerM = form;
+        this.styleLayout(form);
+        if (this.editId) {
+          this.detailEdit();
+
+        }
+        var that = this;
+        form.render();
+        $('.uploadA').bind('click', function () {
+          var names = that.fileName = $(this).siblings('input').attr('name');
+          that.fileU = $(this).siblings('.choiceShow');
+          filesObj.files = that.fileGroup[names + ''].files;
+          filesObj.numbers = that.fileGroup[names + ''].numbers;
+          // fileUpload.js中的方法
+          goUploadPage('', 'deleteAccessory', 'downloadAccessory');
+        })
+      },
+      // 上传文件后处理数据
+      addToForm: function (filesArrs) {
+        console.log('filesArr', filesArrs)
+        if (filesObj.numbers) {
+          var filesArr = filesArrs.slice(-filesObj.numbers);
+        } else {
+          var filesArr = filesArrs;
+        }
+        var html = '';
+        // this.fileGroup[this.fileName+''].files = [];
+        this.fileGroup[this.fileName + ''].files = filesArr;
+        this.fileGroup[this.fileName + ''].tEqFileVos = [];;
+        for (var i = 0; i < filesArr.length; i++) {
+          this.fileGroup[this.fileName + ''].tEqFileVos.push({ "attachmentId": filesArr[i].id })
+          html += '<u><a class="attachmentA layui-color-blue" target="_blank" href="' + filesArr[i].realpath +
+            '">' + filesArr[i].attachmenttitle + '</a></u>&nbsp;&nbsp;'
+        }
+        this.fileU.html(html);
+      },
+      // 详情页面按钮隐藏,输入框只读
+      detailDisplay: function () {
+        if (this.detail === 'detailPage') {
+          // 处理报告详情及检测任务
+          $('a').hide();
+          $("input").attr('readonly', true);
+          $("input[name='archiveDate']").attr('disabled', true)
+          $(':radio:checked').attr('disabled', false).siblings().attr('disabled', true)
+        }
+      },
+      // 详情页面数据处理
+      detailEditData: function (data) {
+        console.log('detailEditData', data)
+        $('input[name="name"]').val(data.name);
+        $('input[name="site"]').val(data.site);
+        $('input[name="contacts"]').val(data.contacts);
+        $('input[name="tel"]').val(data.tel);
+        $('input[name="mobile"]').val(data.mobile);
+        $('input[name="postcode"]').val(data.postcode);
+        $('input[name="operationContent"]').val(data.operationContent);
+        // 查看图片信息
+
+        this.formLayerM.render();
+        this.detailDisplay();
+      },
+      // 查看报告详情ajax回调
+      filesCallback: function (res) {
+        console.log(res)
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          if ( res.obj.length > 0) {
+            console.log(res)
+            var filesArr = res.obj;
+            for (var i = 0; i < filesArr.length; i++) {
+              var files = [];
+              that.fileName = filesArr[i].relationFunctionFileType;
+              that.fileU = $('input[name="' + that.fileName + '"]').siblings('.choiceShow')
+              // var tEqFileVos = that.fileGroup[filesArr[i].relationFunctionFileType].tEqFileVos = [];
+              for (var j = 0; j < filesArr[i].tEqFileVos.length; j++) {
+                files.push({
+                  'id': filesArr[i].tEqFileVos[j].attachmentId,
+                  'realpath': filesArr[i].tEqFileVos[j].url || '',
+                  'attachmenttitle': filesArr[i].tEqFileVos[j].name || ''
+                })
+              }
+              // that.fileGroup[that.fileName].tEqFileVos = files;
+              that.addToForm(files)
+            }
+            return;
+          } 
+        }
+      },
+      // 查看报告详情ajax回调
+      detailEditCallback: function (res) {
+        console.log(res)
+        var that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          that.detailEditData(res.obj);
+          return;
+        }
+      },
+      // 查看详情
+      detailEdit: function () {
+        ajaxRequest(this.detailUrl, { "id": this.editId }, this.detailEditCallback, false, true)
+        ajaxRequest('eqFileController.do?getFileGroupByRelationEntityId', { "relationEntityId": this.editId }, this.filesCallback, false, true);
+
+      },
+      fileGroupFun: function () {
+        console.log('fileGroup', this.fileGroup)
+        var fileGroupArr = [];
+        for (var key in this.fileGroup) {
+          fileGroupArr.push({ "relationFunctionFileType": key, "tEqFileVos": this.fileGroup[key].tEqFileVos })
+        }
+        console.log('fileGroupArr', fileGroupArr)
+        return JSON.stringify(fileGroupArr)
+      },
+      openCallback: function () {
+        var saveParam = this.saveData();
+        if (saveParam) {
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            if (this.editId) {
+              saveParam.id = this.editId;
+            }
+            saveParam.fileGroupStr = this.fileGroupFun();
+            delete saveParam['0'];
+            delete saveParam['1'];
+            delete saveParam['2'];
+            delete saveParam['3'];
+            delete saveParam['4'];
+            delete saveParam['5'];
+            ajaxRequest(this.saveUrl, saveParam, this.saveAjaxCallback, true, true)
+          }
+        }
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.name) {
+          queryParams.msg = '设备名称不能为空';
+          queryParams.element = $('input[name="name"]');
+          return false;
+        }
+        return true;
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = $('#commonQueryForm').serializeJSON();
+        console.log('saveData', formdata)
+        if (this.dataRequired(formdata)) {
+          if (this.editId) {
+            formdata.id = this.editId;
+          }
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var parentThat = parent.InitObj, that = InitObj;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          that.fristConfirm = !that.fristConfirm;
+          return;
+        } else {
+          parent.layer.close(that.parentIndex); //再执行关闭 
+          parentThat.reloadDataGrid(false);
+          parent.layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      // 样式布局控制
+      styleLayout: function (form) {
+        var that = this;
+      }
+    }
+  </script>
+</body>
+
+</html>

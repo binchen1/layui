@@ -1,0 +1,395 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+  pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>打印邮寄单</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建报告</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    /* 自有样式及 样式覆盖 */
+    .btnPrevNext .layui-btn {
+      background: #1e9fff;
+      color: #fff;
+      height: 30px;
+      line-height: 30px;
+      padding: 0 6px;
+    }
+
+    .btnPrevNext .layui-btn.nomore {
+      background: #aabbc7;
+    }
+
+    .layui-form-label {
+      width: 100px;
+    }
+    .layui-form-select dl {
+      top:25px;
+      min-width:98%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="mailList" style="height:100%;">
+    <form class="layui-form layui-form-box">
+      <div class="layui-form-item" id="reportIdsDiv">
+        <label class="layui-form-label">报告编号：</label>
+        <div class="layui-input-block">
+          <span id="reportSnSpan">BG-2018-SNJ-00001; BG-2018-SNJ-00002</span>
+        </div>
+      </div>
+      <div class="layui-form-item ">
+        <label class="layui-form-label">经办人：</label>
+        <div class="layui-input-block">
+          <input type="hidden" id="operatorIdHidden" value="">
+          <input type="text" id="operatorNameInput" name="operatorName" placeholder="请输入姓名" class="layui-input"
+            autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">发放日期：</label>
+        <div class="layui-input-block">
+          <input type="text" class="layui-input" id="issueDateInput" name="issueDate" placeholder="请选择发放日期"
+            autocomplete="off" readonly>
+        </div>
+      </div>
+
+      <div class="layui-form-item ">
+        <label class="layui-form-label">收件人：</label>
+        <div class="layui-input-block">
+          <input type="text" id="receiverInput" name="receiver" placeholder="请输入收件人" class="layui-input"
+            autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item ">
+        <label class="layui-form-label">收件人电话：</label>
+        <div class="layui-input-block">
+          <input type="number" maxlength="11" id="receiverPhoneInput" name="receiverPhone" placeholder="请输入电话号码"
+            class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item ">
+        <label class="layui-form-label">邮寄地址：</label>
+        <div class="layui-input-block">
+          <input type="text" id="mailAddressInput" name="mailAddress" placeholder="请输入邮寄地址" class="layui-input"
+            autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">邮递公司：</label>
+        <div class="layui-input-block" id="mailCompanyDiv">
+          <select name="mailCompany" id="mailCompanySelect">
+            <option value="">请选择</option>
+            <!-- <option value="顺丰速运">顺丰速运</option>
+            <option value="邮政EMS">邮政EMS</option>
+            <option value="圆通快递">圆通快递</option>
+            <option value="申通快递">申通快递</option>
+            <option value="韵达快递">韵达快递</option>
+            <option value="汇通快递">汇通快递</option>
+            <option value="中通快递">中通快递</option>
+            <option value="宅急送">宅急送</option>
+            <option value="天天快递">天天快递</option> -->
+          </select>
+        </div>
+      </div>
+
+      <div class="layui-form-item ">
+        <label class="layui-form-label">邮寄单号：</label>
+        <div class="layui-input-block">
+          <input type="text" id="mailNumberInput" name="mailNumber" placeholder="请输入邮寄单号" class="layui-input"
+            autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item ">
+        <label class="layui-form-label">备注：</label>
+        <div class="layui-input-block">
+          <input type="text" id="remarkInput" name="remark" placeholder="请输入备注" class="layui-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="btnPrevNext" style="text-align: right">
+        <a id="prePageButton" class="layui-btn layui-btn-disabled nomore" onclick="">
+          <i class="layui-icon">&#xe65a;</i> 上一条
+        </a>
+        <a id="nextPageButton" class="layui-btn layui-btn-disabled nomore" onclick="">
+          下一条 <i class="layui-icon">&#xe65b;</i>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        laydate.render({
+          elem: '#issueDateInput'
+          , trigger: 'click'
+          , format: 'yyyy-MM-dd'
+        });
+        InitObj.initFunc(form);
+      })
+    })
+
+    //分组后的报告集合(按单位+项目分组)
+    var reportGroup = [];
+    var pageIndex = 1;
+
+    //初始化对象
+    var InitObj = {
+      reportStr: GetQueryString('strParam'),
+      reportArr: JSON.parse(decodeURI(GetQueryString('strParam'))),
+      expressUrl: 'dictionaryController.do?getListByGroupId', // 获取快遞公司
+      reportIds: [],    // 报告ID
+      formLayerM: null,
+      saveUrl: "reportIssueController.do?batchSave",
+      fristConfirm: true, //是否第一次点击提交
+      //初始化方法,主要是对传入的报告信息进行分组
+      initFunc: function (form) {
+        this.formLayerM = form;
+        this.beGroup();
+        this.drawPage(pageIndex);
+        ajaxRequest(this.expressUrl, { "dictGroupId": "402882206762317b0167626787270002" }, this.mailCompanyHtml, false, true)
+      },
+      // 获取快递公司回调
+      mailCompanyHtml: function (res) {
+        console.log('mailCompanyHtml', res)
+        var html = ''
+        if (res.success && res.obj) {
+          $.each(res.obj, function (i, v) {
+            html += '<option value="' + v.typename + '">' + v.typename + '</option>'
+          })
+        }
+        $('#mailCompanySelect').append(html)
+        InitObj.formLayerM.render()
+      },
+
+      //上一页
+      prepage: function () {
+        //保存本页的数据
+        this.pageToObject();
+        //渲染上一页
+        pageIndex--;
+        console.log('第' + pageIndex + '页');
+        this.drawPage(pageIndex);
+        console.log(reportGroup);
+      },
+
+      //下一页
+      nextPage: function () {
+        //保存本页的数据
+        this.pageToObject();
+        //渲染下一页
+        pageIndex++;
+        console.log('第' + pageIndex + '页');
+        this.drawPage(pageIndex);
+        console.log(reportGroup);
+      },
+
+      //保存本页数据
+      pageToObject: function () {
+        var nowGroup = reportGroup[pageIndex - 1];
+        nowGroup.reportIssueEntity.operatorName = $("#operatorNameInput").val();
+        nowGroup.reportIssueEntity.operatorId = $("#operatorIdHidden").val();
+        nowGroup.reportIssueEntity.issueDate = $("#issueDateInput").val();
+        nowGroup.reportIssueEntity.receiver = $("#receiverInput").val();
+        nowGroup.reportIssueEntity.receiverPhone = $("#receiverPhoneInput").val();
+        nowGroup.reportIssueEntity.mailAddress = $("#mailAddressInput").val();
+        nowGroup.reportIssueEntity.mailCompany = $("#mailCompanySelect").val();
+        nowGroup.reportIssueEntity.mailNumber = $("#mailNumberInput").val();
+        nowGroup.reportIssueEntity.remark = $("#remarkInput").val();
+      },
+
+      //渲染指定页的数据
+      drawPage: function (pgIndex) {
+        var aGroup = reportGroup[pgIndex - 1];//console.log(aGroup);
+        $("#reportSnSpan").html(aGroup.reportSn.join());
+        $("#operatorNameInput").val(aGroup.reportIssueEntity.operatorName);
+        $("#operatorIdHidden").val(aGroup.reportIssueEntity.operatorId);
+        $("#issueDateInput").val(aGroup.reportIssueEntity.issueDate);
+        $("#receiverInput").val(aGroup.reportIssueEntity.receiver);
+        $("#receiverPhoneInput").val(aGroup.reportIssueEntity.receiverPhone);
+        $("#mailAddressInput").val(aGroup.reportIssueEntity.mailAddress);
+        $("#mailCompanySelect").val(aGroup.reportIssueEntity.mailCompany);
+        $("#mailNumberInput").val(aGroup.reportIssueEntity.mailNumber);
+        $("#remarkInput").val(aGroup.reportIssueEntity.remark);
+        //按钮状态
+        if (reportGroup.length <= 1) { return; }
+        if (pgIndex >= reportGroup.length) {
+          $("#prePageButton").attr("class", "layui-btn");
+          $("#prePageButton").attr("onclick", "InitObj.prepage()");
+          $("#nextPageButton").attr("class", "layui-btn layui-btn-disabled nomore");
+          $("#nextPageButton").attr("onclick", "");
+        } else if (pgIndex <= 1) {
+          $("#prePageButton").attr("class", "layui-btn layui-btn-disabled nomore");
+          $("#prePageButton").attr("onclick", "");
+          $("#nextPageButton").attr("class", "layui-btn");
+          $("#nextPageButton").attr("onclick", "InitObj.nextPage()");
+        } else {
+          $("#prePageButton").attr("class", "layui-btn");
+          $("#prePageButton").attr("onclick", "InitObj.prepage()");
+          $("#nextPageButton").attr("class", "layui-btn");
+          $("#nextPageButton").attr("onclick", "InitObj.nextPage()");
+        }
+        //从新渲染表单
+        this.formLayerM.render();
+      },
+
+      //对报告进行分组
+      beGroup: function () {
+        var reportArray = this.reportArr;//console.log(reportArray);               
+        var map = {};
+        for (var i = 0; i < reportArray.length; i++) {
+          var ai = reportArray[i];
+          if (!map[ai.key]) {
+            this.reportIds.push(ai.reportId);
+            reportGroup.push({
+              key: ai.key,
+              reportIds: [ai.reportId],
+              reportSn: [ai.reportSn],
+              reportIssueEntity: {
+                issueWay: "3",
+                operatorId: "",
+                operatorName: "",
+                issueDate: "",
+                receiver: "",
+                receiverPhone: "",
+                mailAddress: "",
+                mailCompany: "",
+                mailNumber: "",
+                remark: ""
+              }
+            });
+            map[ai.key] = ai;
+          } else {
+            for (var j = 0; j < reportGroup.length; j++) {
+              var dj = reportGroup[j];
+              if (dj.key == ai.key) {
+                dj.reportIds.push(ai.reportId);
+                dj.reportSn.push(ai.reportSn);
+                break;
+              }
+            }
+          }
+        }
+        console.log(reportGroup);
+      },
+
+      //窗口点击确定调用的方法
+      openCallback: function () {
+        /* var parentThat = parent.InitObj;
+        parentThat.printMailList();
+        return; */
+        //保存当前页面数据到对象,避免最后一页没有被写入对象的情况
+        this.pageToObject();
+        //循环检查多组对象的必填项,如果没有填,跳转那一页填入
+        var checkObj = this.dataRequired(reportGroup);
+        if (!checkObj.isSucc) {
+          pageIndex = checkObj.idx + 1;
+          this.drawPage(pageIndex);
+        } else {
+          //提交数据
+          if (this.fristConfirm) {
+            this.fristConfirm = !this.fristConfirm;
+            ajaxRequest(this.saveUrl, { batchSaveParamStr: JSON.stringify(reportGroup) }, this.saveCallBack, true, true);
+          }else{
+            SHOW_LOAD_LAYER('数据提交中...')
+          }
+        }
+        return false;
+      },
+      //保存回调
+      saveCallBack: function (res) {
+        var that = InitObj,parentThat = parent.InitObj;
+        that.fristConfirm = !that.fristConfirm;
+        // 打印邮寄单
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        }else{
+          layerAlertFun(res.msg, 6, []);
+          parentThat.printMailList();
+          parentThat.reloadDataGrid(false);
+        }
+      },
+
+      // 表单数据必填项
+      dataRequired: function (reportGroup) {
+        var checkObj = { isSucc: true, idx: -1 };
+        for (var i = 0; i < reportGroup.length; i++) {
+          var aGroup = reportGroup[i];
+          checkObj.idx = i;
+          if (!aGroup.reportIssueEntity.operatorName) {
+            // layer.msg('经办人不能为空');
+            checkObj.isSucc = false;
+            formTipFun('经办人不能为空', $('input[name="operatorName"]'))
+            return checkObj;
+          }
+          if (!aGroup.reportIssueEntity.issueDate) {
+            checkObj.isSucc = false;
+            formTipFun('发放日期不能为空', $('input[name="issueDate"]'))
+            return checkObj;
+          }
+          if (!aGroup.reportIssueEntity.receiver) {
+            checkObj.isSucc = false;
+            formTipFun('收件人不能为空', $('input[name="receiver"]'))
+            return checkObj;
+          }
+          if (!aGroup.reportIssueEntity.receiverPhone) {
+            checkObj.isSucc = false;
+            formTipFun('收件人电话不能为空', $('input[name="receiverPhone"]'))
+            return checkObj;
+          }
+          if (!aGroup.reportIssueEntity.mailAddress) {
+            checkObj.isSucc = false;
+            formTipFun('邮寄地址不能为空', $('input[name="mailAddress"]'))
+            return checkObj;
+          }
+          if (!aGroup.reportIssueEntity.mailCompany) {
+            checkObj.isSucc = false;
+            formTipFun('邮寄公司不能为空', $('#mailCompanyDiv'))
+            return checkObj;
+          }
+          if (aGroup.reportIssueEntity.receiverPhone) {
+            var isPass = checkPhone(aGroup.reportIssueEntity.receiverPhone)
+            if (!isPass) {
+              checkObj.isSucc = false;
+              formTipFun('电话号码有误，请重填', $('input[name="receiverPhone"]'))
+              return checkObj;
+            }
+          }
+        }
+        return checkObj;
+      }
+    }
+
+  </script>
+</body>
+
+</html>

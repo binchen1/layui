@@ -1,0 +1,264 @@
+<%@ page language="java" import="java.util.*" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+
+<script type="text/javascript">
+
+  var setting = {
+    check: {
+      enable: true
+    },
+    data: {
+      simpleData: {
+        enable: true
+      }
+    },
+    async: {
+      enable: true,
+      url: "roleController.do?setAuthority&roleId=${roleId}",
+      dataFilter: filter
+    },
+    callback: {
+      beforeAsync: function () { },
+      onAsyncSuccess: function (event, treeId, treeNode, msg) {
+        //将已选中子节点的父节点设置为选中状态,即级联父级
+				/*var zTree = $.fn.zTree.getZTreeObj("functionid");				
+				var node = zTree.getCheckedNodes(true);
+				var pnode = null; 
+				for ( var i = 0; i < node.length; i++) {
+					pnode = node[i].getParentNode();
+					while (pnode != null) {
+						pnode.checked = true;
+						zTree.updateNode(pnode);
+						pnode = pnode.getParentNode();
+					}			
+				}*/
+        expandAll();
+      },
+      onAsyncError: function () { },
+      onClick: function (event, treeId, treeNode) {
+        console.info(treeNode.id + ", " + treeNode.tId + ", " + treeNode.name + ", " + treeNode.children);
+        if (null !== treeNode.children) {
+          var roleId = $("#rid").val();
+
+          $('#operationListpanel').panel(
+            "refresh",
+            "roleController.do?operationListForFunction&functionId=" + treeNode.id + "&roleId=" + roleId);
+          $('#dataRuleListpanel').panel(
+            "refresh",
+            "roleController.do?dataRuleListForFunction&functionId=" + treeNode.id + "&roleId=" + roleId);
+
+          // $(".easyui-layout").layout('expand', 'east');
+          $('#operationDetailpanel').panel(
+            "refresh", "roleController.do?goExecFunctionRole&functionId=" + treeNode.id + "&roleId=" + roleId);
+        }
+      }
+    }
+  };
+
+
+  function filter(treeId, parentNode, childNodes) {
+    // console.log(treeId, parentNode, childNodes)
+    if (!childNodes) return null;
+    for (var i = 0, l = childNodes.length; i < l; i++) {
+      childNodes[i].name = childNodes[i].text;
+      //childNodes[i].open = (childNodes[i].state === "open");//异步加载，该项无效
+      if (childNodes[i].children != null) {
+        childNodes[i].nodes = childNodes[i].children;
+        filter(null, childNodes[i], childNodes[i].nodes);//递归设置子节点
+      }
+    }
+    return childNodes;
+  }
+  $(function () {
+
+    $.fn.zTree.init($("#functionid"), setting);
+
+    $("#functionListPanel").panel({
+      title: '<t:mutiLang langKey="menu.list"/>',
+      tools: [{
+        iconCls: 'icon-save',
+        handler: function () {
+          mysubmit();
+        }
+      }]
+    });
+    $("#operationListpanel").panel({
+      title: '<t:mutiLang langKey="operate.manage"/>',
+      tools: [{
+        iconCls: 'icon-save',
+        handler: function () {
+          submitOperation();
+        }
+      }]
+    });
+
+    $("#dataRuleListpanel").panel({
+      title: '数据规则权限',
+      tools: [{
+        iconCls: 'icon-save',
+        handler: function () {
+          submitDataRule();
+        }
+      }]
+    });
+  });
+
+  function mysubmit() {
+    var roleId = $("#rid").val();
+    var s = GetNode();
+    console.log('s', s)
+    console.log('roleId', roleId)
+    doSubmit("roleController.do?updateAuthority&rolefunctions=" + s + "&roleId=" + roleId);
+  }
+  function GetNode() {
+    var zTree = $.fn.zTree.getZTreeObj("functionid");
+    var node = zTree.getCheckedNodes(true);
+    //加入实际被选中的节点
+    var cnodes = '';
+    for (var i = 0; i < node.length; i++) {
+      cnodes += node[i].id + ',';
+    }
+    cnodes = cnodes.substring(0, cnodes.length - 1);
+    return cnodes;
+    //加入实际被选中的节点,以及该节点的所有上级节点,即级联父级
+		/*var cnodes = '';
+		var pnodes = '';
+		var pnode = null; //保存上一步所选父节点
+		for ( var i = 0; i < node.length; i++) {
+			if(!node[i].isParent){
+				cnodes += node[i].id + ',';
+				pnode = node[i].getParentNode();//获取当前节点的父节点
+				while (pnode != null) {//添加全部父节点
+					pnodes += pnode.id + ',';
+					pnode = pnode.getParentNode();
+				}
+			} 				
+		}
+		cnodes = cnodes.substring(0, cnodes.length - 1);
+		pnodes = pnodes.substring(0, pnodes.length - 1);
+		return cnodes + "," + pnodes;*/
+  }
+
+  function expandAll() {
+    var zTree = $.fn.zTree.getZTreeObj("functionid");
+    zTree.expandAll(true);
+  }
+  function selecrAll() {
+    var zTree = $.fn.zTree.getZTreeObj("functionid");
+    zTree.checkAllNodes(true);
+  }
+  function reset() {
+    $.fn.zTree.init($("#functionid"), setting);
+  }
+  function changeMode() {
+    var zTree = $.fn.zTree.getZTreeObj("functionid");
+    var typeMode = $("#typeMode").val();
+    var type = typeMode == 1 ? { "Y": "", "N": "" } : { "Y": "ps", "N": "ps" };
+    zTree.setting.check.chkboxType = type;
+    $("#typeMode").val(typeMode % 2 + 1);
+  }
+
+  $('#selecrAllBtn').linkbutton({});
+  $('#resetBtn').linkbutton({});
+  $('#changeBtn').linkbutton({});
+</script>
+<div id="system_function_functionList" class="easyui-layout" fit="true">
+    <%--   update-end--Author:duanql  Date:20130619 for：操作按钮窗口显示控制--%>
+    <div region="center" style="padding:0px;border:0px" class="self-noscroll">
+      <t:datagrid name="functionList" title="" actionUrl="functionController.do?functionGrid&type=0" idField="id" treegrid="true"
+        pagination="false">
+        <t:dgCol title="common.id" field="id" treefield="id" hidden="true"></t:dgCol>
+        <t:dgCol title="menu.name" field="functionName" treefield="text"></t:dgCol>
+        <t:dgCol title="common.icon" field="TSIcon_iconPath" treefield="code" image="true"></t:dgCol>
+        <t:dgCol title="funcType" field="functionType" treefield="functionType" replace="funcType.page_0,funcType.from_1"></t:dgCol>
+        <t:dgCol title="menu.url" field="functionUrl" treefield="src" width="80"></t:dgCol>
+        <t:dgCol title="menu.order" field="functionOrder" treefield="order"></t:dgCol>
+        <t:dgCol title="menu.funiconstyle" field="functionIconStyle" treefield="iconStyle"></t:dgCol>
+        <t:dgCol title="common.operation" field="opt" width="70"></t:dgCol>
+        <t:dgDelOpt url="functionController.do?del&id={id}" title="common.delete" urlclass="ace_button" urlStyle="background-color:#ec4758;"
+          urlfont="fa-trash-o"></t:dgDelOpt>
+        <t:dgFunOpt funname="executiveAuthority(id)" title="执行权限" urlclass="ace_button" urlStyle="background-color:#1a7bb9;"
+          urlfont="fa-cog"></t:dgFunOpt>
+  
+         <t:dgFunOpt funname="operationDetail(id)" title="button.setting" urlclass="ace_button" urlfont="fa-cog"></t:dgFunOpt>
+        <t:dgFunOpt funname="operationData(id)" title="数据规则" urlclass="ace_button" urlStyle="background-color:#1a7bb9;"
+          urlfont="fa-database"></t:dgFunOpt> 
+  
+        <t:dgToolBar title="common.add.param" langArg="common.menu" icon="icon-add" url="functionController.do?addorupdate"
+          height="400" funname="addFun"></t:dgToolBar>
+        <t:dgToolBar title="common.edit.param" langArg="common.menu" icon="icon-edit" url="functionController.do?addorupdate"
+          height="490" funname="update"></t:dgToolBar>
+      </t:datagrid>
+    </div>
+  </div>
+
+
+
+<script>
+
+  // 初始化人员数据待选择，以树形方式显示 
+  function initStaffTreeData() {
+    treeObj = $('#dataGridStaff').treegrid({
+      url: 'reportCreateController.do?getPersonsForChoose',
+      idField: 'id',
+      treeField: 'name',
+      singleSelect: false,
+      toolbar: '#tb',
+      method: 'get',
+      fit: true,
+      fitColumns: true,
+      columns: [[
+        { title: 'id', field: 'id', checkbox: true },
+        { title: '部门/人员', field: 'name', width: 180 },
+        { title: '待处理数量', field: 'taskCount', width: 180, align: 'center' },
+      ]],
+      loadFilter: function (data) {
+        /* if (that.firstLoad) {
+          that.treeResultStr = JSON.stringify(data.rows); // js对象深度复制成字符串
+          that.allData = data;
+          that.firstLoad = false;
+        } */
+        console.log('data', data)
+        return data;
+      },
+      onLoadSuccess: function () {
+      },
+      onSelect: function (rowIndex, rowData) {
+      },
+      onCheck: function (row, rowData) {
+        if (that.staffRowIndex === 0 || that.staffRowIndex) {
+          t = $(this);
+          opts = t.treegrid("options");
+          var idField = opts.idField, id = row[idField];
+          //如果当前节点被勾选,那么勾选该节点的子节点
+          $.each(t.treegrid("getChildren", id), function (i, n) {
+            t.treegrid("select", n[idField]);
+          });
+          var treeField = opts.treeField, treeValue = row[treeField]
+          var arr = JSON.stringify(that.staffRowArr)
+          if (arr.indexOf(id) < 0) {
+            that.onClickTreegrid(true, id, treeValue)
+          }
+
+        } else {
+          layer.msg('请先选择人员');
+        }
+
+      },
+      onUncheck: function (row, rowData) {
+        if (that.staffRowIndex === 0 || that.staffRowIndex) {
+          t = $(this);
+          opts = t.treegrid("options");
+          var idField = opts.idField, id = row[idField];
+          $.each(t.treegrid("getChildren", id), function (i, n) {
+            t.treegrid("unselect", n[idField]);
+          });
+          var treeField = opts.treeField, treeValue = row[treeField]
+          that.onClickTreegrid(false, id, treeValue)
+        } else {
+          layer.msg('请先选择人员');
+        }
+      }
+    })
+  }
+</script>

@@ -1,0 +1,728 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<!DOCTYPE html>
+<t:base type="jquery,easyui,tools,DatePicker" />
+<html lang="en">
+
+<head>
+  <script>
+    var storeTool;
+    var strFullPath = window.document.location.href;
+    var strPath = window.document.location.pathname;
+    var pos = strFullPath.indexOf(strPath);
+    var prePath = strFullPath.substring(0, pos);
+    var postPath = strPath.substring(0, strPath.substr(1).indexOf('/') + 1);
+    var basePath = prePath + postPath;
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/tools/curdtools_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/serializejson/jquery.serializejson.min.js'><\/script>");
+
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/style.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + basePath + "/plug-in/Validform/css/metrole/tablefrom.css'>");
+
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/hplus/contabs.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_v5.3.1_min_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/Validform_Datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/Validform/js/datatype_zh-cn.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/layer/layer.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/base64/base64.js'><\/script>");
+    document.write("<link rel='stylesheet' href='" + basePath + "/plug-in/jquery/jquery-autocomplete/jquery.autocomplete.css' type='text/css' />");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/jquery/jquery-autocomplete/jquery.autocomplete.min.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/common/upload//fileUpload.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/plug-in/assets/js/common.js'><\/script>");
+    document.write("<script type='text/javascript' src='" + basePath + "/webpage/com/hitek/testbusiness/consign/edit.js'><\/script>");
+    //附件上传成功回调
+    function uploadSuccess(a, response) {
+      addToForm(response.obj[0]);
+    }
+  </script>
+  <link type="text/css" rel="stylesheet" href="plug-in/assets/css/jquery.pagewalkthrough.css" />
+  <!-- <script type="text/javascript" src="jquery.min.js"></script> -->
+  <script type="text/javascript" src="plug-in/assets/js/jquery.pagewalkthrough.min.js"></script>
+
+  <style>
+    table th {
+      text-align: center;
+      height: 32px;
+    }
+
+    input {
+      width: 100%;
+      border: none !important;
+    }
+
+    select {
+      width: 100% !important;
+      border: none;
+    }
+
+    .td-label {
+      text-align: right;
+      max-width: 15%;
+    }
+
+    .button,
+    a.l-btn span.l-btn-left {
+      width: 93%;
+      text-align: center;
+    }
+
+    .absolute-toolbar {
+      width: calc(100% - 105px);
+      color: #8f0911;
+      font-weight: bolder;
+    }
+
+    #feeTotal {
+      height: 20px;
+      width: 92px;
+      border: 1px solid #000 !important;
+      border-radius: 0;
+    }
+
+    .fee-box {
+      position: absolute;
+      bottom: 0px;
+      width: 100%;
+      background: #f5f5f5;
+      min-height: 30px;
+      line-height: 30px;
+      color: #8f0911;
+      padding: 0px 5px;
+    }
+
+    .fee-box>div {
+      display: inline-block;
+    }
+
+    .fee-box .fee-box-middle {
+      margin: 0px 10px;
+    }
+
+    .fee-box .fee-box-middle u {
+      color: #1e9fff;
+      margin-right: 10px;
+    }
+
+    .fee-box .fee-box-middle a {
+      background: #f6f6f6;
+      color: #8f0911;
+      padding: 0px 10px;
+      border: 1px solid #ccc;
+      height: 20px;
+      line-height: 20px;
+    }
+
+    .fee-box input[type="radio"]+span {
+      border: 1px solid #1e9fff;
+    }
+
+    .fee-box input[type="radio"]:checked+span {
+      border: 1px solid #1e9fff;
+    }
+
+    .fee-box input[type="radio"]:checked+span::after {
+      background: #1e9fff;
+    }
+
+    .fee-box .fee-box-right {
+      float: right;
+      margin-right: 15px;
+    }
+
+    .fee-box .fee-box-right strong {
+      color: red;
+      margin-right: 20px;
+    }
+
+    #accessoryManageDiv {
+      display: inline-block;
+    }
+
+    input:disabled {
+      background-color: #fff;
+    }
+
+    #receiveTestObjects {
+      margin-bottom: 30px;
+    }
+
+    .Wdate {
+      -ms-background-position-x: 94%;
+    }
+
+    .modal {
+      opacity: 0.2;
+      position: absolute;
+      background: red;
+      top: 0;
+      left: 0;
+      right: 20px;
+      bottom: 0;
+      height: auto;
+      z-index: 1;
+    }
+
+    #walkthrough-content {
+      display: none
+    }
+
+    #jpWalkthrough #jpwTooltip #tooltipInner {
+      font-size: 18px;
+    }
+
+    .blind-sample {
+      color: red;
+      margin: 5px 0;
+      line-height: 22px;
+    }
+    .blind-sample img {
+    	vertical-align:bottom;
+    }
+
+    .blind-sample .blind-sample-btn {
+      color: #6699ff;
+      padding-left: 5px;
+    }
+    /**弹出层样式修改 */
+    .mylayui-layer-molv .layui-layer-title {
+      background: #247abb;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display:none" class="blind-sample" id="blindSample">
+    <img src="plug-in/assets/images/blindSample.png">
+    当前状态：<span class="blind-sample-span">已盲样</span>
+    <span class="blind-sample-btn" onclick="goBlindSampleFun()"> <u>关闭盲样</u> </span>
+  </div>
+  <div id="body-box" class="easyui-layout" data-options="fit: true">
+    <div data-options="region: 'north',border: false" style="height:28px">
+      <span style="width: 100%">
+        <a style="display:none" data-funCode="saveConsign" class="easyui-linkbutton btn-4-save" plain="true"
+          icon="icon-save">保存</a>
+        <a style="display:none" data-funCode="completeConsignByData" class="easyui-linkbutton btn-4-complete"
+          plain="true" icon="icon-add">完成</a>
+        <a style="display:none" data-funCode="printConsignBills" class="easyui-linkbutton btn-4-printConsign show-print"
+          plain="true" target="_blank" icon="icon-add">打印委托单</a>
+        <a style="display:none" data-funCode="printObjectLable" class="easyui-linkbutton btn-4-sampleLable show-print" plain="true"
+          target="_blank" icon="icon-add" href="javascript:void(0);">打印样品标签</a>
+      </span>
+    </div>
+    <div id="p1" data-options="region: 'center',border: false" style="height:400px">
+      <div class="easyui-layout" data-options="fit: true,collapsible: false">
+        <div id="wtinfo" style="overflow-x:hidden;" data-options="region: 'center',title: '委托信息'">
+          <div style="display:none;" class="modal" id="modalDivWtinfo"></div>
+          <form id="form" action="">
+            <input type="hidden" name="testTaskId" value="${testTaskId}">
+            <input type="hidden" name="taskId" value="${taskId}">
+            <input type="hidden" id="isblind" value="${blind}">
+            <input type="hidden" id="contractId" name="contractId" value="${consignInfoEntity.contractId}">
+            <!-- 计费合同ID -->
+            <!--由试验录入 的taskId -->
+            <input type="hidden" name="isTaskRedirect" value="${isTaskRedirect}"><!-- 是否是由试验录入界面跳转的 -->
+            <input type="hidden" name="isSimpleModel" value="${consignInfoEntity.isSimpleModel}"><!-- 是否是简易收样模式 -->
+            <input id='consignId' type="hidden" name="id" value="${consignInfoEntity.id}">
+            <input type="hidden" name="metaData"> <input type="hidden" name="customAttributes"> <i id="testObjects"
+              style="display: none;">${consignInfoEntity.usingMetaData.metaData}</i>
+
+            <input type="hidden" id="btn-4-submit"> <input type="hidden" id="btn-4-save"> <input type="hidden"
+              id="btn-4-complete">
+            <div style="text-align:right;padding-right:10px;">
+              <input style="width:auto;vertical-align:middle;margin-right:5px;" type="checkbox"
+                name="consignType1" />现场试验
+              <input style="width:auto" type="hidden" name="consignType"
+                value="${consignInfoEntity.consignType == '1' ? '1' : '0' } " />
+            </div>
+            <table class="formtable" cellpadding="0" cellspacing="1">
+              <tr>
+                <td class="td-label"><label for="consignCode">委托编号：</label></td>
+                <td class="value" style="width: 35%;">
+                  <input id="consignCode" name="consignCode" style="min-width:180px;width:80%"
+                    value="${consignInfoEntity.consignCode}">
+                  <a class="easyui-linkbutton btn-4-generate-code" style="float: right;">生成编号</a></td>
+                <td class="td-label"><label for="sampleSource">样品来源：</label></td>
+                <td><select id="sampleSource" name="sampleSource">
+                    <option value="1" ${consignInfoEntity.sampleSource=='1' ? 'selected' : '' }>
+                      委托送样</option>
+                    <option value="2" ${consignInfoEntity.sampleSource=='2' ? 'selected' : '' }>
+                      委托收样</option>
+                    <option value="3" ${consignInfoEntity.sampleSource=='3' ? 'selected' : '' }>
+                      现场取样 </option>
+                  </select></td>
+              </tr>
+              <tr>
+                <td class="td-label"><label for="consignUnit"> <span style="color: #F00000">*</span>委托单位：
+                  </label></td>
+                <td class="value" colspan="3">
+                  <input type="text" id="paymentCompany" style="width:80%;padding:0!important;" name="paymentCompany"
+                    autocomplete="off" onchange="changeSenderUnit(this.value)" class="inputxt" datatype="*"
+                    disabled="disabled" value="${consignInfoEntity.consignUnitName}">
+                  <input type="hidden" id="unitId" name="consignUnit.id" value="${consignInfoEntity.consignUnit.id}">
+                  <a class="easyui-linkbutton btn-4-pop-select-consignUnit" style="float:right;">添加/选择</a>
+                  <label class="Validform_label" style="display: none;">委托单位</label>
+                </td>
+              </tr>
+              <tr>
+                <td class="td-label"><label for="project-show"> <span style="color: #F00000">*</span>工程项目：
+                  </label></td>
+                <td class="value" colspan="3">
+                  <select id="project" name="project.id" style="width: 80% !important; display: none;"
+                    data-selected="${consignInfoEntity.project.id}" >
+                  </select>
+                  <input id="project-show" disabled="disabled" />
+                 
+                </td>
+              </tr>
+              <tr style="display:none;">
+                <td class="td-label"><label for="projectTenderName"> <span style="color: #F00000">*</span>项目标段：</label>
+                </td>
+                <td class="value"><input id="projectTenderName" name="projectTenderName"
+                    value="${consignInfoEntity.projectTenderName}">
+                  <label class="Validform_label" style="display: none;">项目名称或标段名称</label>
+                </td>
+                <td class="td-label"><label for="sampleSender"><span style="color: #F00000">*</span>送样人：</label></td>
+                <td><select id="sampleSender" name="sampleSender.id"
+                    data-selected="${consignInfoEntity.sampleSender.id}">
+                  </select>
+                  <label class="Validform_label" style="display: none;" >送样人</label>
+                </td>
+              </tr>
+              <tr>
+                <td class="td-label">
+                  <label for="sampleSenderName">
+                    <span style="color: #F00000">*</span>送样人：
+                  </label>
+                </td>
+                <td class="value"><input id="sampleSenderName" name="sampleSenderName"
+                    value="${consignInfoEntity.sampleSenderName}" disabled="disabled" >
+                </td>
+                <td class="td-label"><label for="sampleSenderPhone">
+                    <span style="color: #F00000">*</span>送样人电话：
+                  </label></td>
+                <td class="value"><input id="sampleSenderPhone" name="sampleSenderPhone"
+                    value="${consignInfoEntity.sampleSenderPhone}" disabled="disabled">
+              </tr>
+              <tr>
+                <td class="td-label"><label for="consignDate">委托日期：</label></td>
+                <td class="value"><input id="consignDate" name="consignDate" value="${consignInfoEntity.consignDate}"
+                    class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})"></td>
+                <td class="td-label"><label for="sampleSendDate">送样日期：</label></td>
+                <td class="value"><input id="sampleSendDate" name="sampleSendDate"
+                    value="${consignInfoEntity.sampleSendDate}" class="Wdate"
+                    onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})"></td>
+              </tr>
+              <tr>
+                <td class="td-label"><label for="requireReportDate">要求报告日期：</label></td>
+                <td class="value" style="text-align: left;">
+                  <input id="requireReportDate" name="requireReportDate" value="${consignInfoEntity.requireReportDate}"
+                    class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})">
+                </td>
+                <td class="td-label"><label for="sampleProcessMethod">测后样品处理：</label></td>
+                <td><select id="sampleProcessMethod" name="sampleProcessMethod">
+                    <option value="1" ${consignInfoEntity.sampleProcessMethod=='1' ? 'selected' : '' }>
+                      废弃</option>
+                    <option value="2" ${consignInfoEntity.sampleProcessMethod=='2' ? 'selected' : '' }>
+                      退还/取回样品</option>
+                    <option value="3" ${consignInfoEntity.sampleProcessMethod=='3' ? 'selected' : '' }>
+                      检测方自行处理</option>
+                    <option value="5" ${consignInfoEntity.sampleProcessMethod=='5' ? 'selected' : '' }>
+                      保存于检测中心</option>
+                    <option value="6" ${consignInfoEntity.sampleProcessMethod=='6' ? 'selected' : '' }>
+                      随机抽样</option>
+                    <option value="4" ${consignInfoEntity.sampleProcessMethod=='4' ? 'selected' : '' }>
+                      留样</option>
+                  </select></td>
+              </tr>
+              <tr>
+                <td class="td-label"><label for="remark">备注：</label></td>
+                <td class="value" colspan="3"><input id="remark" name="remark" value="${consignInfoEntity.remark}"></td>
+              </tr>
+
+              <tr>
+                <td colspan="4" style="text-align: right;"><a href="javascript:void(0)"
+                    class="easyui-linkbutton  btn-4-show-more" icon="icon-more" data-state="1">更多</a></td>
+              </tr>
+              <tr class="dy" style="display:none;">
+                <td class="td-label"><label for="qualificationTypeId">资质类型：</label></td>
+                <td>
+                  <select id="qualificationTypeId" name="qualificationTypeId"
+                    data-selected="${consignInfoEntity.qualificationTypeId}">
+                  </select>
+                </td>
+                <td class="td-label"><label for="testType">检测形式：</label></td>
+                <td><select id="testType" name="testType">
+                    <option value="1" ${consignInfoEntity.testType=='1' ? 'selected' : '' }>初检</option>
+                    <option value="2" ${consignInfoEntity.testType=='2' ? 'selected' : '' }>复检</option>
+                    <option value="3" ${consignInfoEntity.testType=='3' ? 'selected' : '' }>整改后检测
+                    </option>
+                  </select></td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td class="td-label"><label for="snTypeId">编号类别：</label></td>
+                <td><select id="snTypeId" name="snTypeId" data-selected="${consignInfoEntity.snTypeId}">
+                  </select></td>
+                <td class="td-label"><label for="post">邮寄信息：</label></td>
+                <td align="value">
+                  <%--  <input id="postFormId" 
+                    name="postFormId" type="hidden" onchange="changePost(this.value)"
+                    value="${consignInfoEntity.postFormId}">
+                  <input id="postFormName" style="width: 80% !important;"
+                    name="postFormName" 
+                    value=""> --%>
+                  <input id='postedit' name="postedit" type="hidden" value="${consignInfoEntity.postFormId}">
+                  <select id="postFormId" name="postFormId" style="width: 80% !important;">
+                    <script>
+                      $(function () {
+                        inintselectpostinfo();
+                      })
+                      function inintselectpostinfo() {
+                        $.ajax({
+                          url: 'tSPostFormsController.do?getPostFormById',
+                          dataType: 'json',
+                          success: function (data) {
+                            $('#postFormId').text('');
+                            var defaultPostHtml = '<option value="">请选择</option>';
+                            $('#postFormId').append(defaultPostHtml);
+                            $.each(data.obj, function (i, it) {
+                              var html = '<option value=' + it.id + '>' + it.name + '</option>';
+                              $('#postFormId').append(html);
+                            })
+                            var post = $('#postedit').val();
+                            if (post.length > 0) {
+                              $('#postFormId').val(post)
+                            }
+                          }
+                        })
+                      }
+                    </script>
+                  </select>
+                  <a class="easyui-linkbutton btn-4-report-post" style="float: right;width:20%;">选择</a>
+                  <label class="Validform_label" style="display: none;">邮寄信息</label>
+                </td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td class="td-label"><label for="reportHandOverType">报告发放方式：</label></td>
+                <td><select id="reportHandOverType" name="reportHandOverType">
+                    <option value="1" ${consignInfoEntity.reportHandOverType=='1' ? 'selected' : '' }>
+                      自取</option>
+                    <!-- <option value="2" ${consignInfoEntity.reportHandOverType=='2' ? 'selected' : '' }>
+                    代领</option> -->
+                    <option value="3" ${consignInfoEntity.reportHandOverType=='3' ? 'selected' : '' }>
+                      邮寄</option>
+                    <option value="4" ${consignInfoEntity.reportHandOverType=='4' ? 'selected' : '' }>
+                      传真</option>
+                  </select></td>
+                <td class="td-label"><label for="reportPrintNum">报告份数：</label></td>
+                <td class="value">
+                  <input id="reportPrintNum" datatype="reportPrintNum" name="reportPrintNum"
+                    value="${consignInfoEntity.reportPrintNum}" placeholder=" ">
+                </td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td class="td-label"><label for="checkTypeId">检测类别：</label></td>
+                <td><select id="checkTypeId" name="checkTypeId" data-selected="${consignInfoEntity.checkTypeId}">
+                  </select></td>
+                <td class="td-label"><label for="witness">见证人：</label></td>
+                <td class="value"><input id="witness" name="witness" value="${consignWitnessEntity.witness}"></td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td class="td-label"><label for="witnessLicenseNumber">见证人证件号：</label></td>
+                <td class="value"><input id="witnessLicenseNumber" name="witnessLicenseNumber"
+                    value="${consignWitnessEntity.witnessLicenseNumber}"></td>
+                <td class="td-label"><label for="witnessPhone">见证人电话：</label></td>
+                <td class="value"><input id="witnessPhone" datatype="witnessPhone" name="witnessPhone"
+                    value="${consignWitnessEntity.witnessPhone}">
+                </td>
+              </tr>
+              <tr class="dy" style="display: none;">
+
+                <td class="td-label"><label for="witnessUnitName">见证单位：</label></td>
+                <td class="value" colspan="3"><input id="witnessUnitName" name="witnessUnitName"
+                    value="${consignWitnessEntity.witnessUnitName}"></td>
+              </tr>
+              <tr class="dy" style="display:none;">
+                <td class="td-label"><label for="sampleSendUnitName">送样单位：</label></td>
+                <td class="value" colspan="3">
+                  <input id="sampleSendUnitName" name="sampleSendUnitName"
+                    value="${consignInfoEntity.sampleSendUnitName}">
+                </td>
+              </tr>
+              <tr class="dy" style="display:none;">
+                <td class="td-label"><label for="paymentUnitName">缴费单位：</label></td>
+                <td class="value" colspan="3">
+                  <input id="paymentUnitName" name="paymentUnitName" value="${consignInfoEntity.paymentUnitName}">
+                </td>
+              </tr>
+              <tr class="dy" style="display:none;">
+                <td class="td-label"><label for="extractSampleUnit">抽样单位：</label></td>
+                <td class="value" colspan="3">
+                  <input id="extractSampleUnit" name="extractSampleUnit" value="${consignInfoEntity.extractSampleUnit}">
+                </td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td class="td-label"><label for="extractSamplePerson">抽样人：</label></td>
+                <td class="value"><input id="extractSamplePerson" name="extractSamplePerson"
+                    value="${consignInfoEntity.extractSamplePerson}"></td>
+                <td class="td-label"><label for="extractSamplePersonTel">抽样人电话：</label></td>
+                <td class="value"><input id="extractSamplePersonTel" datatype="extractSamplePersonTel"
+                    name="extractSamplePersonTel" value="${consignInfoEntity.extractSamplePersonTel}">
+                </td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td class="td-label"><label for="remainingSampleDeadline">留样期限(天)：</label></td>
+                <td class="value"><input id="remainingSampleDeadline" datatype="reportPrintNum"
+                    name="remainingSampleDeadline"
+                    value='${consignInfoEntity.remainingSampleDeadline==null ? 90 : consignInfoEntity.remainingSampleDeadline}'>
+                </td>
+                <td class="td-label"><label for="fax">传真：</label></td>
+                <td class="value"><input id="fax" name="fax" value="${consignInfoEntity.fax}">
+                </td>
+              </tr>
+              <tr style="display: none;">
+                <td class="td-label"><label for="manualFeeTotal">费用合计：</label></td>
+                <td class="value" style="text-align: left;">
+                  <input class="no-store" id="manualFeeTotal" name="manualFeeTotal"
+                    value="${consignInfoEntity.manualFeeTotal}" />
+                </td>
+              </tr>
+              <tr class="dy" style="display: none;">
+                <td align="right">
+                  <label class="Validform_label"> 附件: </label>
+                </td>
+                <td class="value" colspan="3">
+                  <span class="Validform_checktip"></span>
+                  <label class="Validform_label" style="display: none;"></label>
+                  <div id="accessoryManageDiv"></div>
+                  <input id="accessoryIds" name="accessoryIds" type="hidden" />
+                  <a id="accessoryManage" class="easyui-linkbutton l-btn">选择</a>
+                </td>
+              </tr>
+            </table>
+
+          </form>
+        </div>
+        <c:if test="${not empty consignCustomAttributes}">
+          <div class="customAttributes" data-options="region: 'east',split: true,title: '客户自定义委托信息'"
+            style="width: 350px;">
+            <table class="formtable" cellpadding="0" cellspacing="1">
+              <div style="display:none;" class="modal" id="modalDivFormtable"></div>
+              <c:forEach items="${consignCustomAttributes}" var="item">
+                <tr style="height: 32px;">
+                  <td class="td-label"><label>${item.attributeName}：</label></td>
+                  <td class="value"><input name="${item.id}" value="${item.attributeValue}"></td>
+                </tr>
+              </c:forEach>
+            </table>
+          </div>
+        </c:if>
+      </div>
+    </div>
+    <div data-options="region: 'south',split: true,border: false" class="test" id="p2">
+      <div class="easyui-layout" style="position:relative" data-options="fit: true,collapsible: false">
+        <div data-options="region: 'center',title: '样品信息'">
+          <div class="absolute-toolbar">
+            <a class="easyui-linkbutton btn-4-add-sample" plain="true" icon="icon-add">添加样品</a>
+            <a class="easyui-linkbutton btn-4-add-copy" plain="true" icon="icon-add">复制样品</a>
+          </div>
+          <table id="receiveTestObjects" class="formtable" cellpadding="0" cellspacing="1">
+            <thead>
+              <tr>
+                <th></th>
+                <th>检测样品</th>
+                <th>样品编号</th>
+                <th>规格型号</th>
+                <th>工程部位/用途</th>
+                <th>检测参数（计价数量）</th>
+                <th>金额(元)</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="fee-box" id="fee-box" style="display:none;">
+            <div>
+              <span>计费方式：</span>
+              <input id="chargeByPrice" name="price" type="radio" value="1111" checked />按单价
+              <input id="chargeByContract" name="price" type="radio" value="2222" />按合同价格
+            </div>
+            <div class="fee-box-middle" id="fee-box-middle">
+              <u id="chargeContract" style="display:none;">${consignInfoEntity.contractName}</u>
+              <input type="hidden" value="${consignInfoEntity.contractId}">
+              <a href="###" id="chargeContractSelect" onclick="feeContract()" style="display:none;">选择</a>
+            </div>
+            <div class="fee-box-right">
+              <b>合计金额： <strong id="sumFee">0.00</strong> 核定费用:</b>
+              <input class="no-store" id='feeTotal' type="text" width="50" value='0' onchange='FeesOnChange(this)'>
+              <span>元</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="walkthrough-content">
+
+    <div id="walkthrough-2">
+      选择或添加委托方相关信息 1/3
+    </div>
+
+    <div id="walkthrough-3">
+      录入本次委托的样品 2/3
+    </div>
+
+    <div id="walkthrough-4">
+      完成委托 3/3
+    </div>
+  </div>
+  <iframe id='udrIframe' name='udrIframe'  width='0' height='0' frameborder='none' src=''></iframe>
+  <script>
+    $(function () {
+      // 勿删 来源commom.js 在线体验第一次进入引导页
+      var isUpdateConsign = $("input[name='id']").val();
+      if (!isUpdateConsign) {
+        funCode('showGuideMaskLayer', funCodeCallback);
+      }
+      function funCodeCallback(res, objParam) {
+        if (res.obj && res.obj.length > 0) {
+
+          $.each(res.obj, function (i, v) {
+            if (objParam.codes === v.functioncode) {
+              if (!renderContent('edit-guide')) {
+                guideFun();
+                storeFunc('edit-guide', 'edit-guide');
+              }
+            }
+          })
+        }
+      }
+      function guideFun() {
+        $('body').pagewalkthrough({
+          name: 'introduction',
+          steps: [
+            {
+              wrapper: '.btn-4-pop-select-consignUnit',
+              popup: {
+                content: '#walkthrough-2',
+                type: 'tooltip',
+                position: 'left'
+
+              }
+            }, {
+              wrapper: '.btn-4-add-sample',
+              popup: {
+                content: '#walkthrough-3',
+                type: 'tooltip',
+                position: 'top',
+                offsetVertical: -20,
+                offsetHorizontal: 35,
+
+              }
+            }, {
+              wrapper: '.btn-4-complete',
+              popup: {
+                content: '#walkthrough-4',
+                type: 'tooltip',
+                position: 'right',
+                offsetVertical: 40
+              }
+            }
+          ],
+          buttons: {
+            jpwClose: {
+              i18n: '点击此处关闭',
+              show: true
+            },
+            jpwNext: {
+              i18n: '下一步 &rarr;',
+            },
+            jpwPrevious: {
+              i18n: '&larr; 上一步',
+            },
+            jpwFinish: {
+              i18n: '完成 &#10004;',
+            }
+          }
+        });
+        $('body').pagewalkthrough('show');
+      }
+      // if (!$('#guide-a').is(':hidden')) {
+      //   if (!renderContent('edit-guide')) {
+      //     guideFun();
+      //     storeFunc('edit-guide', 'edit-guide');
+      //   }
+      // }
+    });
+
+  </script>
+  <script>
+    $(document).ready(function () {
+
+      $("#paymentCompany").autocomplete("commonController.do?getAutoList", {
+        max: 5,
+        minChars: 1,
+        width: 200,
+        scrollHeight: 100,
+        matchContains: true,
+        autoFill: false,
+        extraParams: {
+          featureClass: "P",
+          style: "full",
+          maxRows: 10,
+          labelField: "id",
+          valueField: "name",
+          searchField: "name",
+          entityName: "ConsignUnitEntity",
+          trem: getTremValueuserName
+        },
+        parse: function (data) {
+          return jeecgAutoParse.call(this, data);
+        },
+        formatItem: function (row, i, max) {
+          return row['name'];
+        }
+      }).result(function (event, row, formatted) {
+        $("#paymentCompany").val(row['name']);
+        $("#unitId").val(row['id']);
+        consignUnitChanged(this);
+      });
+      var companyName = $('#paymentCompany').val();
+      if (companyName.length > 0) {
+        consignUnitChanged($('#paymentCompany').get(0));
+      }
+
+      // //监听窗口resize事件，动态设置panel高度
+      function resetPanel(numstr) {
+        var windowH = $(window).height();
+        numstr = parseFloat(numstr)
+        $('#p1').panel('resize', { height: numstr });
+        $('#p2').panel('resize', { height: windowH - (numstr + 30), top: (numstr + 30) });
+      }
+      // resetPanel('462');
+      // $(window).resize(resetPanel);
+
+      // 初始化现场检测
+      var cType = $("input[name='consignType']").val();
+      if (parseInt(cType) === 1) {
+        $("input[name='consignType1']").attr("checked", "checked");
+      }
+    });
+    function getTremValueuserName() {
+      return $("#paymentCompany").val();
+    }
+
+    $('input[name="consignType1"]').click(function () {
+      var isChk = $(this).is(':checked')
+      var consignType = $('input[name="consignType"]')
+      if ($(this).is(':checked')) {
+        consignType.val('1')
+      } else {
+        consignType.val('0')
+      }
+    })
+  </script>
+</body>
+
+</html>

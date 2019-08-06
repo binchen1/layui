@@ -1,0 +1,487 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<%-- <t:base type="jquery,easyui,tools,DatePicker"/> --%>
+<script>
+</script>
+<style>
+  .detail-table {
+        width: 100%;
+        border-top: 1px solid #DDD;
+        border-bottom: 1px solid #DDD;
+        border-right: 1px solid #DDD;
+        border-spacing: 0;
+    }
+
+    .detail-table th {
+        text-align: center;
+        height: 30px;
+        border-top: 1px solid #DDD;
+        border-left: 1px solid #DDD;
+    }
+
+    .detail-table td {
+        padding: 5px;
+        border-top: 1px solid #DDD;
+        border-left: 1px solid #DDD;
+        border-bottom: 0;
+        border-right: 0;
+    }
+
+    input {
+        height: 24px;
+    }
+    .layui-body{
+		overflow-y: scroll;
+	}
+	body{
+		overflow-y: auto !important;
+	}
+	.easyui-layout{
+       height:540px !important ;
+       background: #efefef;
+    }
+    .testTaskParams {
+      background: #efefef;
+      padding-top: 1px;
+    }
+    .testTaskParams p {
+      border: 1px solid #D3D3D3;
+      height: 20px;
+      padding: 5px;
+      background: #f3f3f3;
+      margin-top: 5px;
+    }
+    
+	/* .myform .layui-form-radio {
+	   margin:0;
+	} */
+</style>
+
+<body>
+  <div class="easyui-layout" fit="true" style="padding-right: 15px;">
+    <div data-options="region:'north',split:true" style="height:150px;padding-left: 10px;padding-top: 10px;">
+      <strong>任务编号：${testTask.testTaskCode}</strong>
+      <input type="hidden" id="testTaskIdHidden" value="${testTask.id}" />
+      <input type="hidden" id="testTaskStatusHidden" value="${testTask.status}" />
+      <div style="padding-top: 10px;">
+        <a class="easyui-linkbutton" onclick="checkTestTaskStatus()" data-options="iconCls:'icon-save'">提交报告</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-print'">打印空表</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-undo'">任务回退</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-tip'">通知修改委托</a>
+        <a class="easyui-linkbutton" onclick="goSampleFlowRecordPage()" data-options="iconCls:'icon-edit'">样品流转登记</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-man'">查看日志</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-edit'">龄期登记</a>
+        <a id="ReviewAgree" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="display:none;" href="javascript:goReviewComment(1);">复核同意</a>
+        <a id="ReviewNotAgree" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" style="display:none;"
+          href="javascript:goReviewComment(0);">复核不同意</a>
+      </div>
+      <div style="padding-top: 5px;">
+        检测：
+        <c:set var="index0" value="1" />
+        <c:forEach var="p" items="${testTask.testTaskPersons}">
+          <c:if test="${p.type == '0' }">
+            <c:choose>
+              <c:when test="${index0 == 1 }">
+                ${p.name}
+                <c:set var="index0" value="${index0+1}" />
+              </c:when>
+              <c:otherwise>
+                ，${p.name}
+              </c:otherwise>
+            </c:choose>
+          </c:if>
+        </c:forEach>
+        <c:if test="${index0 == '1' }">
+          /
+        </c:if>
+        ；
+        复核：
+        <c:set var="index1" value="1" />
+        <c:forEach var="p" items="${testTask.testTaskPersons}">
+          <c:if test="${p.type == '1' }">
+            <c:choose>
+              <c:when test="${index1 == 1 }">
+                ${p.name}
+                <c:set var="index1" value="${index1+1}" />
+              </c:when>
+              <c:otherwise>
+                ，${p.name}
+              </c:otherwise>
+            </c:choose>
+          </c:if>
+        </c:forEach>
+        <c:if test="${index1 == '1' }">
+          /
+        </c:if>
+        ；
+        审核：
+        <c:set var="index3" value="1" />
+        <c:forEach var="p" items="${testTask.testTaskPersons}">
+          <c:if test="${p.type == '3' }">
+            <c:choose>
+              <c:when test="${index3 == 1 }">
+                ${p.name}
+                <c:set var="index3" value="${index3+1}" />
+              </c:when>
+              <c:otherwise>
+                ，${p.name}
+              </c:otherwise>
+            </c:choose>
+          </c:if>
+        </c:forEach>
+        <c:if test="${index3 == '1' }">
+          /
+        </c:if>
+        ；
+        批准：
+        <c:set var="index4" value="1" />
+        <c:forEach var="p" items="${testTask.testTaskPersons}">
+          <c:if test="${p.type == '4' }">
+            <c:choose>
+              <c:when test="${index4 == 1 }">
+                ${p.name}
+                <c:set var="index4" value="${index4+1}" />
+              </c:when>
+              <c:otherwise>
+                ，${p.name}
+              </c:otherwise>
+            </c:choose>
+          </c:if>
+        </c:forEach>
+        <c:if test="${index4 == '1' }">
+          /
+        </c:if>
+        ；
+      </div>
+      <div style="padding-top: 5px;">
+        <table id="reportCode" style="border: 0px;font-size:12px;"></table>
+      </div>
+    </div>
+    <!--<div data-options="region:'south',title:'检测参数：',split:true" style="height:240px;">
+	    	<jsp:include page="testTaskParams.jsp" flush="true" />
+	    </div> -->
+    <div data-options="region:'east',title:'检测结论：',split:true" style="width:330px;">
+      <jsp:include page="testTaskConclusion.jsp" flush="true" />
+      <%-- <iframe name="testTaskConclusion" width="100%" height="100%" frameborder="none"
+					src="testTaskController?goTestTaskConclusion&testTaskId=${testTask.id}"></iframe> --%>
+    </div>
+    <div data-options="region:'west',title:'数据文件及报告：',split:true" id="filePanel" style="width:280px; ">
+      <div id="fileDiv">
+        <jsp:include page="testTaskFile_shortcut.jsp" flush="true" />
+      </div>
+      <div id="fileDiv2" style="display:none">
+        <jsp:include page="testTaskFile.jsp" flush="true" />
+      </div>
+    </div>
+    <div data-options="region:'center',title:'检测样品：'" style="padding:5px;overflow-x:scroll;">
+      <jsp:include page="testSampleDetail.jsp" flush="true" />
+    </div>
+  </div>
+  <div class="testTaskParams">
+    <p>检测参数：</p>
+  </div>
+  <div data-options="region:'south',title:'检测参数：',split:true">
+    <jsp:include page="testTaskParams.jsp" flush="true" />
+  </div>
+
+  <script type="text/javascript">
+    var form;
+    layui.use(['form'], function () {
+      form = layui.form;
+    })
+    var reportWindowIndex;
+    function goReportCommitPage(checkedReportId) {
+      var testTaskId = $("#testTaskIdHidden").val();
+      //console.log(testTaskId);
+      var url = basePath + '/testTaskReportController.do?goReportCommitPage&taskId=' + testTaskId;
+      if (typeof (checkedReportId) != "undefined") {
+        url += '&reportId=' + checkedReportId;
+      }
+      reportWindowIndex = layer.open({
+        skin: 'layui-layer-molv',
+        maxmin: false,
+        type: 2,
+        title: '提交报告',
+        content: url,
+        btn: ['确定', '关闭'],
+        area: ['70%', '90%'],
+        yes: function (index, layero) {
+          var body = layer.getChildFrame('body', index);
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+
+          //调用子容器的方法
+          iframeWin.submitReport();
+          //iframeWin[childFuncName]();
+        }
+      });
+    }
+    //关闭报告提交弹窗的方法,这个方法是在报告提交子页面上调用的,勿删
+    function closeReportWindow() {
+      layer.close(reportWindowIndex);
+    }
+    //检查本任务的状态,如果已经完成了(status>30)，则不允许再次提交报告
+    function checkTestTaskStatus() {
+      var testTaskStatus = $("#testTaskStatusHidden").val();
+      if (testTaskStatus >= 30) {
+        layer.msg("实验检测已经完成,不能再提交报告");
+      } else {
+        //检查关联的报告提交状态,确认是提交还是确认
+        getRelationReportList();
+      }
+    }
+    //检查任务下的报告提交情况
+    function getRelationReportList() {
+      var testTaskId = $("#testTaskIdHidden").val();
+      var url = "testTaskReportController.do?getRelationReportList";
+      var dataJson = { 'testTaskId': testTaskId };
+      ajaxRequest(url, dataJson, checkReportCommitStatus, true, false);
+    }
+    //上一方法ajax的回调,做报告提交状态的一系列校验
+    function checkReportCommitStatus(data) {
+      // console.log(data);
+      //检查报告类型是否齐全
+      if (data.attributes != null && data.attributes.haveAllTypeReport) {
+        //是:检查本人的待确认列表
+        if (data.attributes.unSureReport.length < 1) {
+          layer.msg("你已经确认了所有的报告,请等待其他人确认");
+        } else {
+          //弹出未确认部分让用户选择确认
+          var html = '<form class="layui-form myform" style="">';
+          $.each(data.attributes.unSureReport, function (index, value) {
+            html += '<div class="layui-input-block" id="notSureRptDiv"><input type="radio" name="notSureReport" title="' + value.reportNumber + '" value="' + value.id + '"/></div>';
+          });
+          html += '</form>';
+          var rptckIndex = layer.open({
+            title: '选择报告来确认提交'
+            , content: html
+            , btn: ['确认', '取消']
+            , yes: function (index, layero) {
+              var checkedReportId = $('#notSureRptDiv input[name="notSureReport"]:checked').val();
+              if (checkedReportId && checkedReportId.length > 0) {
+                layer.close(rptckIndex);
+                goReportCommitPage(checkedReportId);
+              } else {
+                return false;
+              }
+              //layer.msg(checkedReportId);
+            }
+            , btn2: function (index, layero) {
+              //layer.msg("取消");
+            }
+          });
+          form.render();
+        }
+      } else {
+        goReportCommitPage();
+      }
+    }
+
+    //弹出样品流转登记的窗口
+    function goSampleFlowRecordPage() {
+      var testTaskId = $("#testTaskIdHidden").val();
+      // console.log(testTaskId);
+      var url = basePath + '/testTaskSampleFlowController.do?goSampleFlowRecordPage&testTaskId=' + testTaskId;
+      reportWindowIndex = layer.open({
+        skin: 'layui-layer-molv',
+        maxmin: false,
+        type: 2,
+        title: '提交报告',
+        content: url,
+        btn: ['确定', '关闭'],
+        area: ['66%', '90%'],
+        yes: function (index, layero) {
+          var body = layer.getChildFrame('body', index);
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+
+          //调用子容器的方法
+          iframeWin.submit();
+          //iframeWin[childFuncName]();
+        }
+      });
+    }
+
+    //判断该任务是否存在udr附件,如果存在则默认展示快速模式, 不存在则展示文件模
+    function doRequestUdr() {
+      var url = basePath + '/testTaskAttachmentController.do?getUdrAttachment';
+      var testTaskId = $("#testTaskIdHidden").val();
+      var jsonParam = { 'testTaskId': testTaskId };
+      ajaxRequest(url, jsonParam, isHaveUdr, false);
+    }
+    function isHaveUdr(data) {
+      var testTaskId = $("#testTaskIdHidden").val();
+      if (data.success) {
+        $("#testRecordImgButton").attr('onclick', 'openUDRFile("' + testTaskId + '","' + data.obj.id + '","检测数据录入")');
+        $("#testReportImgButton").attr('onclick', 'openUDRFile("' + testTaskId + '","' + data.obj.id + '","检测报告")');
+      } else {
+        showFileModel();
+      }
+    }
+		/**
+		* 打开UDR模板
+		*/
+    function openUDRFile(testTaskId, testTaskAttachmentId, defaultTabTitle) {
+      var url = 'testTaskController.do?goTestTaskUdrContainer';
+      url += '&id=' + testTaskId;
+      url += '&testTaskAttachmentId=' + testTaskAttachmentId;
+      url += '&defaultTabTitle=' + defaultTabTitle;
+      window.open(encodeURI(url), '试验数据录入');
+    }
+
+    //展示文件模式		
+    function showFileModel() {
+      $("#fileDiv").hide();
+      $("#fileDiv2").show();
+      $(".easyui-layout").layout('panel', 'west').panel("resize", { 'width': '450px' });
+      $(".easyui-layout").layout("resize");
+      $("#fileTreegrid").treegrid("resize");
+    }
+
+    $(function () {
+      doRequestUdr();
+      getReportCode();
+      testReviewDisplay();
+    })
+
+		/**
+		*	试验复核页面元素控制
+		*	注意：数据文件模块的 treegrid 里的操作按钮 和 检测参数列表td里的按钮，都是在当前页面控制的（需要渲染后再隐藏）
+		*/
+    function testReviewDisplay() {
+
+      // readType: 1.复核  2.审核  3.批准  4.已批准
+      var readType = GetQueryString("readType");
+
+      if (readType != undefined) {
+        // 隐藏所有的操作按钮
+        $("input, :radio, :checkbox, button, a, li").each(function () {
+          $(this).hide();
+        });
+
+        // 复核页面跳转，保留样品模块查看委托按钮、复核同意/复核不同意按钮
+        $("a[name='checkConsignInfo']").show();
+      }
+      if (readType == 1) {
+        $("#ReviewNotAgree,#ReviewAgree").show();
+      }
+    }
+
+    // 跳转复核审批页面， isAgree：1.同意  0.不同意
+    function goReviewComment(isAgree) {
+
+      // 报告ID
+      var reportIds = GetQueryString("reportId");
+
+      // 弹出新页面
+      var url = 'testTaskReviewController.do?goReviewComment';
+      url += '&reportIds=' + reportIds;
+      url += '&isAgree=' + isAgree;
+      var title = '';
+      if (isAgree == '1') {
+        title = '复核确认【同意】';
+      } else if (isAgree == '0') {
+        title = '复核确认【不同意】';
+      }
+
+      layui.use(['layer', 'form'], function () {
+        var layer = layui.layer;
+
+        var layerIndex = layer.open({
+          skin: 'layui-layer-molv',
+          maxmin: false,
+          type: 2,
+          title: title,
+          content: url,
+          btn: ['确定', '取消'],
+          area: ['400px', '470px'],
+          yes: function (index, layero) {
+            var body = layer.getChildFrame('body', index);
+            var iframeWin = window[layero.find('iframe')[0]['name']];
+
+            //调用子容器的方法
+            iframeWin.doTaskReview(layerIndex);
+          }
+        });
+      });
+
+    }
+
+    // 读取该页面顶部报告编码
+    function getReportCode() {
+
+      // 取实验任务ID
+      var testTaskId = GetQueryString("id");
+      var url = "testTaskController.do?getTestTaskReportInfo";
+      var dataJson = { 'testTaskId': testTaskId };
+      ajaxRequest(url, dataJson, renderReportCode, false);
+    }
+    // 渲染页面顶部报告编码
+    function renderReportCode(res) {
+      if (!res.success) {
+        layer.msg('获取报告编码异常', { icon: 5 });
+        return;
+      }
+
+      var data = res.obj;
+      var len = data.length;
+      if (len == 0) {
+        return;
+      }
+
+      // 渲染报告信息
+      var htm = "";
+      for (var i = 0; i < len; i++) {
+        htm += "<tr>";
+        if (i == 0) {
+          htm += "<td>报告编号：</td><td>" + data[i].reportInfo + "</td>"
+        } else {
+          htm += "<td></td><td>" + data[i].reportInfo + "</td>"
+        }
+        if (data[i].needConfirm == '1') {
+          htm += "<td><a title='确认提交' class='layui-btn layui-btn-xs' href='javascript:reportConfirm(\"" + data[i].reportId + "\")' >确认提交</a></td>";
+        } else {
+          htm += "<td></td>";
+        }
+        htm += "</tr>";
+      }
+      $("#reportCode").append(htm);
+    }
+
+    // 报告确认
+    function reportConfirm(reportId) {
+
+      var testTaskId = $("#testTaskIdHidden").val();
+      var url = basePath + '/testTaskReportController.do?goReportCommitPage&&reportConfirm=1';
+      url += '&reportId=' + reportId;
+      url += '&taskId=' + testTaskId;
+
+      reportWindowIndex = layer.open({
+        skin: 'layui-layer-molv',
+        maxmin: false,
+        type: 2,
+        title: '提交报告',
+        content: url,
+        btn: ['同意提交', '不同意提交', '取消'],
+        area: ['70%', '90%'],
+        btn1: function (index, layero) {
+          var body = layer.getChildFrame('body', index);
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+
+          //调用子容器的方法
+          iframeWin.submitReport();
+        },
+        btn2: function (index, layero) {
+          var body = layer.getChildFrame('body', index);
+          var iframeWin = window[layero.find('iframe')[0]['name']];
+          iframeWin.submitReportDisagree();
+        },
+        btn3: function (index, layero) {
+
+        }
+      });
+    }
+
+  </script>
+</body>

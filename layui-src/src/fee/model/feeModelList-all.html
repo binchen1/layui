@@ -1,0 +1,355 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>费用主列表</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/fee/model/feeModel.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/businessrollback/rollback.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <style>
+    .datagrid-cell,
+    .datagrid-cell-group,
+    .datagrid-header-rownumber,
+    .datagrid-cell-rownumber {
+      white-space: nowrap;
+    }
+
+    div.layui-layer-tips .layui-layer-content {
+      color: #000;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">未收费</li>
+      <li>部分收费</li>
+      <li>已结清</li>
+      <li>全部</li>
+    </ul>
+    <div id="tableBox" class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form class="layui-form" id="commonQueryForm">
+            <input id="isShowSearchId" type="hidden" value="false" />
+            <input id="_sqlbuilder" name="sqlbuilder" type="hidden" />
+            <div class="layui-row">
+              <div class="layui-col-xs8 ordinary">
+                <div class="layui-input-inline" style="width:80%">
+                  <input type="text" name="queryCondition" class="layui-input" placeholder="输入单位/编号后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs8 senior seniorText" style="display:none;">
+                高级查询
+                <span id="retractIcon" onclick="InitObj.retractFun()">
+                  <i class="layui-icon layui-icon-up"></i>
+                </span>
+              </div>
+              <div class="layui-col-xs4">
+                <span id="searchSwitch">
+                  <a href="###" class="easyui-linkbutton" iconCls="iconfont icon-reload" plain="true">切换到高级查询</a>
+                </span>
+              </div>
+            </div>
+            <div class="senior retract" style="display:none">
+              <div class="layui-form-item">
+                <label class="layui-form-label">编号</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignCode" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">单位</label>
+                <div class="layui-input-block">
+                  <input type="text" name="consignUnit" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item ">
+                <label class="layui-form-label">工程项目</label>
+                <div class="layui-input-block">
+                  <input type="text" name="project" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">合同名称</label>
+                <div class="layui-input-block">
+                  <input type="text" name="contractName" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">费用生成日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="CreateDate" id="CreateDate" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div class="layui-form-item">
+                <label class="layui-form-label">收费日期</label>
+                <div class="layui-input-block">
+                  <input type="text" name="TransferSucTime" id="TransferSucTime" class="layui-input" autocomplete="off">
+                </div>
+              </div>
+              <div>
+                <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                  onclick="InitObj.seniorQuickSearch()">查询</a>
+                <button class="easyui-linkbutton" id="reset" type="reset" iconCls="iconfont icon-reload"
+                  plain="true">重置</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" style="display: none" data-funCode="goAddFee" onclick="InitObj.doBitchFee(event)"
+              class="easyui-linkbutton btn_doBitchFee" iconCls="iconfont icon-edit" plain="true">收费</a>
+            <a href="#" style="display: none" data-funCode="feeRollback" onclick="goRollbackPage()"
+              class="easyui-linkbutton btn_goRollback" iconCls="iconfont icon-undo" plain="true">退回</a>
+            <a href="#" style="display: none" data-funCode="batchSelectFee" onclick="InitObj.doBitchSelect(event)"
+              class="easyui-linkbutton" iconCls="iconfont icon-tip" plain="true">批量选择</a>
+            <a href="#" style="display: none" data-funCode="feeExportXls" onclick="InitObj.ExportXls()"
+              class="easyui-linkbutton" iconCls="iconfont icon-redo" plain="true">导出</a>
+            <a href="#" style="display: none" data-funCode="newFeeDetail" onclick="InitObj.doNewCharge(event)"
+              class="easyui-linkbutton" iconCls="iconfont icon-add" plain="true">新增收费</a>
+            <a href="#" onclick="InitObj.addRepayment(event)" class="easyui-linkbutton" iconCls="iconfont icon-add"
+              plain="true">新增回款登记</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="feeModelList"></table>
+    </div>
+  </div>
+
+  <script>
+    $(function () {
+      layui.use(['layer', 'element', 'laydate', 'form', 'table'], function () {
+        var layer = layui.layer;
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var table = layui.table;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          var that = InitObj;
+          that.dataGrid.datagrid('clearSelections');
+          if (0 === data.index) { // 未收费
+            that.isBtnFun('3')
+          } else if (1 === data.index) { // 部分收费
+            that.isBtnFun('2')
+          } else if (2 === data.index) { // 已结清
+            that.isBtnFun('1')
+          } else { // 全部
+            that.isBtnFun('1,2,3')
+          }
+        });
+        InitObj.init(form, laydate)
+      })
+    })
+
+  </script>
+
+  <!-- <script>
+    $(function () {
+      layui.use(['element'], function () {
+        var element = layui.element;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          if (0 === data.index) {
+            var htmls = '<iframe class="height-full width-full" name="waitAssign"  frameborder="none" src="feeModelController.do?listByStatus&status=3"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else if (1 === data.index) {
+            var htmls = '<iframe class="height-full width-full" name="myAssigned" frameborder="none" src="feeModelController.do?listByStatus&status=2"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else if (2 === data.index) {
+            var htmls = '<iframe class="height-full width-full" name="myAssigned" frameborder="none" src="feeModelController.do?listByStatus&status=1"></iframe>'
+            $('#iframeBox').html(htmls)
+          } else {
+            var htmls = '<iframe class="height-full width-full" name="myAssigned" frameborder="none" src="feeModelController.do?listByStatus&status=1,2,3"></iframe>'
+            $('#iframeBox').html(htmls)
+          }
+        });
+      })
+    })
+  </script> -->
+  <!-- <script type="text/javascript">
+    /**
+    * 加载完毕后，要弹出收费的框
+    */
+    $(document).ready(function () {
+      var id = GetQueryString("id");
+      var taskId = GetQueryString("taskId");
+      if (id != null && id != "") {
+        layer.open({
+          title: "收费", content: 'feeModelController.do?goActivity&id=' + id + "&taskId=" + taskId, type: 2, area: ['80%', '90%'], //宽高
+          btn: ['提交', '回退', "移交", "取消"],
+          yes: function (index) {
+            passProcess(index);
+          }, //提交
+          btn2: function (index) {
+            backProcess(index);
+          },//回退'
+          btn3: function (index) {
+            deliverTask(index);
+          },//移交
+        });
+      }
+    });
+    function GetQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) return unescape(r[2]); return null;
+    }
+  </script>
+  <script type="text/javascript">
+    var width = 800;
+    var height = 600;
+    function closeCurrentWin() {
+      window.parent.closeCurrentWin();
+    }
+    function refreshMainTab() {
+      window.parent.refreshMainTab();
+    }
+		/**
+		*提交
+		*/
+    function passProcess(index) {
+      var body = layer.getChildFrame('body', index);
+      $(body).find("#isSubmit").val("true");
+      $(body).find('#btn_sub').trigger('click');
+    }
+
+    function deliverTask(index) {
+      var body = layer.getChildFrame('body', index);
+      var taskId = $(body).find("#taskId").val();
+      var title = "选择可移交的用户";
+
+      var addurl = basePath + "/ActivityController.do?deliverUsers&taskId=" + taskId;
+      //移交 驳回 回退都要求填写评论，并且可以查看历史评论
+      layer.open({
+        title: "移交", content: addurl, type: 2, area: ['80%', '90%'], //宽高
+        btn: ['提交', "取消"],
+        yes: function (index) {
+          var body = layer.getChildFrame('body', index);
+          var json = {};
+          json.userName = body.find("input[name='userName']:checked").val();
+          json.taskId = body.find("#taskId").val();
+          //执行移交
+          $.ajax({
+            url: basePath + '/ActivityController.do?doDeliverUser',
+            data: json,
+            dataType: "json",
+            type: "POST",
+            contentType: "application/x-www-form-urlencoded",
+            //traditional: true,  
+            success: function (data) {
+              window.parent.tip(data.msg);
+              refreshMainTab();
+              return true;
+            }
+          });
+        }//提交
+
+      });
+
+
+    }
+
+
+    function backProcess(index) {
+      var body = layer.getChildFrame('body', index);
+      var taskId = $(body).find("#taskId").val();
+      var title = "驳回";
+      var addurl = basePath + "/ActivityController.do?getBackProcessPage&taskId=" + taskId;
+      layer.open({
+        title: "驳回", content: addurl, type: 2, area: ['80%', '90%'], //宽高
+        btn: ['提交', "取消"],
+        yes: function (index) {
+          var body = layer.getChildFrame('body', index);
+          var json = {};
+          json.taskId = body.find("#taskId").val();
+          json.activityId = body.find("input[name='activityId']:checked").val();
+          json.ueditorContent = body.find("textarea[name='ueditorContent']").val();
+          //执行
+          $.ajax({
+            url: basePath + '/ActivityController.do?backProcess',
+            data: json,
+            dataType: "json",
+            type: "POST",
+            contentType: "application/x-www-form-urlencoded",
+            //traditional: true,  
+            success: function (data) {
+              window.parent.tip(data.msg);
+              refreshMainTab();
+              return true;
+            }
+          });
+        }//提交
+
+      });
+    }
+
+
+    function showActivityStatus() {
+      //opensavesubwin("查看流程图", iframe.basePath+"/ActivityController.do?showActivityStatus&taskId="+$('#taskId', iframe.document).val());
+      var title = "查看流程图";
+      var addurl = basePath + "/ActivityController.do?showActivityStatus&taskId=" + $('#taskId').val();
+      $.dialog({
+        id: "thirdLayer",
+        content: 'url:' + addurl,
+        zIndex: getzIndex(),
+        lock: true,
+        width: width,
+        height: height,
+        title: title,
+        opacity: 0.3,
+        cache: false,
+        cancelVal: '关闭',
+        cancel: true, /*为true等价于function(){}*/
+        close: function () { //无论何种关闭方法都要执行
+          iframe = this.iframe.contentWindow;
+          //页面中close方法 ，利用了闭包的原理，实质是打开子窗口的close方法
+          iframe.close();
+        }
+      });
+    }
+
+    function showComments() {
+      var title = "评论";
+      var addurl = basePath + "/ActivityController.do?goComments&taskId=" + $('#taskId').val();
+      $.dialog({
+        content: 'url:' + addurl,
+        zIndex: getzIndex(),
+        lock: true,
+        width: width,
+        height: height,
+        title: title,
+        opacity: 0.3,
+        cache: false,
+        cancelVal: '关闭',
+        cancel: true /*为true等价于function(){}*/
+
+      });
+    }; -->
+
+  </script>
+</body>
+
+</html>

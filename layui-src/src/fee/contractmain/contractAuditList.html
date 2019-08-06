@@ -1,0 +1,327 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp"%>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>合同审核主列表</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <script type="text/javascript" src="webpage/com/hitek/system/log/logProcess.js"></script>
+
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <style>
+    .tb-box-form {
+      width: 100%;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+      <li class="layui-this">审核中</li>
+      <li>审核完成</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div id="tb" class="tb-box">
+        <div class="tb-box-form">
+          <form id="commonQueryForm" class="layui-form">
+            <div class="layui-row">
+              <div class="layui-col-xs8">
+                <div class="layui-input-inline" style="width:80%">
+                  <input name="quickQryParam" class="layui-input" placeholder="输入合同名称/合同编号/合同方后回车即可查询"
+                    autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                  <a href="#" class="easyui-linkbutton" iconCls="iconfont icon-search" plain="true"
+                    onclick="InitObj.quickSearch()">查询</a>
+                </div>
+              </div>
+              <div class="layui-col-xs4 header-checkbox">
+                <input type="checkbox" name="write" lay-filter="checkboxChk" lay-skin="primary" title="只显示待我审核的申请"
+                  checked>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tb-box-btn" id="functionButton">
+          <span>
+            <a href="#" class="easyui-linkbutton funBtn_2" iconCls="iconfont icon-ok" plain="true">审核通过</a>
+            <a href="#" class="easyui-linkbutton funBtn_3" iconCls="iconfont icon-undo" plain="true">审核不通过</a>
+          </span>
+        </div>
+      </div>
+      <table class="easyui-datagrid" id="dataGrid"></table>
+    </div>
+  </div>
+  <input type="hidden" id="userId" value="${ LOCAL_CLINET_USER.id }" />
+  <script>
+    $(function () {
+      layui.use(['element', 'laydate', 'form', 'layer'], function () {
+        var element = layui.element;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var layer = layui.layer;
+        element.on('tab(docDemoTabBrief)', function (data) {
+          if (0 === data.index) {
+            $('.header-checkbox input').attr('title', '只显示待我审核的申请')
+            $('.header-checkbox span').html('只显示待我审核的申请')
+          } else {
+            $('.header-checkbox input').attr('title', '只显示我已审核的申请')
+            $('.header-checkbox span').html('只显示我已审核的申请')
+          }
+          InitObj.initDataGrid(InitObj.columnsFun(data.index + 1))
+        });
+        InitObj.init(form);
+      })
+
+    })
+    var InitObj = {
+      formLayerM: null, // form对象 
+      userId: $('#userId').val(), // 用户id 
+      defaultUrl: 'contractAuditController.do?getDatagrid', //默认获取数据url
+      auditPageUrl: 'contractAuditController.do?goContractAudit', // 跳转到合同审核页面
+      onlyMine: '1', //  待我审批:1 或我已审核的
+      auditIds: '', // 选中数据id
+      auditStatus: 1, // 1:审核中, 2:审核完成
+      functionButton: $('#functionButton'),
+      okBtn: $('#functionButton .funBtn_2'), // 审核通过
+      undoBtn: $('#functionButton .funBtn_3'), // 审核不通过
+      init: function (form) {
+        this.formLayerM = form;
+        this.initDataGrid(this.columnsFun(1))
+        this.commonQryKeyDown()
+        this.styleLayout();
+        this.btnFun(this.okBtn, this.auditPageUrl, '审核通过')
+        this.btnFun(this.undoBtn, this.auditPageUrl, '审核不通过')
+        form.on('checkbox(checkboxChk)', function (data) {
+          var that = InitObj;
+          if (data.elem.checked) {
+            that.onlyMine = "1"; // 待我审批 或 查询我已审批的
+            that.initDataGrid(that.columnsFun(that.auditStatus))
+          } else {
+            that.onlyMine = "2";
+            that.initDataGrid(that.columnsFun(that.auditStatus))
+          }
+        });
+      },
+      // 功能按钮
+      btnFun: function (btnName, openUrl, openName) {
+        var that = InitObj, tipIndex;
+        btnName.on('click', function () {
+          var self = this, row = $('#dataGrid').datagrid('getSelections');
+          if (!row || row.length === 0) {
+            btnTipMsg(event, '请选择一条记录')
+            return;
+          } else {
+            var isUserId = true; that.auditIds = '';
+            for (var i = 0; i < row.length; i++) {
+              if (row[i].nowAuditUserId !== that.userId) {
+                isUserId = false;
+              }
+              that.auditIds += row[i].auditId + ','
+            }
+            that.auditIds = that.auditIds.slice(0, - 1)
+            if ('审核通过' === openName) {
+              // if (isUserId) {
+              layerOpenFun(openUrl + '&auditIds=' + that.auditIds + '&isPass=30', openName, ['90%', '90%'], ['确定', '取消'])
+              // } else {
+              //   layer.msg('当前所选包含您不能审核的数据，请重新选择！', { icon: 2 })
+              // }
+            } else if ('审核不通过' === openName) {
+              // if (isUserId) {
+              layerOpenFun(openUrl + '&auditIds=' + that.auditIds + '&isPass=40', openName, ['90%', '90%'], ['确定', '取消'])
+              // } else {
+              //   layer.msg('当前所选包含您不能审核的数据，请重新选择！', { icon: 2 })
+              // }
+            }
+            return;
+          }
+        })
+      },
+
+      // 点击进入详情页
+      goDetail: function (did, event) {
+        layui.stope(event);
+        var openUrl = 'contractController.do?goContractEdit&contractId=' + did + '&detail=detailPage', openName = '查看合同详情';
+        layerOpenFun(openUrl, openName, ['70%', '90%'], []);
+      },
+      // 普通快速查询 
+      quickSearch: function () {
+        var data = $('#commonQueryForm').serializeJSON();
+        this.reloadDataGrid(true, { quickQryParam: data.quickQryParam });
+      },
+      commonQryKeyDown: function () {
+        //快速查询input框绑定的回车事件
+        $('#commonQueryForm input').bind('keypress', function (event) {
+          var theEvent = event || window.event;
+          var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+          if (code === 13) {
+            InitObj.quickSearch()
+            return false;//问题解决关键
+          }
+        });
+      },
+      applyMoneyAttribute: function (value) {
+        return formatMoney(getFloatStr(value), 2, '￥ ');
+      },
+      // 各tabs展示数据
+      columnsFun: function (num) {  // 1:审核中, 2:审核完成
+        this.auditStatus = num;
+        var columns = [];
+        // 各tabs展示数据
+        if (num === 1) { //  1:审核中, 2:审核完成
+          this.functionButton.show()
+        } else {
+          this.functionButton.hide()
+        }
+        columns.push({ title: "id", field: "id", checkbox: true, width: 30 })
+        columns.push({
+          title: "申请类型", field: "applyType", width: 40, formatter: function (value, row, index) {
+            // 5:新增合同审核, 6:修改合同审核, 7.终止合同审核, 8.违约扣款审核
+            var reportStatus = { '5': '新增合同审核', '6': '修改合同审核', '7': '终止合同审核', '8': '违约扣款审核' }
+            return reportStatus[value];
+          }
+        })
+        columns.push({ title: "提交意见", field: "submitOpinions", width: 40 })
+        columns.push({ title: "合同编号", field: "contractCode", width: 40 })
+        if (num === 1) {
+          columns.push({
+            title: "流程状态", field: "auditPerson", width: 40, formatter: function (value, row, index) {
+              // 10:审核中 20:审核终止 30:审核通过 40:审核不通过
+              var auditStatus = { '10': '审核中', '20': '审核终止', '30': '审核通过', '40': '审核不通过' }
+              // return auditStatus[value]
+              return '待' + value + '审核';
+            }
+          })
+        } else {
+          columns.push({
+            title: "流程状态", field: "status", width: 40, formatter: function (value, row, index) {
+              // 合同状态：0. 合同终止1.正常（审核通过/执行中） 2.录入中 3.待审核 4.审核不通过
+
+              var auditStatus = { '1': '审核通过', '4': '审核不通过', 'default': '' }
+              // return auditStatus[value]
+              return auditStatus[value] || auditStatus['default'];
+            }
+          })
+        }
+
+
+        columns.push({
+          title: "生效日期", field: "availabilityDate", width: 30, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        })
+        columns.push({
+          title: "失效日期", field: "expiryDate", width: 30, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        })
+        columns.push({
+          title: "登记日期", field: "createDate", width: 30, formatter: function (value, row, index) {
+            return value ? new Date(value).Format("yyyy-MM-dd") : ''
+          }
+        })
+        columns.push({ title: "合同金额", field: "contractFee", width: 40,formatter: this.applyMoneyAttribute })
+        columns.push({ title: "登记人", field: "createName", width: 25 })
+
+        columns.push({
+          title: "更多", title: "更多", field: "more", width: 100, formatter: function (value, row, index) {
+            // 其中【更多】内容为：甲方，合同名称，合同类型
+            var html = '';
+            if (row.unitName) {
+              html += '合同方：' + row.unitName + '； '
+            }
+            if (row.contractName) {
+              html += '合同名称：' + row.contractName + '； '
+            }
+            if (row.type) {
+              var types = { '1': '全包合同', '2': '折扣合同', '3': '部分包干合同', '4': '参数指定合同' }
+              html += '合同类型：' + types[row.type] + '； '
+            }
+            return html;
+          }
+        })
+        columns.push({
+          title: "操作",
+          field: "opt",
+          width: 50,
+          formatter: function (value, row, index) {
+            var btns = '';
+            btns += '<button title="查看合同详情" class="layui-btn layui-btn-sm" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+            btns += '<button title="查看日志" class="layui-btn layui-btn-sm" onclick="showLogs(\'7\',\'' + row.id +
+              '\',true)"><i class="layui-icon">&#xe6b2;</i></button>';
+            return btns;
+          }
+        });
+        return [columns];
+      },
+      //重载datagrid
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // table数据渲染
+      initDataGrid: function (columns) {
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + '&auditStatus=' + this.auditStatus + "&onlyMine=" + this.onlyMine,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          toolbar: '#tb',
+          method: 'get',
+          fit: true,
+          fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // console.log('data', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid');
+          },
+        });
+      },
+      // 样式布局控制
+      styleLayout: function () {
+        var that = this;
+      },
+
+    }
+  </script>
+</body>
+
+</html>

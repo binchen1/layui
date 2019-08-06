@@ -1,0 +1,419 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp"%>
+<%@include file="/context/layuiCommon.jsp" %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单位信息</title>
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/easyui.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/icon.css">
+  <link rel="stylesheet" type="text/css" href="../../easyui-1.5.5.2/demo.css">
+  <link rel="stylesheet" href="../../css/layui.css">
+  <link rel="stylesheet" href="../../assets/css/common.css">
+  <link rel="stylesheet" type="text/css" href="../../assets/css/list.css" />
+
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/datagrid-detailview.js"></script>
+  <script type="text/javascript" src="../../serializajson/jquery.serializejson.min.js"></script>
+  <script type="text/javascript" src="../../easyui-1.5.5.2/index.js"></script>
+  <script src="../../layui.js"></script>
+  <script src="../../assets/js/common.js"></script> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单位信息</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/list.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+  <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+  <!--[if lt IE 9]>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+  <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <style>
+    .bottom-btn {
+      position: absolute;
+      bottom: 0;
+      background: #fff;
+      right: 0;
+    }
+
+    .detailInfo-box {
+      background: #eee;
+    }
+
+    .detailInfo-box>#detailInfo {
+      border: 1px solid #eee;
+    }
+
+    .detailInfo-box>#detailInfo>.layui-row:nth-child(2n-1) {
+      background: #fff;
+    }
+
+    .detailInfo-box .col-right,
+    .detailInfo-box .col-left {
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .detailInfo-box .col-left {
+      padding-right: 10px;
+    }
+
+    .detailInfo-box .col-right input {
+      border-color: transparent;
+      margin-top: 3px;
+      padding-left: 5px;
+    }
+
+    .layout-split-north {
+      border-bottom: 0;
+    }
+
+    .layout-body {
+      border: none;
+    }
+
+    .panel-body {
+      background: #eee;
+    }
+
+    .north-box {
+      width: 100%;
+      display: block;
+      margin-top: 5px;
+    }
+
+    .layui-table-view .layui-form-radio>i {
+      margin-right: 5px;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="layui-tab-brief height-full">
+    <div class="easyui-layout" style="width:100%;height: 100%" data-options="fit: true">
+      <div data-options="region:'north',split:true" style="height:40px;">
+        <span class="north-box">
+          <a class="easyui-linkbutton btn-4-add" onclick="InitObj.addFun()" plain="true" icon="icon-add">添加</a>
+          <a class="easyui-linkbutton btn-4-edit" onclick="InitObj.editFun()" plain="true" icon="icon-edit">编辑</a>
+        </span>
+      </div>
+      <div data-options="region:'center'" style="background:#eee;overflow:hidden;">
+        <table class="layui-hide" id="test" lay-filter="test"></table>
+        <script type="text/html" id="radioTpl">
+          <input type="radio" name="lock"  value="{{d.id}}" title="启用" lay-filter="lockDemo" {{ d.status == 1 ? 'checked' : '' }}>
+        </script>
+      </div>
+      <div data-options="region:'south',split:true" style="height:300px;" class="detailInfo-box">
+        <form class="layui-form" id="detailInfo">
+        </form>
+      </div>
+    </div>
+    <div id="bottom-btn" class="bottom-btn" style="display:none">
+      <button class="layui-btn submit-cancel" onclick="InitObj.submitFun()">保存</button>
+      <button class="layui-btn submit-cancel cancel" onclick="InitObj.cancelFun()">取消</button>
+    </div>
+  </div>
+  <script>
+    layui.use(['table', 'form', 'laydate'], function () {
+      var table = layui.table
+        , form = layui.form
+        , laydate = layui.laydate;
+      InitObj.init(table, form, laydate);
+    });
+    var InitObj = {
+      tableLayerM: null,
+      formLayerM: null,
+      laydateLayerM: null,
+      tableIns: null,
+      tableData: null,
+      submitUrl: 'unitVersionController.do?save',
+      getInfoUrl: 'unitVersionController.do?getById',
+      tableDataId: '',
+      detailInfo: $('#detailInfo'),
+      bottomBtn: $('#bottom-btn'),
+      editId: '',
+      isAdd: false, // 是否点击了添加
+      init: function (table, form, laydate) {
+        this.tableLayerM = table;
+        this.formLayerM = form;
+        this.laydateLayerM = laydate;
+        var that = this;
+        this.tableEvent();
+        ajaxRequest('unitVersionController.do?datagrid', {}, this.successCallback, true, true)
+      },
+      tableEvent: function () {
+        //监听锁定操作
+        this.formLayerM.on('radio(lockDemo)', function (data) {
+          var that = InitObj;
+          for (var i = 0; i < that.tableData.length; i++) {
+            if (this.value === that.tableData[i].id) {
+              ajaxRequest('unitVersionController.do?useVersion', { id: this.value }, that.useVersionCallback, false, true, this.value)
+              break;
+            }
+          }
+        });
+      },
+      // 版本启用回调
+      useVersionCallback: function (res, tableDataId) {
+        var that = InitObj;
+        that.bottomBtn.hide();
+        if (res.success) {
+          if (!that.isAdd) {
+            that.editId = tableDataId;
+          }
+          that.tableDataId = tableDataId; 
+          ajaxRequest(that.getInfoUrl, { id: tableDataId }, that.detailHtml, true, true)
+        } else {
+          layerAlertFun(res.msg, 5);
+        }
+      },
+      bankAccountFun: function (event) {
+        var values = $(event.target).val();
+        var values2 = values.replace(/(\d{4})(?=[^\s])/, "$1 ");
+        $(event.target).val(values2);
+      },
+      detailHtmlRow: function (titles, values, names) {
+        var html = '';
+        html += '<div class="layui-col-xs6">'
+        html += '<div class="layui-row">'
+        if ('departname' === names) {
+          html += '<div class="layui-col-xs3 text-right col-left"><span class="layui-color-red">*</span>' + titles + ':</div>'
+        } else {
+
+          html += '<div class="layui-col-xs3 text-right col-left">' + titles + ':</div>'
+        }
+        html += '<div class="layui-col-xs9 col-right">'
+
+        if (values) {
+          html += ' <input type="text" disabled name="' + names + '" value="' + values + '"  autocomplete="off" class="layui-input"'
+          if ('bankAccount' === names) {
+            html += 'onkeyup="InitObj.bankAccountFun(event)" maxlength="23"'
+          }
+          html += '>'
+        } else {
+          html += ' <input type="text" disabled name="' + names + '" value=""  autocomplete="off" class="layui-input"'
+          if ('bankAccount' === names) {
+            // html += 'onkeyup="this.value=this.value.replace(\/(\d{4})(?=[^\s])\/,"$1 ");"'
+            html += 'onkeyup="InitObj.bankAccountFun(event)" maxlength="23"'
+          }
+          html += '>'
+        }
+        html += '</div>'
+        html += '</div>'
+        html += '</div>'
+        return html;
+      },
+      detailHtml: function (res) {
+        var that = InitObj;
+        if (res.success) {
+          var html = '', data = res.obj;
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('单位名称', data.departname, 'departname');
+          html += that.detailHtmlRow('说明', data.description, 'description');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('二级名称', data.extendname, 'extendname');
+          html += that.detailHtmlRow('查询电话', data.queryPhone, 'queryPhone');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('申述电子邮箱', data.email, 'email');
+          html += that.detailHtmlRow('申述电话', data.explainPhone, 'explainPhone');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('邮编', data.postcode, 'postcode');
+          html += that.detailHtmlRow('联系电话', data.phone, 'phone');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('联系人', data.contacts, 'contacts');
+          html += that.detailHtmlRow('联系人电话', data.mobile, 'mobile');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('联系地址', data.address, 'address');
+          html += that.detailHtmlRow('传真', data.fax, 'fax');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('银行账户', data.bankAccount, 'bankAccount');
+          html += that.detailHtmlRow('银行地址', data.bankAddress, 'bankAddress');
+          html += '</div >'
+          html += '<div class="layui-row">';
+          html += that.detailHtmlRow('银行名称', data.bankName, 'bankName');
+          html += that.detailHtmlRow('开户名称', data.bankAccountName, 'bankAccountName');
+          html += '</div>'
+          that.detailInfo.html(html);
+          if (!data.id) { // 添加
+            that.detailInfo.find('input').attr('disabled', false).css('border-color', '#ccc');
+          }
+          that.detailInfo.css('border-color', '#5baaeb')
+        } else {
+          layerAlertFun(res.msg, 5);
+        }
+
+      },
+      addFun: function () {
+        if (this.isAdd) {
+          layerAlertFun('请先保存数据', 5, [])
+        } else {
+          this.bottomBtn.show();
+          var len = this.tableData.length - 1;
+          var tableDataNew = JSON.parse(JSON.stringify(this.tableData[len]))
+          this.tableData.push(tableDataNew);
+          var len2 = this.tableData.length - 1;
+          if (!this.tableData[len2].createDate) {
+            this.tableData[len2].createDate = new Date(new Date()).Format("yyyy-MM-dd")
+          }
+          this.tableData[len2].id = '';
+          this.isAdd = !this.isAdd;
+          this.tableRender(this.tableData, true);
+        }
+      },
+      cancelFun: function () {
+        this.bottomBtn.hide();
+        if (this.isAdd) { 
+          this.isAdd = !this.isAdd;
+          this.tableData.splice(this.tableData.length - 1, 1)
+          this.tableRender(this.tableData, false);
+        } else { 
+          ajaxRequest(this.getInfoUrl, { id: this.tableDataId }, this.detailHtml, true, true)
+          // this.detailInfo.find('input').attr('disabled', true).css('border-color', 'transparent');
+
+        }
+      },
+      editFun: function () {
+        this.bottomBtn.show();
+        this.detailInfo.find('input').attr('disabled', false).css('border-color', '#ccc');
+      },
+      //保存回调
+      saveAjaxCallback: function (res) {
+        var that = InitObj;
+        // that.fristConfirm = !that.fristConfirm;
+        if (!res.success) {
+          layerAlertFun(res.msg, 5, []);
+          return;
+        } else {
+          that.bottomBtn.hide();
+          that.detailInfo.find('input').attr('disabled', true).css('border-color', 'transparent');
+          layerAlertFun(res.msg, 6, []);
+          return;
+        }
+      },
+      submitFun: function () {
+        var saveParam = this.saveData()
+        if (saveParam) {
+          var dataJson = saveParam;
+          if (this.isAdd) {
+            delete dataJson.id
+          } else {
+            dataJson.id = this.editId;
+          }
+          // if (this.fristConfirm) {
+          //   this.fristConfirm = !this.fristConfirm;
+
+          ajaxRequest(this.submitUrl, dataJson, this.saveAjaxCallback, true, true)
+          // }
+        }
+      },
+      // 保存数据处理
+      saveData: function () {
+        var formdata = this.detailInfo.serializeJSON();
+        if (this.dataRequired(formdata)) { // 验证通过回显数据
+          var trEle = $('.layui-table-click');
+          trEle.find('td[data-field="departname"]').find('div').html(formdata.departname);
+          trEle.find('td[data-field="extendname"]').find('div').html(formdata.extendname);
+          trEle.find('td[data-field="description"]').find('div').html(formdata.description);
+          // 保存数据
+          return formdata;
+        } else {
+          formTipFun(formdata.msg, formdata.element)
+        }
+        return false;
+      },
+      // 表单数据必填项
+      dataRequired: function (queryParams) {
+        if (!queryParams.departname) {
+          queryParams.msg = '单位名称不能为空'
+          queryParams.element = $('input[name="departname"]')
+          return false;
+        }
+        return true;
+      },
+
+      successCallback: function (res) {
+        var that = InitObj;
+        that.tableData = res.rows;
+        that.tableRender(that.tableData)
+      },
+      tableRender: function (tableData, isAdd) {
+        var that = InitObj;
+        this.tableIns = this.tableLayerM.render({
+          elem: '#test'
+          , height: 'full-350'
+          , limit: Number.MAX_VALUE
+          , data: tableData
+          , cols: [[
+            { field: 'version', title: '版本' }
+            , { field: 'departname', title: '单位名称' }
+            , { field: 'extendname', title: '二级名称' }
+            , {
+              field: 'createDate', title: '创建日期', unresize: false, templet: function (row) {
+                return row.createDate ? new Date(row.createDate).Format("yyyy-MM-dd") : '';
+              }
+            }
+            , { field: 'description', title: '说明' }
+            , { field: 'status', title: '是否启用', templet: '#radioTpl' }
+          ]]
+          , page: false
+          , done: function (data) {
+            // console.log('data105', data)
+          }
+        });
+
+        if (isAdd) {
+          var trEle = $('input[value="' + this.tableData[this.tableData.length - 1].id + '"]+div').parent().parent().parent();
+          trEle.click();
+        } else {
+          if (this.editId) { 
+            var trEle = $('input[value="' + this.editId + '"]+div').parent().parent().parent();
+            trEle.click();
+          } else { 
+            $('.layui-form-radioed').click();
+          }
+        }
+
+        //监听行单击事件
+        this.tableLayerM.on('row(test)', function (obj) {
+          var res = { success: true };
+          if (obj.data.id) {
+            that.editId = obj.data.id;
+
+            that.useVersionCallback(res, obj.data.id);
+          } else {
+            res.obj = obj.data;
+            that.detailHtml(res);
+          }
+          obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+          if (that.isAdd) {
+            obj.data.id ? that.cancelFun() : '';
+          }
+
+        });
+        // 初始化完成了，现在干掉前面 的可编辑属性
+      }
+    }
+
+  </script>
+</body>
+
+
+
+</html>

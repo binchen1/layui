@@ -1,0 +1,141 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@include file="/context/mytags.jsp" %>
+<%@include file="/context/easyui.jsp" %>
+<%@include file="/context/layuiCommon.jsp" %>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>合同执行明细</title>
+  <link rel="stylesheet" type="text/css" href="plug-in/assets/css/common.css" />
+  <script type="text/javascript" src="plug-in/assets/js/common.js"></script>
+
+</head>
+
+<body>
+  <div class="height-full">
+    <!-- <div id="tb" class="layui-form-box">
+      <div>
+        <form id="commonQueryForm">
+          <div class="layui-input-inline" style="width:40%">
+            <input type="text" name="quickQryParam" class="layui-input" placeholder="输入编号/委托单位/工程项目后回车即可查询"
+              autocomplete="off">
+          </div>
+          <div class="layui-input-inline">
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+              onclick="InitObj.quickSearch()">查询</a>
+          </div>
+        </form>
+      </div>
+    </div> -->
+    <table class="easyui-datagrid" id="dataGrid"></table>
+  </div>
+  <script>
+    $(function () {
+      layui.use(['table', 'element'], function () {
+        var table = layui.table;
+        var element = layui.element;
+      })
+      InitObj.init();
+    })
+    // 初始化页面
+    var InitObj = {
+      defaultUrl: 'contractController.do?getExecutionDetails', //默认获取数据url
+      contractId: GetQueryString("contractId"), // 获取父页面传递过来的id
+      datagrid: null, // table返回对象
+      // testTaskIdsData: parent.InitObj.testTaskIdsData, // 获取传递的人员列表
+      parentIndex: parent.layer.getFrameIndex(window.name),
+      init: function () {
+        this.initDataGrid(this.columnsFun())
+        // this.commonQryKeyDown()
+      },
+      // 页面打开回调函数
+      openCallback: function () {
+        var selectedData = $("#dataGrid").datagrid("getChecked");
+        console.log('selectedData',selectedData)
+        // return this.testTaskIdsData.concat(selectedData);
+        // return selectedData;
+        parent.layer.close(this.parentIndex); //再执行关闭 
+      },
+      //快速查询
+      quickSearch: function () {
+        // var queryParams = $('#commonQueryForm').serializeJSON();
+        // this.reloadDataGrid(true, queryParams);
+      },
+      //快速查询input框绑定的回车事件
+      commonQryKeyDown: function () {
+        // $('#commonQueryForm input').bind('keypress', function (event) {
+        //   var theEvent = event || window.event;
+        //   var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+        //   if (code === 13) {
+        //     InitObj.quickSearch()
+        //     return false;//问题解决关键
+        //   }
+        // });
+      },
+      goDetail: function (did, event) {
+        layui.stope(event)
+        var openUrl = 'feeModelController.do?goConsignFeeDetail&id='+did + '&detail=detailPage', openName = '查看收费详情';
+        layerOpenFun(openUrl, openName, ['90%', '95%'], [])
+      },
+      /**重载datagrid*/
+      reloadDataGrid: function (goFirstPage, queryParams) {
+        if (goFirstPage) {
+          /*从第一页开始显示*/
+          this.dataGrid.datagrid('load', queryParams);
+        } else {
+          /*停留在当前页面*/
+          this.dataGrid.datagrid('reload', queryParams);
+        }
+      },
+      // 各tabs展示数据
+      columnsFun: function () {
+        return [[
+          { title: "id", field: "id", checkbox: true, hidden: true },
+          { title: "编号", field: "code", width: 50 },
+          { title: "单位", field: "unitName", width: 50 },
+          { title: "费用类型", field: "feeType", width: 50 },
+          { title: "应缴费用", field: "needPay", width: 50 },
+          { title: "当次收取费用", field: "pay", width: 50 },
+          {
+            title: "操作", field: "opt", width: 30,
+            formatter: function (value, row, index) {
+              var btns = '';
+              btns += '<button title="收费详情" type="button" class="layui-btn layui-btn-sm layui-btn-edit" onclick="InitObj.goDetail(&quot;' + row.id + '&quot;,event)"><i class="layui-icon">&#xe705;</i></button>';
+              return btns;
+            }
+          }
+        ]]
+      },
+      initDataGrid: function (columns) {
+        var that = this;
+        this.dataGrid = $('#dataGrid').datagrid({
+          url: this.defaultUrl + "&id=" + this.contractId,
+          pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+          singleSelect: false, // 只允许选中一行
+          idField: 'id',
+          fit: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+          fitColumns: true,
+          scrollbarSize: 0,
+          sortName: 'experience', // 报告时间
+          sortOrder: 'desc', // 倒序，降序 asc desc
+          loadMsg: loadMsgDatagrid,
+          columns: columns,
+          //加载完成事件
+          onLoadSuccess: function (data) {
+            // console.log('onLoadSuccess', data)
+            // 调分页 文本显示 common.js函数
+            getPagerFun('#dataGrid');
+          },
+          onSelect: function (rowIndex, rowData) {
+          }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>

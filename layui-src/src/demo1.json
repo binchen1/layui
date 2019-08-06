@@ -1,0 +1,13 @@
+{
+    "data": [{ "id": 1,"arr":["质量差","不圆度"] ,"joinTime": "2018-10-12", "username": "zhang", "sex": "男", "city":"0", "sign": "签名", "score": "评分", "classify": "职业", "wealth": 0,"paramList":"[质量差,不圆度,好,差,良]" },
+        { "id": 2,"arr":["质量差","良"] ,"joinTime": "2016-02-12", "username": "zhang不圆度", "sex": "男", "city":"1", "sign": "签名", "score": "评分", "classify": "职业", "wealth": 1,"paramList":"[质量差,不圆度,好,差,良]" },
+        { "id": 3,"arr":["质量差","好"] ,"joinTime": "2016-01-12", "username": "zhang", "sex": "女", "city":"2", "sign": "签名", "score": "评分", "classify": "职业", "wealth": 2,"paramList":"[质量差,不圆度,好,差,良]" },
+        { "id": 4,"arr":["不圆度","好"] ,"joinTime": "2016-11-12", "username": "zhang不圆度不", "sex": "男", "city":"1", "sign": "签名", "score": "评分", "classify": "职业", "wealth": 1,"paramList":"[质量差,不圆度,好,差,良]" },
+        { "id": 5,"arr":["差","良"] ,"joinTime": "2016-08-12", "username": "zhang", "sex": "女", "city":"1", "sign": "签名", "score": "评分", "classify": "职业", "wealth": 2,"paramList":"[质量差,不圆度,好,差,良]" },
+        { "id": 6,"arr":["质量差","良"] ,"joinTime": "2017-10-12", "username": "zhang好好好好好好好好好好", "sex": "男", "city":"0", "sign": "签名", "score": "评分", "classify":"职业", "wealth": 1,"paramList":"[质量差,不圆度,好,差,良]" },
+        { "id": 7,"arr":["差","良"] ,"joinTime": "2016-10-02", "username": "zhang差差差差差差差差差差差差差差", "sex": "女", "city": "1", "sign": "签名", "score": "评分", "classify": "职业", "wealth": 0 ,"paramList":"[质量差,不圆度,好,差,良]" }
+    ],
+    "event":["质量差","不圆度","好","差","良"],
+    "paramList":["质量差","不圆度","好","差","良"]
+
+}
